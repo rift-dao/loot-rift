@@ -1292,59 +1292,59 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         return (uint256(keccak256(abi.encodePacked(input))) % 20) + 1;
     }
 
-    // string[] private cursedPrefixes = [
-    //     "Dull",
-    //     "Broken",
-    //     "Twisted",
-    //     "Cracked",
-    //     "Fragmented",
-    //     "Splintered",
-    //     "Beaten",
-    //     "Ruined"
-    // ];
+    string[] private cursedPrefixes = [
+        "Dull",
+        "Broken",
+        "Twisted",
+        "Cracked",
+        "Fragmented",
+        "Splintered",
+        "Beaten",
+        "Ruined"
+    ];
 
-    // string[] private cursedSuffixes = [
-    //     "of Rats",
-    //     "of Crypts",
-    //     "of Nightmares",
-    //     "of Sadness",
-    //     "of Darkness",
-    //     "of Death",
-    //     "of Doom",
-    //     "of Gloom",
-    //     "of Madness"
-    // ];
+    string[] private cursedSuffixes = [
+        "of Rats",
+        "of Crypts",
+        "of Nightmares",
+        "of Sadness",
+        "of Darkness",
+        "of Death",
+        "of Doom",
+        "of Gloom",
+        "of Madness"
+    ];
 
-    // string[] private prefixes = [
-    //     "Gleaming",
-    //     "Glowing",
-    //     "Shiny",
-    //     "Smooth",
-    //     "Faceted",
-    //     "Glassy",
-    //     "Polished",
-    //     "Sheeny",
-    //     "Luminous"
-    // ];
+    string[] private prefixes = [
+        "Gleaming",
+        "Glowing",
+        "Shiny",
+        "Smooth",
+        "Faceted",
+        "Glassy",
+        "Polished",
+        "Sheeny",
+        "Luminous"
+    ];
 
-    // string[] private suffixes = [
-    //     "of Power",
-    //     "of Giants",
-    //     "of Titans",
-    //     "of Skill",
-    //     "of Perfection",
-    //     "of Brilliance",
-    //     "of Enlightenment",
-    //     "of Protection",
-    //     "of Anger",
-    //     "of Rage",
-    //     "of Fury",
-    //     "of Vitriol",
-    //     "of the Fox",
-    //     "of Detection",
-    //     "of Reflection",
-    //     "of the Twins"
-    // ];
+    string[] private suffixes = [
+        "of Power",
+        "of Giants",
+        "of Titans",
+        "of Skill",
+        "of Perfection",
+        "of Brilliance",
+        "of Enlightenment",
+        "of Protection",
+        "of Anger",
+        "of Rage",
+        "of Fury",
+        "of Vitriol",
+        "of the Fox",
+        "of Detection",
+        "of Reflection",
+        "of the Twins"
+    ];
 
     string[] private colors = [
         "Blue",
@@ -1373,13 +1373,13 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         "Dragonseye"
     ];
     
-    // function getCrystalName(string memory seed, uint256 alignment) public view returns (string memory) {
-    //     return pluckNewCrystalName(seed, "NAME", alignment);
-    // }
+    function getCrystalName(string memory seed, uint256 alignment) public view returns (string memory) {
+        return pluckNewCrystalName(seed, "NAME", alignment);
+    }
 
-    // function getSimpleCrystalName(string memory seed) public view returns (string memory) {
-    //     return pluckNewSimpleCrystalName(seed, "NAME");
-    // }
+    function getSimpleCrystalName(string memory seed) public view returns (string memory) {
+        return pluckNewSimpleCrystalName(seed, "NAME");
+    }
 
     // function getCharge(uint256 tokenId, uint256 prevCharge) public pure returns (string memory) {
     //     uint256 rand = random(string(abi.encodePacked("CHARGE", toString(tokenId))));
@@ -1402,41 +1402,41 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     //     return output;
     // }
 
-    // function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal view returns (string memory) {
-    //     uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
-    //     uint256 colorSpecialness = rand % 21;
-    //     string memory output = "";
-    //     // get color
-    //     if (colorSpecialness > 18) {
-    //         output = specialColors[rand % specialColors.length];
-    //     } else {
-    //         output = colors[rand % colors.length];
-    //     }
+    function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal view returns (string memory) {
+        uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
+        uint256 colorSpecialness = rand % 21;
+        string memory output = "";
+        // get color
+        if (colorSpecialness > 18) {
+            output = specialColors[rand % specialColors.length];
+        } else {
+            output = colors[rand % colors.length];
+        }
 
 
-    //     // cursed
-    //     if (alignment < 3) {
-    //         output = string(abi.encodePacked(cursedPrefixes[rand % cursedPrefixes.length], " ", output, " Mana Crystal ", cursedSuffixes[rand % cursedSuffixes.length]));
-    //         return output;
-    //     }
+        // cursed
+        if (alignment < 3) {
+            output = string(abi.encodePacked(cursedPrefixes[rand % cursedPrefixes.length], " ", output, " Mana Crystal ", cursedSuffixes[rand % cursedSuffixes.length]));
+            return output;
+        }
 
-    //     // standard 
-    //     if (alignment < 15) {
-    //         output = string(abi.encodePacked(prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
-    //         return output;
-    //     }
+        // standard 
+        if (alignment < 15) {
+            output = string(abi.encodePacked(prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
+            return output;
+        }
 
-    //     // good 
-    //     if (alignment > 14 && alignment < 19) {
-    //         output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
-    //         return output;
-    //     }
+        // good 
+        if (alignment > 14 && alignment < 19) {
+            output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
+            return output;
+        }
         
-    //     // great 
-    //     output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal ", suffixes[rand % suffixes.length]));
+        // great 
+        output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal ", suffixes[rand % suffixes.length]));
 
-    //     return output;
-    // }
+        return output;
+    }
 
     function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal view returns (string memory) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
@@ -1455,13 +1455,13 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         return output;
     }
     
-    // function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal view returns (string memory) {
-    //     if (isFromLoot) {
-    //         return getCrystalName(seed, alignment);
-    //     } else {
-    //         return getSimpleCrystalName(seed);
-    //     }
-    // }
+    function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal view returns (string memory) {
+        if (isFromLoot) {
+            return getCrystalName(seed, alignment);
+        } else {
+            return getSimpleCrystalName(seed);
+        }
+    }
 
     // function nameFromToken(uint256 tokenId) internal pure returns (string memory) {
     //     return nameCrystal(string(abi.encodePacked((tokenId))));
@@ -1472,21 +1472,26 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     // }
 
     function tokenFromString(string memory seed, bool isFromLoot) internal view returns (string memory) {
-        string[13] memory parts;
+        string[7] memory parts;
         uint256 rand = random(string(abi.encodePacked(seed)));
         uint256 alignment = rand % 21;
 
         parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
 
-        parts[1] = pluckNewSimpleCrystalName(seed, "NAME");
+        parts[1] = nameCrystal(seed, isFromLoot, alignment);
 
-        parts[2] = '</text>';
+        parts[2] = '</text><text x="10" y="40" class="base">';
+
+        parts[3] = nameCrystal(seed, isFromLoot, alignment);
+
+        parts[4] = '</text><text x="10" y="40" class="base">';
+
+        parts[5] = nameCrystal(seed, isFromLoot, alignment);
 
         // TODO: Add crystal stats ? Cap, level, "charged"
-        parts[3] = '</text></svg>';
+        parts[6] = '</text></svg>';
 
-        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3]));
-        output = string(abi.encodePacked(output, parts[9], parts[10], parts[11], parts[12]));
+        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
         
         string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', seed, '", "description": "Ability Scores are randomized table top RPG style stats generated and stored on chain. Feel free to use Ability Scores in any way you want.", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
         output = string(abi.encodePacked('data:application/json;base64,', json));
@@ -1496,7 +1501,7 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     // TEMP for tokenURI testing
     function tokenURI() public view returns (string memory) {
-        return tokenFromString(string(abi.encodePacked(uint256(1))), false);
+        return tokenFromString(string(abi.encodePacked(uint256(2))), true);
     }
 
     // function tokenURI(address wallet) public view returns (string memory) {
