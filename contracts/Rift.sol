@@ -1286,19 +1286,182 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     ERC721 loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
-    
+
     // mirror a dice roll
     function random(string memory input) internal pure returns (uint256) {
         return (uint256(keccak256(abi.encodePacked(input))) % 20) + 1;
     }
+
+    // string[] private cursedPrefixes = [
+    //     "Dull",
+    //     "Broken",
+    //     "Twisted",
+    //     "Cracked",
+    //     "Fragmented",
+    //     "Splintered",
+    //     "Beaten",
+    //     "Ruined"
+    // ];
+
+    // string[] private cursedSuffixes = [
+    //     "of Rats",
+    //     "of Crypts",
+    //     "of Nightmares",
+    //     "of Sadness",
+    //     "of Darkness",
+    //     "of Death",
+    //     "of Doom",
+    //     "of Gloom",
+    //     "of Madness"
+    // ];
+
+    // string[] private prefixes = [
+    //     "Gleaming",
+    //     "Glowing",
+    //     "Shiny",
+    //     "Smooth",
+    //     "Faceted",
+    //     "Glassy",
+    //     "Polished",
+    //     "Sheeny",
+    //     "Luminous"
+    // ];
+
+    // string[] private suffixes = [
+    //     "of Power",
+    //     "of Giants",
+    //     "of Titans",
+    //     "of Skill",
+    //     "of Perfection",
+    //     "of Brilliance",
+    //     "of Enlightenment",
+    //     "of Protection",
+    //     "of Anger",
+    //     "of Rage",
+    //     "of Fury",
+    //     "of Vitriol",
+    //     "of the Fox",
+    //     "of Detection",
+    //     "of Reflection",
+    //     "of the Twins"
+    // ];
+
+    string[] private colors = [
+        "Blue",
+        "Green",
+        "Red",
+        "Yellow",
+        "Orange",
+        "Pink",
+        "Gray",
+        "Black",
+        "White",
+        "Pale",
+        "Brown",
+        "Purple"
+    ];
+
+    string[] private specialColors = [
+        "Lime-Green",
+        "Mauve",
+        "Silver",
+        "Crimson",
+        "Opal",
+        "Sapphire",
+        "Emerald",
+        "Diamond",
+        "Dragonseye"
+    ];
     
-    function nameCrystal(string memory seed) internal pure returns (string memory) {
-        uint256 greatness = random(string(abi.encodePacked(seed, ":NULL")));
-        string memory output = string(abi.encodePacked("Mana Crystal"));
-        // Call naming logic
+    // function getCrystalName(string memory seed, uint256 alignment) public view returns (string memory) {
+    //     return pluckNewCrystalName(seed, "NAME", alignment);
+    // }
+
+    // function getSimpleCrystalName(string memory seed) public view returns (string memory) {
+    //     return pluckNewSimpleCrystalName(seed, "NAME");
+    // }
+
+    // function getCharge(uint256 tokenId, uint256 prevCharge) public pure returns (string memory) {
+    //     uint256 rand = random(string(abi.encodePacked("CHARGE", toString(tokenId))));
+    //     // roll d3 - 1
+    //     uint256 roll = rand % 3; 
+    //     uint256 newCharge = roll + prevCharge;
+
+    //     string memory output = string(abi.encodePacked("Daily Mana: ", toString(newCharge)));
+    //     return output;
+    // }
+
+    // function getCapacity(uint256 tokenId, uint256 prevCapacity) public pure returns (string memory) {
+    //     uint256 rand = random(string(abi.encodePacked("CAPACITY", toString(tokenId))));
+    //     // roll d8
+    //     uint256 roll = rand % 9;
+    //     // go up by at least 1
+    //     uint256 newCapacity = roll + prevCapacity + 1;
+
+    //     string memory output = string(abi.encodePacked("Mana Capacity: ", toString(newCapacity)));
+    //     return output;
+    // }
+
+    // function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal view returns (string memory) {
+    //     uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
+    //     uint256 colorSpecialness = rand % 21;
+    //     string memory output = "";
+    //     // get color
+    //     if (colorSpecialness > 18) {
+    //         output = specialColors[rand % specialColors.length];
+    //     } else {
+    //         output = colors[rand % colors.length];
+    //     }
+
+
+    //     // cursed
+    //     if (alignment < 3) {
+    //         output = string(abi.encodePacked(cursedPrefixes[rand % cursedPrefixes.length], " ", output, " Mana Crystal ", cursedSuffixes[rand % cursedSuffixes.length]));
+    //         return output;
+    //     }
+
+    //     // standard 
+    //     if (alignment < 15) {
+    //         output = string(abi.encodePacked(prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
+    //         return output;
+    //     }
+
+    //     // good 
+    //     if (alignment > 14 && alignment < 19) {
+    //         output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
+    //         return output;
+    //     }
+        
+    //     // great 
+    //     output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal ", suffixes[rand % suffixes.length]));
+
+    //     return output;
+    // }
+
+    function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal view returns (string memory) {
+        uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
+        uint256 colorSpecialness = rand % 21;
+        string memory output = "";
+
+        // get color
+        if (colorSpecialness > 18) {
+            output = specialColors[rand % specialColors.length];
+        } else {
+            output = colors[rand % colors.length];
+        }
+
+        output = string(abi.encodePacked(output, " Mana Crystal"));
 
         return output;
     }
+    
+    // function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal view returns (string memory) {
+    //     if (isFromLoot) {
+    //         return getCrystalName(seed, alignment);
+    //     } else {
+    //         return getSimpleCrystalName(seed);
+    //     }
+    // }
 
     // function nameFromToken(uint256 tokenId) internal pure returns (string memory) {
     //     return nameCrystal(string(abi.encodePacked((tokenId))));
@@ -1308,11 +1471,14 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     //     return nameCrystal(string(abi.encodePacked((wallet))));
     // }
 
-    function tokenFromString(string memory seed) internal pure returns (string memory) {
+    function tokenFromString(string memory seed, bool isFromLoot) internal view returns (string memory) {
         string[13] memory parts;
+        uint256 rand = random(string(abi.encodePacked(seed)));
+        uint256 alignment = rand % 21;
+
         parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
 
-        parts[1] = nameCrystal(seed);
+        parts[1] = pluckNewSimpleCrystalName(seed, "NAME");
 
         parts[2] = '</text>';
 
@@ -1328,14 +1494,18 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         return output;
     }
 
-    // TODO: Name?
-    function tokenURI(address wallet) public pure returns (string memory) {
-        return tokenFromString(string(abi.encodePacked(wallet)));
+    // TEMP for tokenURI testing
+    function tokenURI() public view returns (string memory) {
+        return tokenFromString(string(abi.encodePacked(uint256(1))), false);
     }
 
-    function tokenURI(uint256 tokenId) override public pure returns (string memory) {
-        return tokenFromString(string(abi.encodePacked(tokenId)));
-    }
+    // function tokenURI(address wallet) public view returns (string memory) {
+    //     return tokenFromString(string(abi.encodePacked(wallet)), false);
+    // }
+
+    // function tokenURI(uint256 tokenId) override public view returns (string memory) {
+    //     return tokenFromString(string(abi.encodePacked(tokenId)), true);
+    // }
 
     function claim(uint256 tokenId) public nonReentrant {
         require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
@@ -1376,7 +1546,7 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         return string(buffer);
     }
     
-    constructor() ERC721("Ability Score", "SCORE") Ownable() {}
+    constructor() ERC721("The Rift", "RIFT") Ownable() {}
 }
 
 /// [MIT License]

@@ -5,8 +5,10 @@
   "main": "index.js",
   "scripts": {
     "coverage": "truffle run coverage",
+    "estimate-gas": "node ./estimateGas.js",
     "lint": "solium -d contracts/",
     "test": "truffle compile && mocha --exit --recursive",
+    "test:quick": "mocha --exit --recursive",
     "test:watch": "truffle compile && mocha --watch --recursive"
   },
   "keywords": [],
