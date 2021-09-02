@@ -3,27 +3,6 @@ const { expect } = require('chai');
 
 const Rift = contract.fromArtifact('Rift'); // Loads a compiled contract
 
-before(async () => {
-    console.log('\n\n----------\n');
-    const estimatedGas = await Rift.new.estimateGas();
-    console.log('⛽ Estimated Gas:', estimatedGas);
-    console.log('\n----------\n\n');
-});
-
-// Use estimateGas.js instead
-// describe('Rift Gas Estimation', () => {
-//     it('should init contract', async () => {
-//         await Rift.new();
-//         expect(1).to.be.equal(1);
-//     });
-
-//     it('should estimate tokenURI gas', async () => {
-//         const riftInstance = await Rift.new();
-//         const estimatedGas = await riftInstance.tokenURI.estimateGas();
-//         expect(estimatedGas).to.be.equal(1);
-//     });
-// });
-
 describe('Rift', () => {
     it('should load', async () => {
         const riftInstance = await Rift.new();
