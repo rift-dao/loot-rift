@@ -1284,102 +1284,41 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
 
 
 contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
+    using strings for string;
+    using strings for strings.slice;
 
-    ERC721 loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
+    ERC721 public constant loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
+
+    string private constant cursedPrefixes = "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
+    uint256 private constant cursedPrefixesLength = 8;
+
+    string private constant cursedSuffixes = "of Rats,of Crypts,of Nightmares,of Sadness,of Darkness,of Death,of Doom,of Gloom,of Madness";
+    uint256 private constant cursedSuffixesLength = 9;
+
+    string private constant prefixes = "Gleaming,Glowing,Shiny,Smooth,Faceted,Glassy,Polished,Sheeny,Luminous";
+    uint256 private constant prefixesLength = 9;
+
+    string private constant suffixes = "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins";
+    uint256 private constant suffixesLength = 16;
+
+    string private constant colors = "Blue,Green,Red,Yellow,Orange,Pink,Gray,Black,White,Pale,Brown,Purple";
+    uint256 private constant colorsLength = 12;
+
+    string private constant specialColors = "Lime-Green,Mauve,Silver,Crimson,Opal,Sapphire,Emerald,Diamond,Dragonseye";
+    uint256 private constant specialColorsLength = 9;
+
+    uint256 private constant _MAX = 1000000;
 
     // mirror a dice roll
     function random(string memory input) internal pure returns (uint256) {
         return (uint256(keccak256(abi.encodePacked(input))) % 20) + 1;
     }
-
-    uint256 private constant _MAX = 1000000;
-
-    string[] private cursedPrefixes = [
-        "Dull",
-        "Broken",
-        "Twisted",
-        "Cracked",
-        "Fragmented",
-        "Splintered",
-        "Beaten",
-        "Ruined"
-    ];
-
-    string[] private cursedSuffixes = [
-        "of Rats",
-        "of Crypts",
-        "of Nightmares",
-        "of Sadness",
-        "of Darkness",
-        "of Death",
-        "of Doom",
-        "of Gloom",
-        "of Madness"
-    ];
-
-    string[] private prefixes = [
-        "Gleaming",
-        "Glowing",
-        "Shiny",
-        "Smooth",
-        "Faceted",
-        "Glassy",
-        "Polished",
-        "Sheeny",
-        "Luminous"
-    ];
-
-    string[] private suffixes = [
-        "of Power",
-        "of Giants",
-        "of Titans",
-        "of Skill",
-        "of Perfection",
-        "of Brilliance",
-        "of Enlightenment",
-        "of Protection",
-        "of Anger",
-        "of Rage",
-        "of Fury",
-        "of Vitriol",
-        "of the Fox",
-        "of Detection",
-        "of Reflection",
-        "of the Twins"
-    ];
-
-    string[] private colors = [
-        "Blue",
-        "Green",
-        "Red",
-        "Yellow",
-        "Orange",
-        "Pink",
-        "Gray",
-        "Black",
-        "White",
-        "Pale",
-        "Brown",
-        "Purple"
-    ];
-
-    string[] private specialColors = [
-        "Lime-Green",
-        "Mauve",
-        "Silver",
-        "Crimson",
-        "Opal",
-        "Sapphire",
-        "Emerald",
-        "Diamond",
-        "Dragonseye"
-    ];
     
-    function getCrystalName(string memory seed, uint256 alignment) public view returns (string memory) {
+    function getCrystalName(string memory seed, uint256 alignment) public pure returns (string memory) {
         return pluckNewCrystalName(seed, "NULL", alignment);
     }
 
-    function getSimpleCrystalName(string memory seed) public view returns (string memory) {
+    function getSimpleCrystalName(string memory seed) public pure returns (string memory) {
         return pluckNewSimpleCrystalName(seed, "NULL");
     }
 
@@ -1402,60 +1341,55 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         return newCapacity;
     }
 
-    function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal view returns (string memory) {
+    function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal pure returns (string memory) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
         uint256 colorSpecialness = rand % 21;
         string memory output = "";
         // get color
         if (colorSpecialness > 18) {
-            output = specialColors[rand % specialColors.length];
+            output = getItemFromCSV(specialColors, rand % specialColorsLength);
         } else {
-            output = colors[rand % colors.length];
+            output = getItemFromCSV(colors, rand % colorsLength);
         }
 
 
         // cursed
         if (alignment < 3) {
-            output = string(abi.encodePacked(cursedPrefixes[rand % cursedPrefixes.length], " ", output, " Mana Crystal ", cursedSuffixes[rand % cursedSuffixes.length]));
+            output = string(abi.encodePacked(getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength), " ", output, " Mana Crystal ", getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)));
             return output;
         }
 
         // standard 
         if (alignment < 15) {
-            output = string(abi.encodePacked(prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
+            output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal"));
             return output;
         }
 
         // good 
         if (alignment > 14 && alignment < 19) {
-            output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
+            output = string(abi.encodePacked("Perfectly ", getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal"));
             return output;
         }
         
         // great 
-        output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal ", suffixes[rand % suffixes.length]));
+        output = string(abi.encodePacked("Perfectly ", getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
 
         return output;
     }
 
-    function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal view returns (string memory) {
+    function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal pure returns (string memory) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
         uint256 colorSpecialness = rand % 21;
-        string memory output = "";
 
         // get color
         if (colorSpecialness > 18) {
-            output = specialColors[rand % specialColors.length];
+            return string(abi.encodePacked(getItemFromCSV(specialColors, rand % specialColorsLength), " Mana Crystal"));
         } else {
-            output = colors[rand % colors.length];
+            return string(abi.encodePacked(getItemFromCSV(colors, rand % colorsLength), " Mana Crystal"));
         }
-
-        output = string(abi.encodePacked(output, " Mana Crystal"));
-
-        return output;
     }
     
-    function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal view returns (string memory) {
+    function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal pure returns (string memory) {
         if (isFromLoot) {
             return getCrystalName(seed, alignment);
         } else {
@@ -1471,7 +1405,7 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     //     return nameCrystal(string(abi.encodePacked((wallet))));
     // }
 
-    function tokenFromString(string memory seed, uint256 lootId) internal view returns (string memory) {
+    function tokenFromString(string memory seed, uint256 lootId) internal pure returns (string memory) {
         string[7] memory parts;
         uint256 rand = random(string(abi.encodePacked(seed)));
         uint256 alignment = rand % 21;
@@ -1509,7 +1443,7 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     //     return tokenFromString(string(abi.encodePacked(wallet)), false);
     // }
 
-    function tokenURI(uint256 tokenId) override public view returns (string memory) {
+    function tokenURI(uint256 tokenId) override public pure returns (string memory) {
         return tokenFromString(string(abi.encodePacked(tokenId)), tokenId);
     }
 
@@ -1597,6 +1531,17 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         }
         return string(buffer);
     }
+
+    function getItemFromCSV(string memory str, uint256 index) internal pure returns (string memory) {
+        strings.slice memory strSlice = str.toSlice();
+        string memory separatorStr = ",";
+        strings.slice memory separator = separatorStr.toSlice();
+        strings.slice memory item;
+        for (uint256 i = 0; i <= index; i++) {
+            item = strSlice.split(separator);
+        }
+        return item.toString();
+    }
     
     constructor() ERC721("The Rift", "RIFT") Ownable() {}
 }
@@ -1659,5 +1604,138 @@ library Base64 {
         }
 
         return string(result);
+    }
+}
+
+pragma solidity ^0.8.0;
+
+library strings {
+    struct slice {
+        uint _len;
+        uint _ptr;
+    }
+    
+    function memcpy(uint dest, uint src, uint len) private pure {
+        // Copy word-length chunks while possible
+        for(; len >= 32; len -= 32) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+            dest += 32;
+            src += 32;
+        }
+
+        // Copy remaining bytes
+        uint mask = 256 ** (32 - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask))
+            let destpart := and(mload(dest), mask)
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
+
+    /*
+     * @dev Returns a slice containing the entire string.
+     * @param self The string to make a slice from.
+     * @return A newly allocated slice containing the entire string.
+     */
+    function toSlice(string memory self) internal pure returns (slice memory) {
+        uint ptr;
+        assembly {
+            ptr := add(self, 0x20)
+        }
+        return slice(bytes(self).length, ptr);
+    }
+
+    /*
+     * @dev Copies a slice to a new string.
+     * @param self The slice to copy.
+     * @return A newly allocated string containing the slice's text.
+     */
+    function toString(slice memory self) internal pure returns (string memory) {
+        string memory ret = new string(self._len);
+        uint retptr;
+        assembly { retptr := add(ret, 32) }
+
+        memcpy(retptr, self._ptr, self._len);
+        return ret;
+    }
+
+    // Returns the memory address of the first byte of the first occurrence of
+    // `needle` in `self`, or the first byte after `self` if not found.
+    function findPtr(uint selflen, uint selfptr, uint needlelen, uint needleptr) private pure returns (uint) {
+        uint ptr = selfptr;
+        uint idx;
+
+        if (needlelen <= selflen) {
+            if (needlelen <= 32) {
+                bytes32 mask = bytes32(~(2 ** (8 * (32 - needlelen)) - 1));
+
+                bytes32 needledata;
+                assembly { needledata := and(mload(needleptr), mask) }
+
+                uint end = selfptr + selflen - needlelen;
+                bytes32 ptrdata;
+                assembly { ptrdata := and(mload(ptr), mask) }
+
+                while (ptrdata != needledata) {
+                    if (ptr >= end)
+                        return selfptr + selflen;
+                    ptr++;
+                    assembly { ptrdata := and(mload(ptr), mask) }
+                }
+                return ptr;
+            } else {
+                // For long needles, use hashing
+                bytes32 hash;
+                assembly { hash := keccak256(needleptr, needlelen) }
+
+                for (idx = 0; idx <= selflen - needlelen; idx++) {
+                    bytes32 testHash;
+                    assembly { testHash := keccak256(ptr, needlelen) }
+                    if (hash == testHash)
+                        return ptr;
+                    ptr += 1;
+                }
+            }
+        }
+        return selfptr + selflen;
+    }
+
+    /*
+     * @dev Splits the slice, setting `self` to everything after the first
+     *      occurrence of `needle`, and `token` to everything before it. If
+     *      `needle` does not occur in `self`, `self` is set to the empty slice,
+     *      and `token` is set to the entirety of `self`.
+     * @param self The slice to split.
+     * @param needle The text to search for in `self`.
+     * @param token An output parameter to which the first token is written.
+     * @return `token`.
+     */
+    function split(slice memory self, slice memory needle, slice memory token) internal pure returns (slice memory) {
+        uint ptr = findPtr(self._len, self._ptr, needle._len, needle._ptr);
+        token._ptr = self._ptr;
+        token._len = ptr - self._ptr;
+        if (ptr == self._ptr + self._len) {
+            // Not found
+            self._len = 0;
+        } else {
+            self._len -= token._len + needle._len;
+            self._ptr = ptr + needle._len;
+        }
+        return token;
+    }
+
+    /*
+     * @dev Splits the slice, setting `self` to everything after the first
+     *      occurrence of `needle`, and returning everything before it. If
+     *      `needle` does not occur in `self`, `self` is set to the empty slice,
+     *      and the entirety of `self` is returned.
+     * @param self The slice to split.
+     * @param needle The text to search for in `self`.
+     * @return The part of `self` up to the first occurrence of `delim`.
+     */
+    function split(slice memory self, slice memory needle) internal pure returns (slice memory token) {
+        split(self, needle, token);
     }
 }
