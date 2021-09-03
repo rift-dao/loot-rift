@@ -1313,33 +1313,31 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     }
     
     function getCrystalName(string memory seed, uint256 alignment) public view returns (string memory) {
-        return pluckNewCrystalName(seed, "NAME", alignment);
+        return pluckNewCrystalName(seed, "NULL", alignment);
     }
 
     function getSimpleCrystalName(string memory seed) public view returns (string memory) {
-        return pluckNewSimpleCrystalName(seed, "NAME");
+        return pluckNewSimpleCrystalName(seed, "NULL");
     }
 
-    // function getCharge(uint256 tokenId, uint256 prevCharge) public pure returns (string memory) {
-    //     uint256 rand = random(string(abi.encodePacked("CHARGE", toString(tokenId))));
-    //     // roll d3 - 1
-    //     uint256 roll = rand % 3; 
-    //     uint256 newCharge = roll + prevCharge;
+    function getCharge(uint256 tokenId, uint256 prevCharge) public pure returns (uint256) {
+        uint256 rand = random(string(abi.encodePacked("CHARGE", toString(tokenId))));
+        // roll d3 - 1
+        uint256 roll = rand % 3; 
+        uint256 newCharge = roll + prevCharge;
 
-    //     string memory output = string(abi.encodePacked("Daily Mana: ", toString(newCharge)));
-    //     return output;
-    // }
+        return newCharge;
+    }
 
-    // function getCapacity(uint256 tokenId, uint256 prevCapacity) public pure returns (string memory) {
-    //     uint256 rand = random(string(abi.encodePacked("CAPACITY", toString(tokenId))));
-    //     // roll d8
-    //     uint256 roll = rand % 9;
-    //     // go up by at least 1
-    //     uint256 newCapacity = roll + prevCapacity + 1;
+    function getCapacity(uint256 tokenId, uint256 prevCapacity) public pure returns (uint256) {
+        uint256 rand = random(string(abi.encodePacked("CAPACITY", toString(tokenId))));
+        // roll d8
+        uint256 roll = rand % 9;
+        // go up by at least 1
+        uint256 newCapacity = roll + prevCapacity + 1;
 
-    //     string memory output = string(abi.encodePacked("Mana Capacity: ", toString(newCapacity)));
-    //     return output;
-    // }
+        return newCapacity;
+    }
 
     function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal view returns (string memory) {
         uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
@@ -1405,10 +1403,11 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
     //     return nameCrystal(string(abi.encodePacked((wallet))));
     // }
 
-    function tokenFromString(string memory seed, bool isFromLoot) internal view returns (string memory) {
+    function tokenFromString(string memory seed, uint256 lootId) internal view returns (string memory) {
         string[7] memory parts;
         uint256 rand = random(string(abi.encodePacked(seed)));
         uint256 alignment = rand % 21;
+        bool isFromLoot = lootId > 0 && lootId < 8001;
 
         parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
 
@@ -1416,35 +1415,35 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         parts[2] = '</text><text x="10" y="40" class="base">';
 
-        parts[3] = nameCrystal(seed, isFromLoot, alignment);
+        parts[3] = string(abi.encodePacked("Daily Mana: ", toString(getCharge(lootId, uint256(10)))));
 
-        parts[4] = '</text><text x="10" y="40" class="base">';
+        parts[4] = '</text><text x="10" y="60" class="base">';
 
-        parts[5] = nameCrystal(seed, isFromLoot, alignment);
+        parts[5] = string(abi.encodePacked("Mana Capacity: ", toString(getCapacity(lootId, uint256(10)))));
 
         // TODO: Add crystal stats ? Cap, level, "charged"
         parts[6] = '</text></svg>';
 
         string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
         
-        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', seed, '", "description": "Ability Scores are randomized table top RPG style stats generated and stored on chain. Feel free to use Ability Scores in any way you want.", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
+        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', toString(lootId), '", "data": { "dailyMana": ', toString(getCharge(lootId, uint256(10))), ' }, "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
         output = string(abi.encodePacked('data:application/json;base64,', json));
 
         return output;
     }
 
     // TEMP for tokenURI testing
-    function tokenURI() public view returns (string memory) {
-        return tokenFromString(string(abi.encodePacked(uint256(2))), true);
-    }
+    // function tokenURI() public view returns (string memory) {
+    //     return tokenFromString(string(abi.encodePacked(uint256(2))), true);
+    // }
 
     // function tokenURI(address wallet) public view returns (string memory) {
     //     return tokenFromString(string(abi.encodePacked(wallet)), false);
     // }
 
-    // function tokenURI(uint256 tokenId) override public view returns (string memory) {
-    //     return tokenFromString(string(abi.encodePacked(tokenId)), true);
-    // }
+    function tokenURI(uint256 tokenId) override public view returns (string memory) {
+        return tokenFromString(string(abi.encodePacked(tokenId)), tokenId);
+    }
 
     function claim(uint256 tokenId) public nonReentrant {
         require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");

@@ -1,5 +1,4 @@
 const { contract } = require('@openzeppelin/test-environment');
-const { BN } = require('@openzeppelin/test-helpers');
 
 const Rift = contract.fromArtifact('Rift');
 

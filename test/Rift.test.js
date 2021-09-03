@@ -3,14 +3,14 @@ const { expect } = require('chai');
 
 const Rift = contract.fromArtifact('Rift'); // Loads a compiled contract
 
-describe('Rift', () => {
-    it('should load', async () => {
-        const riftInstance = await Rift.new();
-        const estimatedGas = await riftInstance.tokenURI.estimateGas();
-    });
+let riftInstace = null;
 
+before(async () => {
+    riftInstance = await Rift.new();
+});
+
+describe('Rift', () => {
     it('should have valid tokenURI', async () => {
-        const riftInstance = await Rift.new();
         const output = await riftInstance.tokenURI();
 
         expect(output).to.contain('data:application/json;base64');

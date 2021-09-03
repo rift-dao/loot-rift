@@ -6,7 +6,7 @@
 
 ## Environment Setup
 
-* [node](https://nodejs.org/en/) & [npm](https://www.npmjs.com/) ([nvm](https://github.com/nvm-sh/nvm/blob/master/README.md#installing-and-updating) recommended)
+* [node](https://nodejs.org/en/) ^v14 ([nvm](https://github.com/nvm-sh/nvm/blob/master/README.md#installing-and-updating) recommended)
 * [yarn](https://classic.yarnpkg.com/en/docs/install/#windows-stable)
 * [ethlint](https://github.com/duaraghav8/Ethlint) (if running coverage script)
 
@@ -14,7 +14,9 @@
 
 | command | description |
 | --- | --- |
+| claim | test claim, generate tokenURI for given id `yarn claim 6434` |
 | coverage | check test coverage |
+| gas | check estimated gas cost for deployment and functions |
 | test | compile and run js tests |
 | test:quick | run js tests without compiling |
 | test:watch | compile and run js tests while watching for test.js changes |
