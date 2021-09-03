@@ -1,5 +1,4 @@
 const { contract } = require('@openzeppelin/test-environment');
-const { BN } = require('@openzeppelin/test-helpers');
 
 const Rift = contract.fromArtifact('Rift');
 
@@ -14,13 +13,16 @@ const Rift = contract.fromArtifact('Rift');
     const riftInstance = await Rift.new();
 
     // TODO: Figure out how to test claim, claimWithLoot, ownerClaim
-    const functionsToEstimate = ['tokenURI'];
+    const functionsToEstimate = ['tokenURI', 'getLevel', 'getBonusMana', 'getMaxCapacity'];
     const functionEstimateMap = { deploy: estimatedGas };
+
+    // const fnEstimatedGas = await riftInstance.tokenURI.estimateGas(1);
+    // output.push(`\t${fnEstimatedGas}\t-\ttokenURI`);
 
     for (let i = 0; i < functionsToEstimate.length; i++) {
         const fnName = functionsToEstimate[i];
         
-        const fnEstimatedGas = await riftInstance[fnName].estimateGas();
+        const fnEstimatedGas = await riftInstance[fnName].estimateGas(1);
 
         functionEstimateMap[fnName] = fnEstimatedGas;
         output.push(`\t${fnEstimatedGas}\t-\t${fnName}`);
