@@ -10,6 +10,13 @@ before(async () => {
     riftInstance = await Rift.new();
 });
 
+const MOCK_0001 = {
+    id: 1,
+    name: 'Perfectly Polished Pale Mana Crystal',
+    maxCapacity: '5',
+    bonusMana: '4',
+};
+
 describe('Rift', () => {
     it('should have valid tokenURI', async () => {
         const output = await riftInstance.tokenURI(1);
@@ -49,12 +56,17 @@ describe('Rift', () => {
     });
 
     it('should getMaxCapacity', async () => {
-        const maxCapacity = await riftInstance.getMaxCapacity(1);
-        expect(maxCapacity).to.be.bignumber.equal('4');
+        const maxCapacity = await riftInstance.getMaxCapacity(MOCK_0001.id);
+        expect(maxCapacity).to.be.bignumber.equal(MOCK_0001.maxCapacity);
     });
 
     it('should getBonusMana', async () => {
-        const bonusMana = await riftInstance.getBonusMana(1);
-        expect(bonusMana).to.be.bignumber.equal('2');
+        const bonusMana = await riftInstance.getBonusMana(MOCK_0001.id);
+        expect(bonusMana).to.be.bignumber.equal(MOCK_0001.bonusMana);
+    });
+
+    it('should getName', async () => {
+        const name = await riftInstance.getName(MOCK_0001.id);
+        expect(name).to.be.equal(MOCK_0001.name);
     });
 });

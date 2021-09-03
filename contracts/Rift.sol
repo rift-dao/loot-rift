@@ -1309,41 +1309,248 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     uint256 private constant _MAX = 1000000;
 
-    // mirror a dice roll
     function random(string memory input) internal pure returns (uint256) {
-        return (uint256(keccak256(abi.encodePacked(input))) % 20) + 1;
+        return uint256(keccak256(abi.encodePacked(input)));
+    }
+
+    // v==========v
+
+    // mirror a dice roll
+    // function d20(string memory input) internal pure returns (uint256) {
+    //     return (random(input) % 20) + 1;
+    // }
+    
+    // function getCrystalName(string memory seed, uint256 alignment) public pure returns (string memory) {
+    //     return pluckNewCrystalName(seed, "NULL", alignment);
+    // }
+
+    // function getSimpleCrystalName(string memory seed) public pure returns (string memory) {
+    //     return pluckNewSimpleCrystalName(seed, "NULL");
+    // }
+
+    // function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal pure returns (string memory) {
+    //     uint256 rand = d20(string(abi.encodePacked(keyPrefix, seed)));
+    //     uint256 colorSpecialness = rand % 21;
+    //     string memory output = "";
+    //     // get color
+    //     if (colorSpecialness > 18) {
+    //         output = getItemFromCSV(specialColors, rand % specialColorsLength);
+    //     } else {
+    //         output = getItemFromCSV(colors, rand % colorsLength);
+    //     }
+
+
+    //     // cursed
+    //     if (alignment < 3) {
+    //         output = string(abi.encodePacked(getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength), " ", output, " Mana Crystal ", getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)));
+    //         return output;
+    //     }
+
+    //     // standard 
+    //     if (alignment < 15) {
+    //         output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal"));
+    //         return output;
+    //     }
+
+    //     // good 
+    //     if (alignment > 14 && alignment < 19) {
+    //         output = string(abi.encodePacked("Perfectly ", getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal"));
+    //         return output;
+    //     }
+        
+    //     // great 
+    //     output = string(abi.encodePacked("Perfectly ", getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
+
+    //     return output;
+    // }
+
+    // function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal pure returns (string memory) {
+    //     uint256 rand = d20(string(abi.encodePacked(keyPrefix, seed)));
+    //     uint256 colorSpecialness = rand % 21;
+
+    //     // get color
+    //     if (colorSpecialness > 18) {
+    //         return string(abi.encodePacked(getItemFromCSV(specialColors, rand % specialColorsLength), " Mana Crystal"));
+    //     } else {
+    //         return string(abi.encodePacked(getItemFromCSV(colors, rand % colorsLength), " Mana Crystal"));
+    //     }
+    // }
+    
+    // function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal pure returns (string memory) {
+    //     if (isFromLoot) {
+    //         return getCrystalName(seed, alignment);
+    //     } else {
+    //         return getSimpleCrystalName(seed);
+    //     }
+    // }
+
+    // function nameFromToken(uint256 tokenId) internal pure returns (string memory) {
+    //     return nameCrystal(string(abi.encodePacked((tokenId))));
+    // }
+
+    // function nameFromAddress(address wallet) internal pure returns (string memory) {
+    //     return nameCrystal(string(abi.encodePacked((wallet))));
+    // }
+
+    // function tokenFromString(uint256 lootId) internal pure returns (string memory) {
+    //     string[7] memory parts;
+    //     uint256 isFromLoot = lootId > 0 && lootId < 8001 ? 1 : 0;
+
+    //     parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
+
+    //     parts[1] = isFromLoot == 1 ? getLootName(lootId) : getBasicName(lootId);
+
+    //     parts[2] = '</text><text x="10" y="40" class="base">';
+
+    //     parts[3] = string(abi.encodePacked("Daily Mana: ", toString(getBonusMana(lootId))));
+
+    //     parts[4] = '</text><text x="10" y="60" class="base">';
+
+    //     parts[5] = string(abi.encodePacked("Mana Capacity: ", toString(getMaxCapacity(lootId))));
+
+    //     // TODO: Add crystal stats ? Cap, level, "charged"
+    //     parts[6] = '</text></svg>';
+
+    //     string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
+        
+    //     string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', toString(lootId), '", "data": { "dailyMana": ', toString(getBonusMana(lootId)), ' }, "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
+    //     output = string(abi.encodePacked('data:application/json;base64,', json));
+
+    //     return output;
+    // }
+
+    // TEMP for tokenURI testing
+    // function tokenURI() public view returns (string memory) {
+    //     return tokenFromString(string(abi.encodePacked(uint256(2))), true);
+    // }
+
+    // function tokenURI(address wallet) public view returns (string memory) {
+    //     return tokenFromString(string(abi.encodePacked(wallet)), false);
+    // }
+
+    // ^==========^
+
+    
+    function tokenURI(uint256 tokenId) override public pure returns (string memory) {
+        string[9] memory parts;
+
+        parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
+
+        parts[1] = getName(tokenId);
+
+        parts[2] = '</text><text x="10" y="40" class="base">';
+
+        parts[3] = string(abi.encodePacked("Level: ", toString(getLevel(tokenId))));
+
+        parts[4] = '</text><text x="10" y="60" class="base">';
+
+        parts[5] = string(abi.encodePacked("Daily Mana: ", toString(getBonusMana(tokenId))));
+
+        parts[6] = '</text><text x="10" y="80" class="base">';
+
+        parts[7] = string(abi.encodePacked("Mana Capacity: ", toString(getMaxCapacity(tokenId))));
+
+        // TODO: Add crystal stats ? Cap, level, "charged"
+        parts[8] = '</text></svg>';
+
+        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
+        
+        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', toString(tokenId), '", "data": { "dailyMana": ', toString(getBonusMana(tokenId)), ' }, "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
+        output = string(abi.encodePacked('data:application/json;base64,', json));
+
+        return output;
+    }
+
+    function claim(uint256 tokenId) public nonReentrant {
+        require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
+        _safeMint(_msgSender(), tokenId);
     }
     
-    function getCrystalName(string memory seed, uint256 alignment) public pure returns (string memory) {
-        return pluckNewCrystalName(seed, "NULL", alignment);
+    function claimWithLoot(uint256 tokenId) public nonReentrant {
+        require(tokenId > 0 && tokenId < 8001, "Token ID invalid");
+        require(loot.ownerOf(tokenId) == msg.sender, "Not Loot owner");
+        _safeMint(_msgSender(), tokenId);
+    }
+    
+    // TODO: figure out dual owner claim
+    function ownerClaim(uint256 tokenId) public nonReentrant onlyOwner {
+        require(tokenId > 9000 && tokenId < 9051, "Token ID invalid");
+        _safeMint(owner(), tokenId);
     }
 
-    function getSimpleCrystalName(string memory seed) public pure returns (string memory) {
-        return pluckNewSimpleCrystalName(seed, "NULL");
+    function originalSeed(uint256 tokenId) internal pure returns (uint256) {
+        if (tokenId <= _MAX) {
+            return tokenId;
+        }
+
+        return tokenId - (_MAX * (tokenId / _MAX));
     }
 
-    function getCharge(uint256 tokenId, uint256 prevCharge) public pure returns (uint256) {
-        uint256 rand = random(string(abi.encodePacked("CHARGE", toString(tokenId))));
-        // roll d3 - 1
-        uint256 roll = rand % 3; 
-        uint256 newCharge = roll + prevCharge;
-
-        return newCharge;
+    function getRandom(uint256 tokenId, string memory key) internal pure returns (uint256) {
+        uint256 oSeed = originalSeed(tokenId);
+        
+        return random(string(abi.encodePacked(oSeed, key)));
     }
 
-    function getCapacity(uint256 tokenId, uint256 prevCapacity) public pure returns (uint256) {
-        uint256 rand = random(string(abi.encodePacked("CAPACITY", toString(tokenId))));
-        // roll d8
-        uint256 roll = rand % 9;
-        // go up by at least 1
-        uint256 newCapacity = roll + prevCapacity + 1;
+    function getRoll(uint256 tokenId, string memory key, uint256 size, uint256 times) internal pure returns (uint256) {
+        return (getRandom(tokenId, key) % size) * times;
+    }
+    
+    function getLevel(uint256 tokenId) public pure returns (uint256) {
+        uint256 oSeed = originalSeed(tokenId);
+        if (oSeed == tokenId) {
+            return 1;
+        }
 
-        return newCapacity;
+        return (tokenId / _MAX) + 1;
     }
 
-    function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal pure returns (string memory) {
-        uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
-        uint256 colorSpecialness = rand % 21;
+    function getBonusMana(uint256 tokenId) public pure returns (uint256) {
+        uint256 level = getLevel(tokenId);
+
+        return level + getRoll(tokenId, "BONUS_MANA", 5, 1);
+    }
+
+    function getMaxCapacity(uint256 tokenId) public pure returns (uint256) {
+        uint256 level = getLevel(tokenId);
+        uint256 capacity = getBonusMana(tokenId);
+
+        uint256 i = 0;
+        // roll d8 for each level
+        while (i < level) {
+            i++;
+            capacity += getRoll(tokenId, string(abi.encodePacked("MAX_CAPACITY", i)), 8, 1);
+        }
+
+        return capacity;
+    }
+
+    function getName(uint256 tokenId) public pure returns (string memory) {
+        uint256 level = getLevel(tokenId);
+        uint256 oSeed = originalSeed(tokenId);
+        uint256 isFromLoot = oSeed > 0 && oSeed < 8001 ? 1 : 0;
+
+        return isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
+        // return level > 1 ? string(abi.encodePacked(isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed), " +", level)) : isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
+    }
+
+    function getBasicName(uint256 tokenId) internal pure returns (string memory) {
+        uint256 rand = getRandom(tokenId, "BASIC_NAME");
+        uint256 colorSpecialness = getRoll(tokenId, "COLOR_RARITY", 20, 1);
+
+        // get color
+        if (colorSpecialness > 18) {
+            return string(abi.encodePacked(getItemFromCSV(specialColors, rand % specialColorsLength), " Mana Crystal"));
+        } else {
+            return string(abi.encodePacked(getItemFromCSV(colors, rand % colorsLength), " Mana Crystal"));
+        }
+    }
+
+    function getLootName(uint256 tokenId) internal pure returns (string memory) {
+        uint256 rand = getRandom(tokenId, "LOOT_NAME");
+        uint256 colorSpecialness = getRoll(tokenId, "COLOR_RARITY", 20, 1);
+        uint256 alignment = getRoll(tokenId, "ALIGNMENT", 20, 1);
+
         string memory output = "";
         // get color
         if (colorSpecialness > 18) {
@@ -1375,139 +1582,6 @@ contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
         output = string(abi.encodePacked("Perfectly ", getItemFromCSV(prefixes, rand % prefixesLength), " ", output, " Mana Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
 
         return output;
-    }
-
-    function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal pure returns (string memory) {
-        uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
-        uint256 colorSpecialness = rand % 21;
-
-        // get color
-        if (colorSpecialness > 18) {
-            return string(abi.encodePacked(getItemFromCSV(specialColors, rand % specialColorsLength), " Mana Crystal"));
-        } else {
-            return string(abi.encodePacked(getItemFromCSV(colors, rand % colorsLength), " Mana Crystal"));
-        }
-    }
-    
-    function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal pure returns (string memory) {
-        if (isFromLoot) {
-            return getCrystalName(seed, alignment);
-        } else {
-            return getSimpleCrystalName(seed);
-        }
-    }
-
-    // function nameFromToken(uint256 tokenId) internal pure returns (string memory) {
-    //     return nameCrystal(string(abi.encodePacked((tokenId))));
-    // }
-
-    // function nameFromAddress(address wallet) internal pure returns (string memory) {
-    //     return nameCrystal(string(abi.encodePacked((wallet))));
-    // }
-
-    function tokenFromString(string memory seed, uint256 lootId) internal pure returns (string memory) {
-        string[7] memory parts;
-        uint256 rand = random(string(abi.encodePacked(seed)));
-        uint256 alignment = rand % 21;
-        bool isFromLoot = lootId > 0 && lootId < 8001;
-
-        parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
-
-        parts[1] = nameCrystal(seed, isFromLoot, alignment);
-
-        parts[2] = '</text><text x="10" y="40" class="base">';
-
-        parts[3] = string(abi.encodePacked("Daily Mana: ", toString(getCharge(lootId, uint256(10)))));
-
-        parts[4] = '</text><text x="10" y="60" class="base">';
-
-        parts[5] = string(abi.encodePacked("Mana Capacity: ", toString(getCapacity(lootId, uint256(10)))));
-
-        // TODO: Add crystal stats ? Cap, level, "charged"
-        parts[6] = '</text></svg>';
-
-        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
-        
-        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', toString(lootId), '", "data": { "dailyMana": ', toString(getCharge(lootId, uint256(10))), ' }, "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
-        output = string(abi.encodePacked('data:application/json;base64,', json));
-
-        return output;
-    }
-
-    // TEMP for tokenURI testing
-    // function tokenURI() public view returns (string memory) {
-    //     return tokenFromString(string(abi.encodePacked(uint256(2))), true);
-    // }
-
-    // function tokenURI(address wallet) public view returns (string memory) {
-    //     return tokenFromString(string(abi.encodePacked(wallet)), false);
-    // }
-
-    function tokenURI(uint256 tokenId) override public pure returns (string memory) {
-        return tokenFromString(string(abi.encodePacked(tokenId)), tokenId);
-    }
-
-    function claim(uint256 tokenId) public nonReentrant {
-        require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
-        _safeMint(_msgSender(), tokenId);
-    }
-    
-    function claimWithLoot(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < 8001, "Token ID invalid");
-        require(loot.ownerOf(tokenId) == msg.sender, "Not Loot owner");
-        _safeMint(_msgSender(), tokenId);
-    }
-    
-    // TODO: figure out dual owner claim
-    function ownerClaim(uint256 tokenId) public nonReentrant onlyOwner {
-        require(tokenId > 9000 && tokenId < 9051, "Token ID invalid");
-        _safeMint(owner(), tokenId);
-    }
-
-    function originalSeed(uint256 tokenId) public pure returns (uint256) {
-        if (tokenId <= _MAX) {
-            return tokenId;
-        }
-
-        // 0111 -> 1111 - 1000 = 111
-        // 987 -> 2987 - 2000 = 987
-        // 546 -> 5546 - 5000 = 546
-        return tokenId - (_MAX * (tokenId / _MAX));
-    }
-
-    function getRandom(uint256 tokenId, string memory key) public pure returns (uint256) {
-        uint256 oSeed = originalSeed(tokenId);
-        
-        return random(string(abi.encodePacked(oSeed, key)));
-    }
-    
-    function getLevel(uint256 tokenId) public pure returns (uint256) {
-        uint256 oSeed = originalSeed(tokenId);
-        if (oSeed == tokenId) {
-            return 1;
-        }
-
-        return (tokenId / _MAX) + 1;
-    }
-
-    function getBonusMana(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-
-        return level + ((getRandom(tokenId, "BM") % 5) + 1);
-    }
-
-    function getMaxCapacity(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-        uint256 capacity = 1;
-
-        uint256 i = 0;
-        // roll d8 for each level
-        while (i < level) {
-            i++;
-            capacity += (getRandom(tokenId, string(abi.encodePacked("CAP", i))) % 9) + 1;
-        }
-
-        return capacity;
     }
     
     function toString(uint256 value) internal pure returns (string memory) {
@@ -1607,7 +1681,7 @@ library Base64 {
     }
 }
 
-pragma solidity ^0.8.0;
+// pragma solidity ^0.8.0;
 
 library strings {
     struct slice {
