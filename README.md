@@ -6,7 +6,7 @@
 
 ## Environment Setup
 
-* [node](https://nodejs.org/en/) & [npm](https://www.npmjs.com/) ([nvm](https://github.com/nvm-sh/nvm/blob/master/README.md#installing-and-updating) recommended)
+* [node](https://nodejs.org/en/) ^v14 & [npm](https://www.npmjs.com/) ([nvm](https://github.com/nvm-sh/nvm/blob/master/README.md#installing-and-updating) recommended)
 * [yarn](https://classic.yarnpkg.com/en/docs/install/#windows-stable)
 * [ethlint](https://github.com/duaraghav8/Ethlint) (if running coverage script)
 
