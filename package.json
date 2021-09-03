@@ -8,6 +8,7 @@
     "compile": "truffle compile",
     "coverage": "truffle run coverage",
     "gas": "yarn compile && node ./scripts/estimateGas.js",
+    "gas:quick": "node ./scripts/estimateGas.js",
     "lint": "solium -d contracts/",
     "test": "yarn compile && mocha --exit --recursive",
     "test:quick": "mocha --exit --recursive",

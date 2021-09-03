@@ -1,5 +1,5 @@
 /**
- *Submitted for verification at Etherscan.io on 2021-08-31
+ *Submitted for verification at Etherscan.io on 2021-08-27
 */
 
 // SPDX-License-Identifier: MIT
@@ -26,6 +26,11 @@ interface IERC165 {
      */
     function supportsInterface(bytes4 interfaceId) external view returns (bool);
 }
+
+
+
+
+
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -1282,323 +1287,167 @@ abstract contract ERC721Enumerable is ERC721, IERC721Enumerable {
     }
 }
 
+interface IERC20 {
+    function transfer(address recipient, uint256 amount) external returns (bool);
 
-contract Rift is ERC721Enumerable, ReentrancyGuard, Ownable {
+    function transferFrom(
+        address sender,
+        address recipient,
+        uint256 amount
+    ) external returns (bool);
+}
 
-    ERC721 loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
 
-    // mirror a dice roll
+contract Name is ERC721Enumerable, ReentrancyGuard, Ownable {
+    using strings for string;
+    using strings for strings.slice;
+
+    ERC721 public constant loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
+    IERC20 public constant agld = IERC20(0x32353A6C91143bfd6C7d363B546e62a9A2489A20);
+    uint256 private constant NAME_CHANGE_BASE_PRICE = 420 * 10**18;
+    
+    string private constant prefixes = "Master,Right Honourable,Senator,President,Generalissimo,His Majesty,Her Majesty,His Grace,Her Grace,Lord,Archbishop,Bishop,Council,Emperor,Empress,Caesar,Chieftain,Chief Ape,Couch,Pope,King,Queen,Dr.,Ser,Prophet,Professor,Marshal,Private,Comrade,Fren,Druid,Imperator,Doge,Archon,Lord Protector,Archduke,Duke,Earl,Count,Baron,Basileus,Khan,Earth-Shaker,Mayor,Viceroy,Tribune,Chad,Cringe,Based,0x,Mohandas,Arch-ape,General Financier,DAO Dictator,Benevolent Dictator,Secretary of the Treasury,Khal,Khaleesi,Sultan";
+    uint256 private constant prefixesLength = 59;
+
+    string private constant firstNames = "Satoshi,Vitalik,Vlad,Adam,Ailmar,Darfin,Jhaan,Zabbas,Neldor,Gandor,Bellas,Daealla,Nym,Vesryn,Angor,Gogu,Malok,Rotnam,Chalia,Astra,Fabien,Orion,Quintus,Remus,Rorik,Sirius,Sybella,Azura,Dorath,Freya,Ophelia,Yvanna,Zeniya,James,Robert,John,Michael,William,David,Richard,Joseph,Thomas,Charles,Mary,Patricia,Jennifer,Linda,Elizabeth,Barbara,Susan,Jessica,Sarah,Karen,Dilibe,Eva,Matthew,Bolethe,Polycarp,Ambrogino,Jiri,Chukwuebuka,Chinonyelum,Mikael,Mira,Aniela,Samuel,Isak,Archibaldo,Chinyelu,Kerstin,Abigail,Olympia,Grace,Nahum,Elisabeth,Serge,Sugako,Patrick,Florus,Svatava,Ilona,Lachlan,Caspian,Filippa,Paulo,Darda,Linda,Gradasso,Carly,Jens,Betty,Ebony,Dennis,Martin Davorin,Laura,Jesper,Remy,Onyekachukwu,Jan,Dioscoro,Hilarij,Rosvita,Noah,Patrick,Mohammed,Chinwemma,Raff,Aron,Miguel,Dzemail,Gawel,Gustave,Efraim,Adelbert,Jody,Mackenzie,Victoria,Selam,Jenci,Ulrich,Chishou,Domonkos,Stanislaus,Fortinbras,George,Daniel,Annabelle,Shunichi,Bogdan,Anastazja,Marcus,Monica,Martin,Yuukou,Harriet,Geoffrey,Jonas,Dennis,Hana,Abdelhak,Ravil,Patrick,Karl,Eve,Csilla,Isabella,Radim,Thomas,Faina,Rasmus,Alma,Charles,Chad,Zefram,Hayden,Joseph,Andre,Irene,Molly,Cindy,Su,Stani,Ed,Janet,Cathy,Kyle,Zaki,Belle,Bella,Jessica,Amou,Steven,Olgu,Eva,Ivan,Vllad,Helga,Anya,John,Rita,Evan,Jason,Donald,Tyler,Changpeng,Sam";
+    uint256 private constant firstNamesLength = 186;
+
+    string private constant middleNames = "von,de la,chadde,mise,of,da,from,in,first of,sixth of,t11s,hi tuba,vibes,mons,zef,state,sump,sunarto,jai,mewny,amogsus,light,groovy,formerly";
+    uint256 private constant middleNamesLength = 24;
+
+    string private constant lastNames = "Nakamoto,Buterin,Zamfir,Mintz,Ashbluff,Marblemaw,Bozzelli,Fellowes,Windward,Yarrow,Yearwood,Wixx,Humblecut,Dustfinger,Biddercombe,Kicklighter,Vespertine,October,Gannon,Collymore,Stoll,Adler,Huxley,Ledger,Hayes,Ford,Finnegan,Beckett,Zimmerman,Crassus,Hendrix,Lennon,Thatcher,St. James,Cromwell,Monroe,West,Langley,Cassidy,Lopez,Jenkins,Udobata,Valova,Gresham,Frederiksen,Vasiliev,Mancini,Danicek,Okwuoma,Chibugo,Broberg,Strozak,Borkowska,Araujo,Geisler,Hidalgo,Ibekwe,Schmidt,Leehy,Rodrigue,Hines,Izmaylov,Egede,Pinette,Hakugi,McLellan,Mailhot,Lelkova,Simon,Tjangamarra,Sandgreen,Nystrom,Kjeldsen,Goncalves,Sos,Hornblower,Pelletier,Donaldson,Jackson,Rojo,Ermakov,Stornik,Lothran,Gousse,Henrichon,Onwuka,Horak,Elizondo,Mikulanc,Skotnik,Berg,Nilsson,Berg,Enyinnaya,Hermanns,Holmberg,Oliveira,Kufersin,Kwiatkowski,Courtois,Piest,Sandheaver,Woods,Ives,Dias,Grizelj,Viragh,Blau,Kodou,Torma,Sorokina,Took-Took,Allen,Melo,Bunker,Kiyomizu,Donkervoort,Maciejewska,Steffensen,Solomina,Zidek,Gotou,Bryant,Quenneville,Karlsen,Thomsen,Havlikova,Feron,Bazhenov,Amsel,Enoksen,Schneider,Kiss,Woodd,Benes,Probst,Aliyeva,Fleischer,Plain,Hoskinson,Chad,Maki,Gandhi,Zhao,Wintermute,Cronje,Felten,Yellen,Wood,Zhu,Davis,K,Delphine,Thorne,Kulechov,Nigiri,Goldfeder,Ranth,Galt,Lincoln,Trump";
+    uint256 private constant lastNamesLength = 161;
+
+    string private constant suffixes = "the Great,Jr.,Sr.,the Ape,the Magnificent,the Impaler,the Able,the Ambitious,the Astrologer,the Bad,the Bastard,the Black,the Blessed,the Bloody,the Conqueror,the Cruel,the Damned,Dracula,the Drunkard,the Elder,the Eloquent,the Enlightened,the Fair,the Farmer,the Fat,the Fearless,the Fighter,the Comfy,the Couch,the Fortunate,the Generous,the Gentle,the Glorious,the Good,the God-Given,the Grim,the Handsome,the Hammer,Hadrada,the Hidden,the Holy,the Hunter,the Illustrious,the Invincible,the Iron,the Just,the Kind,the Lame,the Last,the Lawgiver,the Learned,the Liberator,the Lion,the Mad,the Magnanimous,the Mighty,the Monk,the Mild,the Musician,the Navigator,the Nobel,the Old,the One-Eyed,the Outlaw,the Pale,the Peaceful,the Philosopher,the Pilgrim,the Pious,the Poet,the Proud,the Quiet,the Rash,the Red,the Reformer,the Saint,the Savior,the Seer,the Short,the Silent,the Simple,the Sorcerer,the Strong,the Tall,the Terrible,the Thunderbolt,the Trembling,the Tyrant,the Unlucky,the Unready,the Vain,the Virgin,the Warrior,the Weak,the White,the Wicked,the Wise,the Young,the Cuck,the Chad,the NoCoiner,.eth,da gay,the Prophet,the Paper-Handed";
+    uint256 private constant suffixesLength = 105;
+
+    mapping(uint256 => string) internal firstNameOverride;
+    mapping(uint256 => string) internal lastNameOverride;
+    mapping(uint256 => uint256) public numNameChanges;
+
     function random(string memory input) internal pure returns (uint256) {
-        return (uint256(keccak256(abi.encodePacked(input))) % 20) + 1;
+        return uint256(keccak256(abi.encodePacked(input)));
     }
 
-    uint256 private constant _MAX = 1000000;
-
-    string[] private cursedPrefixes = [
-        "Dull",
-        "Broken",
-        "Twisted",
-        "Cracked",
-        "Fragmented",
-        "Splintered",
-        "Beaten",
-        "Ruined"
-    ];
-
-    string[] private cursedSuffixes = [
-        "of Rats",
-        "of Crypts",
-        "of Nightmares",
-        "of Sadness",
-        "of Darkness",
-        "of Death",
-        "of Doom",
-        "of Gloom",
-        "of Madness"
-    ];
-
-    string[] private prefixes = [
-        "Gleaming",
-        "Glowing",
-        "Shiny",
-        "Smooth",
-        "Faceted",
-        "Glassy",
-        "Polished",
-        "Sheeny",
-        "Luminous"
-    ];
-
-    string[] private suffixes = [
-        "of Power",
-        "of Giants",
-        "of Titans",
-        "of Skill",
-        "of Perfection",
-        "of Brilliance",
-        "of Enlightenment",
-        "of Protection",
-        "of Anger",
-        "of Rage",
-        "of Fury",
-        "of Vitriol",
-        "of the Fox",
-        "of Detection",
-        "of Reflection",
-        "of the Twins"
-    ];
-
-    string[] private colors = [
-        "Blue",
-        "Green",
-        "Red",
-        "Yellow",
-        "Orange",
-        "Pink",
-        "Gray",
-        "Black",
-        "White",
-        "Pale",
-        "Brown",
-        "Purple"
-    ];
-
-    string[] private specialColors = [
-        "Lime-Green",
-        "Mauve",
-        "Silver",
-        "Crimson",
-        "Opal",
-        "Sapphire",
-        "Emerald",
-        "Diamond",
-        "Dragonseye"
-    ];
-    
-    function getCrystalName(string memory seed, uint256 alignment) public view returns (string memory) {
-        return pluckNewCrystalName(seed, "NULL", alignment);
-    }
-
-    function getSimpleCrystalName(string memory seed) public view returns (string memory) {
-        return pluckNewSimpleCrystalName(seed, "NULL");
-    }
-
-    function getCharge(uint256 tokenId, uint256 prevCharge) public pure returns (uint256) {
-        uint256 rand = random(string(abi.encodePacked("CHARGE", toString(tokenId))));
-        // roll d3 - 1
-        uint256 roll = rand % 3; 
-        uint256 newCharge = roll + prevCharge;
-
-        return newCharge;
-    }
-
-    function getCapacity(uint256 tokenId, uint256 prevCapacity) public pure returns (uint256) {
-        uint256 rand = random(string(abi.encodePacked("CAPACITY", toString(tokenId))));
-        // roll d8
-        uint256 roll = rand % 9;
-        // go up by at least 1
-        uint256 newCapacity = roll + prevCapacity + 1;
-
-        return newCapacity;
-    }
-
-    function pluckNewCrystalName(string memory seed, string memory keyPrefix, uint256 alignment) internal view returns (string memory) {
-        uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
-        uint256 colorSpecialness = rand % 21;
-        string memory output = "";
-        // get color
-        if (colorSpecialness > 18) {
-            output = specialColors[rand % specialColors.length];
-        } else {
-            output = colors[rand % colors.length];
-        }
-
-
-        // cursed
-        if (alignment < 3) {
-            output = string(abi.encodePacked(cursedPrefixes[rand % cursedPrefixes.length], " ", output, " Mana Crystal ", cursedSuffixes[rand % cursedSuffixes.length]));
-            return output;
-        }
-
-        // standard 
-        if (alignment < 15) {
-            output = string(abi.encodePacked(prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
-            return output;
-        }
-
-        // good 
-        if (alignment > 14 && alignment < 19) {
-            output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal"));
-            return output;
-        }
-        
-        // great 
-        output = string(abi.encodePacked("Perfectly ", prefixes[rand % prefixes.length], " ", output, " Mana Crystal ", suffixes[rand % suffixes.length]));
-
-        return output;
-    }
-
-    function pluckNewSimpleCrystalName(string memory seed, string memory keyPrefix) internal view returns (string memory) {
-        uint256 rand = random(string(abi.encodePacked(keyPrefix, seed)));
-        uint256 colorSpecialness = rand % 21;
-        string memory output = "";
-
-        // get color
-        if (colorSpecialness > 18) {
-            output = specialColors[rand % specialColors.length];
-        } else {
-            output = colors[rand % colors.length];
-        }
-
-        output = string(abi.encodePacked(output, " Mana Crystal"));
-
-        return output;
+    function getPrefix(uint256 tokenId) public pure returns (string memory) {
+        return pluck(tokenId, "PREFIX", prefixes, prefixesLength, true);
     }
     
-    function nameCrystal(string memory seed, bool isFromLoot, uint256 alignment) internal view returns (string memory) {
-        if (isFromLoot) {
-            return getCrystalName(seed, alignment);
-        } else {
-            return getSimpleCrystalName(seed);
+    function getFirstName(uint256 tokenId) public view returns (string memory) {
+        if (numNameChanges[tokenId] > 0) {
+            return firstNameOverride[tokenId];
         }
+        return pluck(tokenId, "FIRST_NAME", firstNames, firstNamesLength, false);
+    }
+    
+    function getMiddleName(uint256 tokenId) public pure returns (string memory) {
+        return pluck(tokenId, "MIDDLE_NAME", middleNames, middleNamesLength, true);
+    }
+    
+    function getLastName(uint256 tokenId) public view returns (string memory) {
+        if (numNameChanges[tokenId] > 0) {
+            return lastNameOverride[tokenId];
+        }
+        return pluck(tokenId, "LAST_NAME", lastNames, lastNamesLength, false);
     }
 
-    // function nameFromToken(uint256 tokenId) internal pure returns (string memory) {
-    //     return nameCrystal(string(abi.encodePacked((tokenId))));
-    // }
+    function getSuffix(uint256 tokenId) public pure returns (string memory) {
+        return pluck(tokenId, "SUFFIX", suffixes, suffixesLength, true);
+    }
 
-    // function nameFromAddress(address wallet) internal pure returns (string memory) {
-    //     return nameCrystal(string(abi.encodePacked((wallet))));
-    // }
+    function pluck(uint256 tokenId, string memory keyPrefix, string memory sourceCSV, uint256 sourceCSVLength, bool rareTrait) internal pure returns (string memory) {
+        uint256 rand = random(string(abi.encodePacked(keyPrefix, Strings.toString(tokenId))));
+        if (!rareTrait || shouldGib(tokenId, keyPrefix)) {
+            return getItemFromCSV(sourceCSV, rand % sourceCSVLength);
+        } else {
+            return "";
+        }
+    }
+    
+    function shouldGib(uint256 tokenId, string memory keyPrefix) internal pure returns (bool) {
+        uint256 rand = random(string(abi.encodePacked("SHOULD_GIB", keyPrefix, Strings.toString(tokenId))));
+        uint256 greatness = rand % 21;
+        return (greatness >= 19);
+    }
 
-    function tokenFromString(string memory seed, uint256 lootId) internal view returns (string memory) {
-        string[7] memory parts;
-        uint256 rand = random(string(abi.encodePacked(seed)));
-        uint256 alignment = rand % 21;
-        bool isFromLoot = lootId > 0 && lootId < 8001;
+    function tokenURI(uint256 tokenId) override public view returns (string memory) {
+        string[11] memory parts;
 
         parts[0] = '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">';
 
-        parts[1] = nameCrystal(seed, isFromLoot, alignment);
+        parts[1] = getPrefix(tokenId);
 
-        parts[2] = '</text><text x="10" y="40" class="base">';
+        parts[2] = bytes(parts[1]).length > 0 ? ' ' : '';
 
-        parts[3] = string(abi.encodePacked("Daily Mana: ", toString(getCharge(lootId, uint256(10)))));
+        parts[3] = getFirstName(tokenId);
 
-        parts[4] = '</text><text x="10" y="60" class="base">';
+        parts[4] = ' ';
 
-        parts[5] = string(abi.encodePacked("Mana Capacity: ", toString(getCapacity(lootId, uint256(10)))));
+        parts[5] = getMiddleName(tokenId);
 
-        // TODO: Add crystal stats ? Cap, level, "charged"
-        parts[6] = '</text></svg>';
+        parts[6] = bytes(parts[5]).length > 0 ? ' ' : '';
 
-        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
+        parts[7] = getLastName(tokenId);
         
-        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "Sheet #', toString(lootId), '", "data": { "dailyMana": ', toString(getCharge(lootId, uint256(10))), ' }, "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
+        parts[9] = getSuffix(tokenId);
+
+        parts[8] = bytes(parts[9]).length > 0 ? ' ' : '';
+
+        parts[10] = '</text></svg>';
+
+        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
+        output = string(abi.encodePacked(output, parts[9], parts[10]));
+        
+        string memory fullName = string(abi.encodePacked(parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8], parts[9]));
+        string memory json = Base64.encode(bytes(string(abi.encodePacked('{"name": "', fullName, '", "description": "Name is randomized adventurer name generated and stored on chain. Stats, images, and other functionality are intentionally omitted for others to interpret. Feel free to use Name in any way you want.", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
         output = string(abi.encodePacked('data:application/json;base64,', json));
 
         return output;
     }
-
-    // TEMP for tokenURI testing
-    // function tokenURI() public view returns (string memory) {
-    //     return tokenFromString(string(abi.encodePacked(uint256(2))), true);
-    // }
-
-    // function tokenURI(address wallet) public view returns (string memory) {
-    //     return tokenFromString(string(abi.encodePacked(wallet)), false);
-    // }
-
-    function tokenURI(uint256 tokenId) override public view returns (string memory) {
-        return tokenFromString(string(abi.encodePacked(tokenId)), tokenId);
-    }
-
-    function claim(uint256 tokenId) public nonReentrant {
-        require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
+    
+    function claim(uint256 tokenId) external nonReentrant {
+        require(tokenId > 8000 && tokenId < 8021, "Token ID invalid");
         _safeMint(_msgSender(), tokenId);
     }
-    
-    function claimWithLoot(uint256 tokenId) public nonReentrant {
+
+    function claimForLoot(uint256 tokenId) external nonReentrant {
         require(tokenId > 0 && tokenId < 8001, "Token ID invalid");
         require(loot.ownerOf(tokenId) == msg.sender, "Not Loot owner");
         _safeMint(_msgSender(), tokenId);
     }
     
-    // TODO: figure out dual owner claim
-    function ownerClaim(uint256 tokenId) public nonReentrant onlyOwner {
-        require(tokenId > 9000 && tokenId < 9051, "Token ID invalid");
-        _safeMint(owner(), tokenId);
+    /**
+     * @notice The price for changing names starts at 420 ALGD and doubles after every change
+     */
+    function nameChangePrice(uint256 tokenId) public view returns (uint256) {
+        return NAME_CHANGE_BASE_PRICE * (2 ** numNameChanges[tokenId]);
     }
-
-    function originalSeed(uint256 tokenId) public pure returns (uint256) {
-        if (tokenId <= _MAX) {
-            return tokenId;
-        }
-
-        // 0111 -> 1111 - 1000 = 111
-        // 987 -> 2987 - 2000 = 987
-        // 546 -> 5546 - 5000 = 546
-        return tokenId - (_MAX * (tokenId / _MAX));
-    }
-
-    function getRandom(uint256 tokenId, string memory key) public pure returns (uint256) {
-        uint256 oSeed = originalSeed(tokenId);
+    
+    function changeName(uint256 tokenId, string calldata firstName, string calldata lastName) external nonReentrant {
+        require(tokenId > 0 && tokenId < 8021, "Token ID invalid");
+        require(ownerOf(tokenId) == msg.sender, "Not Name owner");
         
-        return random(string(abi.encodePacked(oSeed, key)));
+        // transfer AGLD to owner
+        agld.transferFrom(msg.sender, owner(), nameChangePrice(tokenId));
+        
+        // override name
+        firstNameOverride[tokenId] = firstName;
+        lastNameOverride[tokenId] = lastName;
+        numNameChanges[tokenId] += 1;
     }
     
-    function getLevel(uint256 tokenId) public pure returns (uint256) {
-        uint256 oSeed = originalSeed(tokenId);
-        if (oSeed == tokenId) {
-            return 1;
+    function getItemFromCSV(string memory str, uint256 index) internal pure returns (string memory) {
+        strings.slice memory strSlice = str.toSlice();
+        string memory separatorStr = ",";
+        strings.slice memory separator = separatorStr.toSlice();
+        strings.slice memory item;
+        for (uint256 i = 0; i <= index; i++) {
+            item = strSlice.split(separator);
         }
-
-        return (tokenId / _MAX) + 1;
-    }
-
-    function getBonusMana(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-
-        return level + ((getRandom(tokenId, "BM") % 5) + 1);
-    }
-
-    function getMaxCapacity(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-        uint256 capacity = 1;
-
-        uint256 i = 0;
-        // roll d8 for each level
-        while (i < level) {
-            i++;
-            capacity += (getRandom(tokenId, string(abi.encodePacked("CAP", i))) % 9) + 1;
-        }
-
-        return capacity;
+        return item.toString();
     }
     
-    function toString(uint256 value) internal pure returns (string memory) {
-    // Inspired by OraclizeAPI's implementation - MIT license
-    // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
-
-        if (value == 0) {
-            return "0";
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
-    }
-    
-    constructor() ERC721("The Rift", "RIFT") Ownable() {}
+    constructor() ERC721("Name", "NAME") Ownable() {}
 }
 
 /// [MIT License]
@@ -1659,5 +1508,174 @@ library Base64 {
         }
 
         return string(result);
+    }
+}
+
+/*
+ * @title String & slice utility library for Solidity contracts.
+ * @author Nick Johnson <arachnid@notdot.net>
+ *
+ * @dev Functionality in this library is largely implemented using an
+ *      abstraction called a 'slice'. A slice represents a part of a string -
+ *      anything from the entire string to a single character, or even no
+ *      characters at all (a 0-length slice). Since a slice only has to specify
+ *      an offset and a length, copying and manipulating slices is a lot less
+ *      expensive than copying and manipulating the strings they reference.
+ *
+ *      To further reduce gas costs, most functions on slice that need to return
+ *      a slice modify the original one instead of allocating a new one; for
+ *      instance, `s.split(".")` will return the text up to the first '.',
+ *      modifying s to only contain the remainder of the string after the '.'.
+ *      In situations where you do not want to modify the original slice, you
+ *      can make a copy first with `.copy()`, for example:
+ *      `s.copy().split(".")`. Try and avoid using this idiom in loops; since
+ *      Solidity has no memory management, it will result in allocating many
+ *      short-lived slices that are later discarded.
+ *
+ *      Functions that return two slices come in two versions: a non-allocating
+ *      version that takes the second slice as an argument, modifying it in
+ *      place, and an allocating version that allocates and returns the second
+ *      slice; see `nextRune` for example.
+ *
+ *      Functions that have to copy string data will return strings rather than
+ *      slices; these can be cast back to slices for further processing if
+ *      required.
+ *
+ *      For convenience, some functions are provided with non-modifying
+ *      variants that create a new slice and return both; for instance,
+ *      `s.splitNew('.')` leaves s unmodified, and returns two values
+ *      corresponding to the left and right parts of the string.
+ */
+
+pragma solidity ^0.8.0;
+
+library strings {
+    struct slice {
+        uint _len;
+        uint _ptr;
+    }
+    
+    function memcpy(uint dest, uint src, uint len) private pure {
+        // Copy word-length chunks while possible
+        for(; len >= 32; len -= 32) {
+            assembly {
+                mstore(dest, mload(src))
+            }
+            dest += 32;
+            src += 32;
+        }
+
+        // Copy remaining bytes
+        uint mask = 256 ** (32 - len) - 1;
+        assembly {
+            let srcpart := and(mload(src), not(mask))
+            let destpart := and(mload(dest), mask)
+            mstore(dest, or(destpart, srcpart))
+        }
+    }
+
+    /*
+     * @dev Returns a slice containing the entire string.
+     * @param self The string to make a slice from.
+     * @return A newly allocated slice containing the entire string.
+     */
+    function toSlice(string memory self) internal pure returns (slice memory) {
+        uint ptr;
+        assembly {
+            ptr := add(self, 0x20)
+        }
+        return slice(bytes(self).length, ptr);
+    }
+
+    /*
+     * @dev Copies a slice to a new string.
+     * @param self The slice to copy.
+     * @return A newly allocated string containing the slice's text.
+     */
+    function toString(slice memory self) internal pure returns (string memory) {
+        string memory ret = new string(self._len);
+        uint retptr;
+        assembly { retptr := add(ret, 32) }
+
+        memcpy(retptr, self._ptr, self._len);
+        return ret;
+    }
+
+    // Returns the memory address of the first byte of the first occurrence of
+    // `needle` in `self`, or the first byte after `self` if not found.
+    function findPtr(uint selflen, uint selfptr, uint needlelen, uint needleptr) private pure returns (uint) {
+        uint ptr = selfptr;
+        uint idx;
+
+        if (needlelen <= selflen) {
+            if (needlelen <= 32) {
+                bytes32 mask = bytes32(~(2 ** (8 * (32 - needlelen)) - 1));
+
+                bytes32 needledata;
+                assembly { needledata := and(mload(needleptr), mask) }
+
+                uint end = selfptr + selflen - needlelen;
+                bytes32 ptrdata;
+                assembly { ptrdata := and(mload(ptr), mask) }
+
+                while (ptrdata != needledata) {
+                    if (ptr >= end)
+                        return selfptr + selflen;
+                    ptr++;
+                    assembly { ptrdata := and(mload(ptr), mask) }
+                }
+                return ptr;
+            } else {
+                // For long needles, use hashing
+                bytes32 hash;
+                assembly { hash := keccak256(needleptr, needlelen) }
+
+                for (idx = 0; idx <= selflen - needlelen; idx++) {
+                    bytes32 testHash;
+                    assembly { testHash := keccak256(ptr, needlelen) }
+                    if (hash == testHash)
+                        return ptr;
+                    ptr += 1;
+                }
+            }
+        }
+        return selfptr + selflen;
+    }
+
+    /*
+     * @dev Splits the slice, setting `self` to everything after the first
+     *      occurrence of `needle`, and `token` to everything before it. If
+     *      `needle` does not occur in `self`, `self` is set to the empty slice,
+     *      and `token` is set to the entirety of `self`.
+     * @param self The slice to split.
+     * @param needle The text to search for in `self`.
+     * @param token An output parameter to which the first token is written.
+     * @return `token`.
+     */
+    function split(slice memory self, slice memory needle, slice memory token) internal pure returns (slice memory) {
+        uint ptr = findPtr(self._len, self._ptr, needle._len, needle._ptr);
+        token._ptr = self._ptr;
+        token._len = ptr - self._ptr;
+        if (ptr == self._ptr + self._len) {
+            // Not found
+            self._len = 0;
+        } else {
+            self._len -= token._len + needle._len;
+            self._ptr = ptr + needle._len;
+        }
+        return token;
+    }
+
+    /*
+     * @dev Splits the slice, setting `self` to everything after the first
+     *      occurrence of `needle`, and returning everything before it. If
+     *      `needle` does not occur in `self`, `self` is set to the empty slice,
+     *      and the entirety of `self` is returned.
+     * @param self The slice to split.
+     * @param needle The text to search for in `self`.
+     * @return The part of `self` up to the first occurrence of `delim`.
+     */
+    function split(slice memory self, slice memory needle) internal pure returns (slice memory token) {
+        split(self, needle, token);
     }
 }
