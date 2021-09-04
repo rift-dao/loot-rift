@@ -1310,13 +1310,16 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     uint256 private constant prefixesLength = 9;
 
     string private constant suffixes = "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins,of Relevance,of the Rift";
-    uint256 private constant suffixesLength = 16;
+    uint256 private constant suffixesLength = 18;
 
     string private constant colors = "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,White,Brown,Purple";
-    uint256 private constant colorsLength = 13;
+    uint256 private constant colorsLength = 12;
 
     string private constant specialColors = "Aqua,Black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
-    uint256 private constant specialColorsLength = 10;
+    uint256 private constant specialColorsLength = 11;
+
+    string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
+    uint256 private constant slabsLength = 4;
 
     uint256 private constant _MAX = 1000000;
 
@@ -1329,30 +1332,24 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     }
     
     function tokenURI(uint256 tokenId) override public pure returns (string memory) {
-        string[8] memory parts;
+        string memory output;
 
-        parts[0] = string(abi.encodePacked('<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.mana { fill: blue !important; } .base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base" style="fill: ', getColor(tokenId), ' !important;">'));
+        string memory color = getColor(tokenId);
+        output = string(abi.encodePacked(
+          '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 14px; } .slab { fill: ',
+          color, '; font-size: 22px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base" style="fill: ',color, ' !important;">'));
 
-        parts[7] = "";
-        if (getLevel(tokenId) > 1) {
-          parts[7] = string(abi.encodePacked(" +", toString(getLevel(tokenId) - 1)));
-        }
+        output = string(abi.encodePacked(output, getName(tokenId), (getLevel(tokenId) > 1 ? string(abi.encodePacked(" +", toString(getLevel(tokenId) - 1))) : "")));
 
-        parts[1] = string(abi.encodePacked(getName(tokenId), parts[7]));
+        output = string(abi.encodePacked(output, '</text><text x="10" y="40" style="fill: ', color, ';" class="base">', "Resonance: ", toString(getResonance(tokenId))));
 
-        parts[2] = '</text><text x="10" y="40" class="base">';
+        output = string(abi.encodePacked(output, '</text><text x="10" y="60" style="fill: ', color, ';" class="base">', "Spin: ", toString(getSpin(tokenId))));
 
-        parts[3] = string(abi.encodePacked("Resonance: ", toString(getBonusMana(tokenId))));
+        output = string(abi.encodePacked(output, '</text><text x="285" y="295" class="slab">', getSlab(tokenId, 1), getSlab(tokenId, 2), getSlab(tokenId, 3)));
+        output = string(abi.encodePacked(output, '</text><text x="285" y="314" class="slab">', getSlab(tokenId, 4), getSlab(tokenId, 5), getSlab(tokenId, 6)));
+        output = string(abi.encodePacked(output, '</text><text x="285" y="333" class="slab">', getSlab(tokenId, 7), getSlab(tokenId, 8), getSlab(tokenId, 9), '</text></svg>'));
 
-        parts[4] = '</text><text x="10" y="60" class="base">';
-
-        parts[5] = string(abi.encodePacked("Spin: ", toString(getMaxCapacity(tokenId))));
-
-        parts[6] = '</text></svg>';
-
-        string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6]));
-
-        string memory stats = string(abi.encodePacked('"stats": { "level": ', toString(getLevel(tokenId)), ', "bonusMana": ', toString(getBonusMana(tokenId)), ', "maxCapacity": ', toString(getMaxCapacity(tokenId)), ' }'));
+        string memory stats = string(abi.encodePacked('"stats": { "level": ', toString(getLevel(tokenId)), ', "resonance": ', toString(getResonance(tokenId)), ', "spin": ', toString(getSpin(tokenId)), ' }'));
         
         string memory json = Base64.encode(bytes(string(abi.encodePacked('{"id": ', toString(tokenId), ', "name": "Crystal #', toString(originalSeed(tokenId)), '", ', stats, ', "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
         output = string(abi.encodePacked('data:application/json;base64,', json));
@@ -1400,13 +1397,13 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         // uint256 daysSinceLastAction = daysSinceLastCharge > daysSinceLastTx ? daysSinceLastTx : daysSinceLastCharge;
 
-        // uint256 manaGained = daysSinceLastAction * getBonusMana(tokenId);
+        // uint256 manaGained = daysSinceLastAction * getResonance(tokenId);
 
-        // if (manaGained > getMaxCapacity(tokenId)) {
-        //   manaGained = getMaxCapacity(tokenId);
+        // if (manaGained > getSpin(tokenId)) {
+        //   manaGained = getSpin(tokenId);
         // }
 
-        // return string(abi.encodePacked("daysSinceLastAction: ", toString(daysSinceLastAction), ", manaGained: ", toString(manaGained), ", cap: ", toString(getMaxCapacity(tokenId)), ", mana: ", toString(getBonusMana(tokenId))));
+        // return string(abi.encodePacked("daysSinceLastAction: ", toString(daysSinceLastAction), ", manaGained: ", toString(manaGained), ", cap: ", toString(getSpin(tokenId)), ", mana: ", toString(getResonance(tokenId))));
         // calculate amount of mana gained
         // - h = #hours since last charge or transfered whichever is sooner
         // - d = h / 24
@@ -1445,8 +1442,32 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         return random(string(abi.encodePacked(oSeed, key)));
     }
 
+    // This will always return a random number based on tokenId, NOT the original seed!
+    function getRandom(uint256 tokenId, string memory key, bool skipSeed) internal pure returns (uint256) {
+        return random(string(abi.encodePacked(tokenId, key)));
+    }
+
     function getRoll(uint256 tokenId, string memory key, uint256 size, uint256 times) internal pure returns (uint256) {
-        return (getRandom(tokenId, key) % size) * times;
+        return ((getRandom(tokenId, key) % size) + 1) * times;
+    }
+
+    // This will always return a roll based on tokenId, NOT the original seed!
+    function getRoll(uint256 tokenId, string memory key, uint256 size, uint256 times, bool skipSeed) internal pure returns (uint256) {
+        return ((getRandom(tokenId, key, skipSeed) % size) + 1) * times;
+    }
+
+    // return dice rolls for each level
+    function getLevelRolls(uint256 tokenId, string memory key, uint256 size, uint256 times) internal pure returns (uint256) {
+      uint256 oSeed = originalSeed(tokenId);
+      uint256 index = 1;
+      uint256 score = getRoll(tokenId, key, size, times);
+      
+      while(index < getLevel(tokenId)) {
+        score += getRoll((index * _MAX) + oSeed, key, size, times, true);
+        index++;
+      }
+
+      return score;
     }
     
     function getLevel(uint256 tokenId) public pure returns (uint256) {
@@ -1458,24 +1479,16 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         return (tokenId / _MAX) + 1;
     }
 
-    function getBonusMana(uint256 tokenId) public pure returns (uint256) {
+    function getResonance(uint256 tokenId) public pure returns (uint256) {
         uint256 level = getLevel(tokenId);
 
-        return level + getRoll(tokenId, "BONUS_MANA", 5, 1);
+        return level + getRoll(tokenId, "RESONANCE", 5, 1);
     }
 
-    function getMaxCapacity(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-        uint256 capacity = getBonusMana(tokenId);
+    function getSpin(uint256 tokenId) public pure returns (uint256) {
+        uint256 resonance = getResonance(tokenId);
 
-        uint256 i = 0;
-        // roll d8 for each level
-        while (i < level) {
-            i++;
-            capacity += getRoll(tokenId, string(abi.encodePacked("MAX_CAPACITY", i)), 8, 1);
-        }
-
-        return capacity;
+        return resonance + getLevelRolls(tokenId, "SPIN", 8, 1);
     }
 
     function getColor(uint256 tokenId) public pure returns (string memory) {
@@ -1500,16 +1513,23 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     function getBasicName(uint256 tokenId) internal pure returns (string memory) {
         uint256 rand = getRandom(tokenId, "BASIC_NAME");
         uint256 alignment = getRoll(tokenId, "ALIGNMENT", 20, 1);
+        uint256 colorSpecialness = getRoll(tokenId, "COLOR_RARITY", 20, 1);
         uint256 isAncient = getRandom(tokenId, "IS_ANCIENT") % 10000000;
 
         string memory output = "";
 
-        if (alignment == 1) {
-          output = string(abi.encodePacked(getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength), getColor(tokenId), " Crystal"));
+        if (alignment == 10 && colorSpecialness == 10 && isAncient != 1) {
+            output = "Average Crystal";
+        } else if (alignment == 1) {
+          output = string(abi.encodePacked("Crystal ", getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)));
         } else if (alignment == 20) {
-          output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), getColor(tokenId), " Crystal"));
+          output = string(abi.encodePacked("Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
+        } else if (alignment < 3) {
+          output = string(abi.encodePacked(getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength), " Crystal"));
+        } else if (alignment > 18) {
+          output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " Crystal"));
         } else {
-          output = string(abi.encodePacked(getColor(tokenId), " Crystal"));
+          output = string(abi.encodePacked("Crystal"));
         }
 
         if (isAncient == 1) {
@@ -1522,28 +1542,39 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     function getLootName(uint256 tokenId) internal pure returns (string memory) {
         uint256 rand = getRandom(tokenId, "LOOT_NAME");
         uint256 alignment = getRoll(tokenId, "ALIGNMENT", 20, 1);
+        uint256 colorSpecialness = getRoll(tokenId, "COLOR_RARITY", 20, 1);
         uint256 isAncient = getRandom(tokenId, "IS_ANCIENT") % 1000000;
 
         string memory output = "";
 
+        // average
+        if (alignment == 10 && colorSpecialness == 10) {
+            output = "Perfectly Average Crystal";
+        }
+
         // cursed
-        if (alignment < 3) {
-            output = string(abi.encodePacked(getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength), " ", getColor(tokenId), " Crystal ", getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)));
+        else if (alignment < 3) {
+            output = string(abi.encodePacked((alignment == 1 ? "Demonic Crystal ": "Crystal "), getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)));
         }
 
         // standard 
-        else if (alignment < 15) {
-            output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " ", getColor(tokenId), " Crystal"));
+        else if (alignment < 17) {
+            output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " Crystal"));
         }
 
         // good 
-        else if (alignment > 14 && alignment < 19) {
-            output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " ", getColor(tokenId), " Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
+        else if (alignment > 16 && alignment < 20) {
+            output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
         }
 
         // great 
+        else if (alignment == 20) {
+          output = string(abi.encodePacked("Divine ", " Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
+        }
+
+        // shouldn't happen lol
         else {
-          output = string(abi.encodePacked("Perfect ", getItemFromCSV(prefixes, rand % prefixesLength), " ", getColor(tokenId), " Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
+          output = "Forgotten Crystal";
         }
 
         if (isAncient == 1) {
@@ -1551,6 +1582,19 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         }
 
         return output;
+        // return string(abi.encodePacked(toString(alignment), " - ", output));
+    }
+
+    function getSlab(uint256 tokenId, uint256 index) internal pure returns (string memory)  {
+        uint256 rand = getRandom(tokenId, string(abi.encodePacked("SLAB_", toString(index))), true);
+
+        return getItemFromCSV(slabs, rand % slabsLength);
+    }
+
+    function getSlabs(uint256 tokenId) internal pure returns (string memory)  {        
+        string[4] memory chars = ["&#9698;", "&#9699;", "&#9700;", "&#9701;"];
+        
+        return string(abi.encodePacked(chars[getRoll(tokenId, "FIRST_SLAB", 4, 1)], chars[getRoll(tokenId, "SECOND_SLAB", 4, 1)], chars[getRoll(tokenId, "THIRDS_SLAB", 4, 1)], chars[getRoll(tokenId, "FOURTH_SLAB", 4, 1)]));
     }
     
     function toString(uint256 value) internal pure returns (string memory) {

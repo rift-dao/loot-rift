@@ -13,7 +13,7 @@ const Rift = contract.fromArtifact('Rift');
     const riftInstance = await Rift.new();
 
     // TODO: Figure out how to test claim, claimWithLoot, ownerClaim
-    const functionsToEstimate = ['tokenURI', 'getName', 'getLevel', 'getBonusMana', 'getMaxCapacity'];
+    const functionsToEstimate = ['tokenURI', 'getName', 'getLevel', 'getResonance', 'getSpin'];
     const functionEstimateMap = { deploy: estimatedGas };
 
     // const fnEstimatedGas = await riftInstance.tokenURI.estimateGas(1);
