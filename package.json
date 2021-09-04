@@ -4,12 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "claim": "yarn compile && node ./scripts/getCrystal.js",
+    "claim": "yarn compile && node ./scripts/claim.js",
+    "claim:quick": "node ./scripts/claim.js",
     "compile": "truffle compile",
     "coverage": "truffle run coverage",
-    "gas": "yarn compile && node ./scripts/estimateGas.js",
-    "gas:quick": "node ./scripts/estimateGas.js",
+    "gas": "yarn compile && node ./scripts/gas.js",
+    "gas:quick": "node ./scripts/gas.js",
     "lint": "solium -d contracts/",
+    "stats": "yarn compile && node ./scripts/stats.js",
+    "stats:quick": "node ./scripts/stats.js",
     "test": "yarn compile && mocha --exit --recursive",
     "test:quick": "mocha --exit --recursive",
     "test:watch": "yarn compile && mocha --watch --recursive"
@@ -22,6 +25,7 @@
     "@openzeppelin/test-helpers": "^0.5.13",
     "chai": "^4.3.4",
     "mocha": "^9.1.1",
+    "open": "^8.2.1",
     "solidity-coverage": "^0.7.17",
     "truffle": "^5.4.8"
   }
