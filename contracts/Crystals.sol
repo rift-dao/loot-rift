@@ -1,5 +1,16 @@
-/**
- *Submitted for verification at Etherscan.io on 2021-08-31
+/*
+
+ _______  _______           _______ _________ _______  _        _______ 
+(  ____ \(  ____ )|\     /|(  ____ \\__   __/(  ___  )( \      (  ____ \   (for Adventurers) 
+| (    \/| (    )|( \   / )| (    \/   ) (   | (   ) || (      | (    \/
+| |      | (____)| \ (_) / | (_____    | |   | (___) || |      | (_____ 
+| |      |     __)  \   /  (_____  )   | |   |  ___  || |      (_____  )
+| |      | (\ (      ) (         ) |   | |   | (   ) || |            ) |
+| (____/\| ) \ \__   | |   /\____) |   | |   | )   ( || (____/\/\____) |
+(_______/|/   \__/   \_/   \_______)   )_(   |/     \|(_______/\_______)
+                                                                       
+                                                                        
+    by chris and tony
 */
 
 // SPDX-License-Identifier: MIT
@@ -1301,13 +1312,11 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     string private constant suffixes = "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins,of Relevance,of the Rift";
     uint256 private constant suffixesLength = 16;
 
-    // string private constant colors = "Blue,Green,Red,Yellow,Orange,Pink,Gray,Black,White,Pale,Brown,Purple";
-    string private constant colors = "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,Black,White,Brown,Purple";
-    uint256 private constant colorsLength = 12;
+    string private constant colors = "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,White,Brown,Purple";
+    uint256 private constant colorsLength = 13;
 
-    // string private constant specialColors = "Lime-Green,Mauve,Silver,Crimson,Opal,Sapphire,Emerald,Diamond,Dragonseye";
-    string private constant specialColors = "Aqua,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
-    uint256 private constant specialColorsLength = 9;
+    string private constant specialColors = "Aqua,Black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
+    uint256 private constant specialColorsLength = 10;
 
     uint256 private constant _MAX = 1000000;
 
@@ -1333,11 +1342,11 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         parts[2] = '</text><text x="10" y="40" class="base">';
 
-        parts[3] = string(abi.encodePacked("Daily Mana: ", toString(getBonusMana(tokenId))));
+        parts[3] = string(abi.encodePacked("Resonance: ", toString(getBonusMana(tokenId))));
 
         parts[4] = '</text><text x="10" y="60" class="base">';
 
-        parts[5] = string(abi.encodePacked("Mana Capacity: ", toString(getMaxCapacity(tokenId))));
+        parts[5] = string(abi.encodePacked("Spin: ", toString(getMaxCapacity(tokenId))));
 
         parts[6] = '</text></svg>';
 
@@ -1531,9 +1540,6 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         else if (alignment > 14 && alignment < 19) {
             output = string(abi.encodePacked(getItemFromCSV(prefixes, rand % prefixesLength), " ", getColor(tokenId), " Crystal ", getItemFromCSV(suffixes, rand % suffixesLength)));
         }
-        // else if (alignment > 14 && alignment < 19) {
-        //     output = string(abi.encodePacked("Perfectly ", getItemFromCSV(prefixes, rand % prefixesLength), " ", getColor(tokenId), " Crystal"));
-        // }
 
         // great 
         else {
