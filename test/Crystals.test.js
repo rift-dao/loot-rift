@@ -13,8 +13,8 @@ before(async () => {
 const MOCK_0001 = {
     id: 1,
     name: 'Polished Brown Crystal of Detection',
-    maxCapacity: '5',
-    bonusMana: '4',
+    spin: '5',
+    resonance: '4',
 };
 
 describe('Crystal getters', () => {
@@ -53,14 +53,14 @@ describe('Crystal getters', () => {
         // TODO: uint256 max value
     });
 
-    it('should getMaxCapacity', async () => {
-        const maxCapacity = await crystalInstance.getMaxCapacity(MOCK_0001.id);
-        expect(maxCapacity).to.be.bignumber.equal(MOCK_0001.maxCapacity);
+    it('should getSpin', async () => {
+        const spin = await crystalInstance.getSpin(MOCK_0001.id);
+        expect(spin).to.be.bignumber.equal(MOCK_0001.spin);
     });
 
-    it('should getBonusMana', async () => {
-        const bonusMana = await crystalInstance.getBonusMana(MOCK_0001.id);
-        expect(bonusMana).to.be.bignumber.equal(MOCK_0001.bonusMana);
+    it('should getResonance', async () => {
+        const resonance = await crystalInstance.getResonance(MOCK_0001.id);
+        expect(resonance).to.be.bignumber.equal(MOCK_0001.resonance);
     });
 
     it('should getName', async () => {
