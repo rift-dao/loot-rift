@@ -1330,15 +1330,6 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     function random(string memory input) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(input)));
     }
-
-    
-    // parts[6] = string(abi.encodePacked('</text><text x="220" y="300" style="fill: ', color, ' !important; font-size: 28px" class="base">'));
-
-    // // parts[7] = string(abi.encodePacked(getSlabs(tokenId)));
-    // parts[7] = string(abi.encodePacked(getSlab(tokenId, 1), getSlab(tokenId, 2)));
-
-    // parts[8] = string(abi.encodePacked('</text><text x="220" y="330" style="fill: ', color, ' !important; font-size: 28px" class="base">'));
-    // parts[9] = string(abi.encodePacked(getSlab(tokenId, 3), getSlab(tokenId, 4)));
     
     function tokenURI(uint256 tokenId) override public pure returns (string memory) {
         string memory output;
@@ -1365,43 +1356,6 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         return output;
     }
-
-    // function tokenURI(uint256 tokenId) override public pure returns (string memory) {
-    //     string[10] memory parts;
-
-    //     string memory color = getColor(tokenId);
-    //     parts[0] = string(abi.encodePacked('<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.mana { fill: blue !important; } .base { fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base" style="fill: ', color, ' !important;">'));
-
-    //     parts[9] = "";
-    //     if (getLevel(tokenId) > 1) {
-    //       parts[9] = string(abi.encodePacked(" +", toString(getLevel(tokenId) - 1)));
-    //     }
-
-    //     parts[1] = string(abi.encodePacked(getName(tokenId), parts[9]));
-
-    //     parts[2] = string(abi.encodePacked('</text><text x="10" y="40" style="fill: ', color, ' !important;" class="base">'));
-
-    //     parts[3] = string(abi.encodePacked("Resonance: ", toString(getResonance(tokenId))));
-
-    //     parts[4] = string(abi.encodePacked('</text><text x="10" y="60" style="fill: ', color, ' !important;" class="base">'));
-
-    //     parts[5] = string(abi.encodePacked("Spin: ", toString(getSpin(tokenId))));
-
-    //     parts[6] = string(abi.encodePacked('</text><text x="240" y="330" style="fill: ', color, ' !important; font-size: 28px" class="base">'));
-
-    //     parts[7] = string(abi.encodePacked(getSlabs(tokenId)));
-
-    //     parts[8] = '</text></svg>';
-
-    //     string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
-
-    //     string memory stats = string(abi.encodePacked('"stats": { "level": ', toString(getLevel(tokenId)), ', "resonance": ', toString(getResonance(tokenId)), ', "spin": ', toString(getSpin(tokenId)), ' }'));
-        
-    //     string memory json = Base64.encode(bytes(string(abi.encodePacked('{"id": ', toString(tokenId), ', "name": "Crystal #', toString(originalSeed(tokenId)), '", ', stats, ', "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
-    //     output = string(abi.encodePacked('data:application/json;base64,', json));
-
-    //     return output;
-    // }
 
     function claim(uint256 tokenId) public nonReentrant {
         require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
