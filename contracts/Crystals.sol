@@ -1300,6 +1300,17 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     ERC721 public constant loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
 
+    struct Crystal {
+        string name;
+        uint256 resonance;
+        uint256 spin;
+        string slabs;
+        uint256 level;
+        uint256 tokenId;
+    }
+
+    mapping(uint256 => Crystal) public crystals;
+
     string private constant cursedPrefixes = "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     uint256 private constant cursedPrefixesLength = 8;
 
@@ -1324,8 +1335,6 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     uint256 private constant _MAX = 1000000;
 
     mapping(uint256 => uint256) visits;
-
-    
 
     function random(string memory input) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(input)));
@@ -1479,12 +1488,14 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         return (tokenId / _MAX) + 1;
     }
 
+    // The "presence" of the crystal
     function getResonance(uint256 tokenId) public pure returns (uint256) {
         uint256 level = getLevel(tokenId);
 
         return level + getRoll(tokenId, "RESONANCE", 5, 1);
     }
 
+    // Higher spin => more in phase with magic realm
     function getSpin(uint256 tokenId) public pure returns (uint256) {
         uint256 resonance = getResonance(tokenId);
 
@@ -1628,6 +1639,15 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
             item = strSlice.split(separator);
         }
         return item.toString();
+    }
+
+    function sqrt(uint x) internal pure returns (uint y) {
+        uint z = (x + 1) / 2;
+        y = x;
+        while (z < y) {
+            y = z;
+            z = (x / z + z) / 2;
+        }
     }
     
     constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
