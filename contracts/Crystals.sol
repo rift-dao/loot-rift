@@ -1343,11 +1343,11 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         parts[2] = string(abi.encodePacked('</text><text x="10" y="40" style="fill: ', color, ' !important;" class="base">'));
 
-        parts[3] = string(abi.encodePacked("Resonance: ", toString(getBonusMana(tokenId))));
+        parts[3] = string(abi.encodePacked("Resonance: ", toString(getResonance(tokenId))));
 
         parts[4] = string(abi.encodePacked('</text><text x="10" y="60" style="fill: ', color, ' !important;" class="base">'));
 
-        parts[5] = string(abi.encodePacked("Spin: ", toString(getMaxCapacity(tokenId))));
+        parts[5] = string(abi.encodePacked("Spin: ", toString(getSpin(tokenId))));
 
         parts[6] = string(abi.encodePacked('</text><text x="240" y="330" style="fill: ', color, ' !important; font-size: 28px" class="base">'));
 
@@ -1357,7 +1357,7 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         string memory output = string(abi.encodePacked(parts[0], parts[1], parts[2], parts[3], parts[4], parts[5], parts[6], parts[7], parts[8]));
 
-        string memory stats = string(abi.encodePacked('"stats": { "level": ', toString(getLevel(tokenId)), ', "bonusMana": ', toString(getBonusMana(tokenId)), ', "maxCapacity": ', toString(getMaxCapacity(tokenId)), ' }'));
+        string memory stats = string(abi.encodePacked('"stats": { "level": ', toString(getLevel(tokenId)), ', "resonance": ', toString(getResonance(tokenId)), ', "spin": ', toString(getSpin(tokenId)), ' }'));
         
         string memory json = Base64.encode(bytes(string(abi.encodePacked('{"id": ', toString(tokenId), ', "name": "Crystal #', toString(originalSeed(tokenId)), '", ', stats, ', "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'))));
         output = string(abi.encodePacked('data:application/json;base64,', json));
@@ -1463,24 +1463,24 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         return (tokenId / _MAX) + 1;
     }
 
-    function getBonusMana(uint256 tokenId) public pure returns (uint256) {
+    function getResonance(uint256 tokenId) public pure returns (uint256) {
         uint256 level = getLevel(tokenId);
 
-        return level + getRoll(tokenId, "BONUS_MANA", 5, 1);
+        return level + getRoll(tokenId, "RESONANCE", 5, 1);
     }
 
-    function getMaxCapacity(uint256 tokenId) public pure returns (uint256) {
+    function getSpin(uint256 tokenId) public pure returns (uint256) {
         uint256 level = getLevel(tokenId);
-        uint256 capacity = getBonusMana(tokenId);
+        uint256 resonance = getResonance(tokenId);
 
         uint256 i = 0;
         // roll d8 for each level
         while (i < level) {
             i++;
-            capacity += getRoll(tokenId, string(abi.encodePacked("MAX_CAPACITY", i)), 8, 1);
+            resonance += getRoll(tokenId, string(abi.encodePacked("RESONANCE", i)), 8, 1);
         }
 
-        return capacity;
+        return resonance;
     }
 
     function getColor(uint256 tokenId) public pure returns (string memory) {
