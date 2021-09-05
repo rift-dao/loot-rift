@@ -28,5 +28,8 @@
     "open": "^8.2.1",
     "solidity-coverage": "^0.7.17",
     "truffle": "^5.4.8"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.3.1"
   }
 }

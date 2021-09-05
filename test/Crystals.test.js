@@ -2,19 +2,21 @@ const { accounts, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
-const Crystals = contract.fromArtifact('Crystals'); // Loads a compiled contract
+const Crystals = contract.fromArtifact('Crystals');
+const Mana = contract.fromArtifact('Mana');
 
 let crystalInstance = null;
 
 before(async () => {
-    crystalInstance = await Crystals.new();
+    manaInstance = await Mana.new();
+    crystalInstance = await Crystals.new(manaInstance.address);
 });
 
 const MOCK_0001 = {
     id: 1,
-    name: 'Polished Brown Crystal of Detection',
-    spin: '5',
-    resonance: '4',
+    name: 'Polished Crystal of the Twins',
+    spin: '6',
+    resonance: '3',
 };
 
 describe('Crystal getters', () => {
