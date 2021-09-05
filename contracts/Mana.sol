@@ -24,13 +24,13 @@ contract Mana is Context, Ownable, ERC20 {
 	  }
 
     /// @notice function for Crystals contract to mint on behalf of to
+    /// @param recipient address to send mana to
     /// @param amount number of mana to mint
-    /// @param to address to send mana to
-    function ccMintTo(uint256 amount, address to) external {
+    function ccMintTo(address recipient, uint256 amount) external {
         // Check that the msgSender is from Crystals
         require(_msgSender() == ccAddress, "MUST_BE_FROM_CRYSTALS_CONTRACT");
 
-        _mint(to, amount);
+        _mint(recipient, amount);
     }
 
     function burn(uint256 amount) external {

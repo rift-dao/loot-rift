@@ -5,13 +5,6 @@ const { expect } = require('chai');
 const Crystals = contract.fromArtifact('Crystals');
 const Mana = contract.fromArtifact('Mana');
 
-let crystalInstance = null;
-
-before(async () => {
-    manaInstance = await Mana.new();
-    crystalInstance = await Crystals.new(manaInstance.address);
-});
-
 const MOCK_0001 = {
     id: 1,
     name: 'Polished Crystal of the Twins',
@@ -19,7 +12,16 @@ const MOCK_0001 = {
     resonance: '3',
 };
 
+let crystalInstance = null;
+let manaInstance = null;
+
 describe('Crystal getters', () => {
+
+    before(async () => {
+        manaInstance = await Mana.new();
+        crystalInstance = await Crystals.new(manaInstance.address);
+    });
+
     it('should have valid tokenURI', async () => {
         const output = await crystalInstance.tokenURI(1);
 
@@ -84,15 +86,15 @@ describe('Crystal getters', () => {
     // });
 });
 
-describe('Crystal buisness', () => {
-    before(async () => {
-        const ownedCrystal = await crystalInstance.claim(8003);
-        expect(true).to.be.true;
-    });
+// describe('Crystal business', () => {
+//     before(async () => {
+//         const ownedCrystal = await crystalInstance.claim(8003);
+//         expect(true).to.be.true;
+//     });
 
-    it('should chargeCrystal', async () => {
-        const output = await crystalInstance.chargeCrystal.call(8003);
-        console.log('output', output);
-        expect(true).to.be.true;
-    });
-});
+//     it('should chargeCrystal', async () => {
+//         const output = await crystalInstance.chargeCrystal.call(8003);
+//         // console.log('output', output);
+//         expect(true).to.be.true;
+//     });
+// });
