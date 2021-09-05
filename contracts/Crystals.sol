@@ -1300,6 +1300,17 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     ERC721 public constant loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
 
+    struct Crystal {
+        uint256 seedTokenId;
+        string name;
+        string slabs;
+        uint resonance;
+        uint spin;
+        uint level;
+    }
+
+    mapping(uint256 => Crystal) crystals;
+
     string private constant cursedPrefixes = "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     uint256 private constant cursedPrefixesLength = 8;
 
@@ -1329,6 +1340,15 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
     function random(string memory input) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(input)));
+    }
+
+    function registerCrystalForLoot(uint256 tokenId) public nonReentrant {
+        // require(crystals[tokenId].seedTokenId != 0, "This loot has already claimed a Crystal");
+        crystals[tokenId].name = getName(tokenId);
+        crystals[tokenId].resonance = getResonance(tokenId);
+        crystals[tokenId].spin = getSpin(tokenId);
+        crystals[tokenId].level = getLevel(tokenId);
+        crystals[tokenId].slabs = getSlabs(tokenId);
     }
     
     function tokenURI(uint256 tokenId) override public pure returns (string memory) {
