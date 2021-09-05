@@ -1299,17 +1299,7 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     using strings for strings.slice;
 
     ERC721 public constant loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
-
-    struct Crystal {
-        string name;
-        uint256 resonance;
-        uint256 spin;
-        string slabs;
-        uint256 level;
-        uint256 tokenId;
-    }
-
-    mapping(uint256 => Crystal) public crystals;
+    ERC721 public constant mloot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
 
     string private constant cursedPrefixes = "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     uint256 private constant cursedPrefixesLength = 8;
@@ -1332,7 +1322,10 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
     uint256 private constant slabsLength = 4;
 
-    uint256 private constant _MAX = 1000000;
+    uint256 private constant slabsRootX = 335;
+    uint256 private constant slabsRootY = 335;
+
+    uint256 private constant _MAX = 20000000;
 
     mapping(uint256 => uint256) visits;
 
@@ -1365,15 +1358,6 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         return output;
     }
-
-    function claim(uint256 tokenId) public nonReentrant {
-        require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
-        _safeMint(_msgSender(), tokenId);
-
-        // TODO store visits (charge & level) inside uint256
-        // visits[tokenId] = 1000000;
-        // TODO Mana.mint(1)
-    }
     
     function claimWithLoot(uint256 tokenId) public nonReentrant {
         require(tokenId > 0 && tokenId < 8001, "Token ID invalid");
@@ -1382,10 +1366,16 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
 
         // TODO Mana.mint(3)
     }
+
+    function claimWithmLoot(uint256 tokenId) public nonReentrant {
+        require(tokenId > 8000 && tokenId < 19999951, "Token ID invalid");
+        require(mloot.ownerOf(tokenId) == msg.sender, "Not mLoot owner");
+        _safeMint(_msgSender(), tokenId);
+    }
     
     // TODO: figure out dual owner claim
     function ownerClaim(uint256 tokenId) public nonReentrant onlyOwner {
-        require(tokenId > 9000 && tokenId < 9051, "Token ID invalid");
+        require(tokenId > 19999950 && tokenId < 20000001, "Token ID invalid");
         _safeMint(owner(), tokenId);
     }
 
@@ -1596,16 +1586,26 @@ contract Crystals is ERC721Enumerable, ReentrancyGuard, Ownable {
         // return string(abi.encodePacked(toString(alignment), " - ", output));
     }
 
-    function getSlab(uint256 tokenId, uint256 index) internal pure returns (string memory)  {
-        uint256 rand = getRandom(tokenId, string(abi.encodePacked("SLAB_", toString(index))), true);
+// output = string(abi.encodePacked(output, '</text><text x="285" y="295" class="slab">', getSlab(tokenId, 1), getSlab(tokenId, 2), getSlab(tokenId, 3)));
+//         output = string(abi.encodePacked(output, '</text><text x="285" y="314" class="slab">', getSlab(tokenId, 4), getSlab(tokenId, 5), getSlab(tokenId, 6)));
+//         output = string(abi.encodePacked(output, '</text><text x="285" y="333" class="slab">', getSlab(tokenId, 7), getSlab(tokenId, 8), getSlab(tokenId, 9), '</text></svg>'));
+    function formSlabs(uint256 tokenId) internal pure returns (string memory) {
+        uint numSlabs = getLevel(tokenId);
+        uint slabsInserted = 0;
+        uint sqrtSlabs = sqrt(numSlabs);
+        string memory output = "";
 
-        return getItemFromCSV(slabs, rand % slabsLength);
+        for (uint i = 0; i < sqrtSlabs; i++) {
+            for (uint j = 0; j < sqrtSlabs; j++) {
+                output = 
+            }
+        }
     }
 
-    function getSlabs(uint256 tokenId) internal pure returns (string memory)  {        
-        string[4] memory chars = ["&#9698;", "&#9699;", "&#9700;", "&#9701;"];
-        
-        return string(abi.encodePacked(chars[getRoll(tokenId, "FIRST_SLAB", 4, 1)], chars[getRoll(tokenId, "SECOND_SLAB", 4, 1)], chars[getRoll(tokenId, "THIRDS_SLAB", 4, 1)], chars[getRoll(tokenId, "FOURTH_SLAB", 4, 1)]));
+    function getSlab(uint256 tokenId, uint256 indexX, uint indexY) internal pure returns (string memory)  {
+        uint256 rand = getRandom(tokenId, string(abi.encodePacked("SLAB_", toString(indexX), toString(indexY))), true);
+
+        return getItemFromCSV(slabs, rand % slabsLength);
     }
     
     function toString(uint256 value) internal pure returns (string memory) {
