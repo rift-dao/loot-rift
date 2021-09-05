@@ -1,18 +1,21 @@
 const { contract } = require('@openzeppelin/test-environment');
 
 const Crystals = contract.fromArtifact('Crystals');
+const Mana = contract.fromArtifact('Mana');
 
 (async () => {
     let output = [];
+    const manaInstance = await Mana.new();
 
     output.push('----------');
-    const estimatedGas = await Crystals.new.estimateGas();
+    const estimatedGas = await Crystals.new.estimateGas(manaInstance.address);
     output.push(`⛽ Estimations`);
 
     output.push(`\t${estimatedGas}\t-\tDeployment`);
-    const crystalsInstance = await Crystals.new();
+    const crystalsInstance = await Crystals.new(manaInstance.address);
 
     // TODO: Figure out how to test claim, claimWithLoot, ownerClaim
+    // const functionsToEstimate = [];
     const functionsToEstimate = ['tokenURI', 'getName', 'getLevel', 'getResonance', 'getSpin'];
     const functionEstimateMap = { deploy: estimatedGas };
 
