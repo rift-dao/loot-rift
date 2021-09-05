@@ -67,9 +67,9 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
     uint256 private constant slabsLength = 4;
 
-    uint256 private constant slabsOriginX = 340;
+    uint256 private constant slabsOriginX = 10;
     uint256 private constant slabsOriginY = 340;
-    uint256 private constant slabSize = 10;
+    uint256 private constant slabSize = 20;
     uint256 private constant slabPerLine = 34;
 
     uint256 private constant _MAX = 20000000;
@@ -348,9 +348,6 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
         // return string(abi.encodePacked(toString(alignment), " - ", output));
     }
 
-// output = string(abi.encodePacked(output, '</text><text x="285" y="295" class="slab">', getSlab(tokenId, 1), getSlab(tokenId, 2), getSlab(tokenId, 3)));
-//         output = string(abi.encodePacked(output, '</text><text x="285" y="314" class="slab">', getSlab(tokenId, 4), getSlab(tokenId, 5), getSlab(tokenId, 6)));
-//         output = string(abi.encodePacked(output, '</text><text x="285" y="333" class="slab">', getSlab(tokenId, 7), getSlab(tokenId, 8), getSlab(tokenId, 9), '</text></svg>'));
     function formSlabs(uint256 tokenId) internal pure returns (string memory) {
         uint numSlabs = getLevel(tokenId);
         uint slabsInserted = 0;
@@ -359,12 +356,13 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
 
         for (uint i = 0; i < sqrtSlabs; i++) {
             string memory slabsRow = "";
-            for (uint j = 0; j < sqrtSlabs; j++) {
-                slabsInserted++;
-                slabsRow = string(abi.encodePacked(slabsRow, getSlab(tokenId, i, j)));
+            for (uint j = 0; j <= sqrtSlabs; j++) {
+                if (slabsInserted < numSlabs - 1) {
+                    slabsInserted++;
+                    slabsRow = string(abi.encodePacked(slabsRow, getSlab(tokenId, i, j)));
+                }
             }
-            uint xOffset = sqrtSlabs - (slabsInserted % sqrtSlabs);
-            output = string(abi.encodePacked(output, '</text><text x="', toString(slabsOriginX - (xOffset * slabSize)), '" y="', toString(slabsOriginY - (i * slabSize)), '" class="slab">', slabs));
+            output = string(abi.encodePacked(output, '</text><text x="20" y="', toString(slabsOriginY - (i * slabSize)), '" class="slab">', slabsRow));
         }
 
         return output;
