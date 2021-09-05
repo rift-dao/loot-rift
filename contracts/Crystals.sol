@@ -24,6 +24,18 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
+interface ManaI {
+    // function transfer(address recipient, uint256 amount) external returns (bool);
+
+    // function transferFrom(
+    //     address sender,
+    //     address recipient,
+    //     uint256 amount
+    // ) external returns (bool);
+
+    function ccMintTo(address recipient, uint256 amount) external;
+    function burn(uint256 amount) external;
+}
 
 contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable, ReentrancyGuard, Ownable {
     using strings for string;
@@ -32,6 +44,7 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
     address public manaAddress = address(0);
     ERC721 public constant loot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
     ERC721 public constant mloot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
+    ManaI public mana;
 
     string private constant cursedPrefixes = "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     uint256 private constant cursedPrefixesLength = 8;
@@ -65,6 +78,7 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
 
     constructor(address manaAddress_) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
         manaAddress = manaAddress_;
+        mana = ManaI(manaAddress);
     }
 
 
@@ -95,13 +109,23 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
 
         return output;
     }
+
+    function claim(uint256 tokenId) public {
+        require(tokenId > 8000 && tokenId < 9000, "Token ID invalid");
+        _safeMint(_msgSender(), tokenId);
+        mana.ccMintTo(_msgSender(), 1);
+
+        // TODO store visits (charge & level) inside uint256
+        // visits[tokenId] = 1000000;
+        // TODO ManaI.mint(1)
+    }
     
     function claimWithLoot(uint256 tokenId) public nonReentrant {
         require(tokenId > 0 && tokenId < 8001, "Token ID invalid");
         require(loot.ownerOf(tokenId) == msg.sender, "Not Loot owner");
         _safeMint(_msgSender(), tokenId);
 
-        // TODO Mana.mint(3)
+        // TODO ManaI.mint(3)
     }
 
     function claimWithmLoot(uint256 tokenId) public nonReentrant {
@@ -121,6 +145,7 @@ contract Crystals is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Burnable,
 
         uint256 lastVisitEncoded = visits[originalSeed(tokenId)];
 
+        mana.ccMintTo(_msgSender(), getResonance(tokenId));
 
 
         return string(abi.encodePacked("lastVisitEncoded: ", toString(lastVisitEncoded)));

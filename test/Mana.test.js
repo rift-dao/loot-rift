@@ -9,18 +9,18 @@ const Mana = contract.fromArtifact('Mana');
 let manaInstance = null;
 let crystalsInstance = null;
 
-before(async () => {
-    manaInstance = await Mana.new();
-    crystalsInstance = await Crystals.new(manaInstance.address);
-    await manaInstance.ownerSetCContractAddress(crystalsInstance.address);
-});
-
-after(() => {
-    manaInstance = null;
-    crystalsInstance = null;
-});
-
 describe('Mana', () => {
+    before(async () => {
+        manaInstance = await Mana.new();
+        crystalsInstance = await Crystals.new(manaInstance.address);
+        await manaInstance.ownerSetCContractAddress(crystalsInstance.address);
+    });
+    
+    after(() => {
+        manaInstance = null;
+        crystalsInstance = null;
+    });
+
     it('should have set mana to owner', async () => {
         const owner = await manaInstance.owner();
         const output = await manaInstance.balanceOf(owner);
@@ -38,9 +38,12 @@ describe('Mana', () => {
         expect(output).to.be.bignumber.eq('7');
     });
 
-    it('should be note be mintable by owner', async () => {
-        const owner = await manaInstance.owner();
-        await manaInstance.ccMintTo(10, owner);
-        const output = await manaInstance.balanceOf(owner);
-    });
+    // TODO: make sure crystalsInstance.address is testing the right thing
+    // it('should be mintable by crystals', async () => {
+    //     // const owner = await manaInstance.owner();
+    //     await manaInstance.ccMintTo(accounts[0], 33);
+    //     const output = await manaInstance.balanceOf(accounts[0]);
+
+    //     expect(output).to.be.bignumber.eq('13');
+    // });
 });
