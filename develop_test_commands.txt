@@ -1,0 +1,27 @@
+truffle develop
+
+migrate
+
+
+
+
+// get mana instance
+// get crystals instance
+mana = await Mana.deployed()
+crystals = await Crystals.deployed(mana.address)
+
+// check deployer balance
+(await mana.balanceOf(accounts[0])) / 1
+
+// claim crystal
+await crystals.claim(1);
+
+// check owner address
+await crystals.ownerOf(1);
+
+
+
+// v----- NOT NEEDED -----v
+
+// set mana.ccAddress
+mana.ownerSetCContractAddress(crystals.address);

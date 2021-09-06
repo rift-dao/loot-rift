@@ -11,17 +11,17 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @notice This contract mints Mana for Crystals
 /// @custom:unaudited This contract has not been audited. Use at your own risk.
 contract Mana is Context, Ownable, ERC20 {
-    // Loot contract is available at https://etherscan.io/address/0xff9c1b15b16263c61d017ee9f65c50e4ae0113d7
-    address public ccAddress = address(0);
+    address public ccAddress;
     IERC721Enumerable public crystalsContract;
 
     constructor() Ownable() ERC20("Mana", "MANA") {
-        _mint(_msgSender(), 20);
+        _mint(_msgSender(), 100);
+        // _mint('TONYS_WALLET', 100);
     }
 
-   	function decimals() public pure override returns (uint8) {
-	    	return 0;
-	  }
+    function decimals() public pure override returns (uint8) {
+        return 0;
+    }
 
     /// @notice function for Crystals contract to mint on behalf of to
     /// @param recipient address to send mana to
@@ -34,29 +34,12 @@ contract Mana is Context, Ownable, ERC20 {
     }
 
     function burn(uint256 amount) external {
-      _burn(_msgSender(), amount);
+        _burn(_msgSender(), amount);
     }
-
-    /// @dev Internal function to mint Loot upon claiming
-    // function _claim(uint256 amount, address to) internal {
-    //     _mint(to, amount);
-    // }
-
-    /// @notice Allows the DAO to mint new tokens for use within the Loot
-    /// Ecosystem
-    /// @param amountDisplayValue The amount of Loot to mint. This should be
-    /// input as the display value, not in raw decimals. If you want to mint
-    /// 100 Loot, you should enter "100" rather than the value of 100 * 10^18.
-    // function daoMint(uint256 amountDisplayValue) external onlyOwner {
-    //     _mint(owner(), amountDisplayValue * (10**decimals()));
-    // }
 
     /// @notice Allows Crystals to migrate
     /// @param ccAddress_ The new contract address for Crystals
-    function ownerSetCContractAddress(address ccAddress_)
-        external
-        onlyOwner
-    {
+    function ownerSetCContractAddress(address ccAddress_) external onlyOwner {
         ccAddress = ccAddress_;
         crystalsContract = IERC721Enumerable(ccAddress);
     }
