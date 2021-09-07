@@ -408,7 +408,7 @@ contract Crystals is
     }
 
     function getResonance(uint256 tokenId) public pure returns (uint256) {
-        return getLevelRolls(tokenId, "%RESONANCE", 3, 1);
+        return getLevelRolls(tokenId, "%RESONANCE", 2, 1);
     }
 
     function getSpin(uint256 tokenId) public pure returns (uint256) {
@@ -417,7 +417,7 @@ contract Crystals is
         if (level == 1) {
             return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1);
         } else {
-            return 3 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 2, 1);
+            return 5 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 2, 1) - 1;
         }
     }
 
