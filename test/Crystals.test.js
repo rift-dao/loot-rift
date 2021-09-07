@@ -57,6 +57,32 @@ describe('Crystal getters', () => {
         // TODO: uint256 max value
     });
 
+    it('should getSlab', async () => {
+        const slab = await crystalInstance.getSlab(MOCK_0001.id, 1);
+
+        expect(slab).to.be.eq('&#9701;');
+        expect(await crystalInstance.getSlab(1000001, 1)).to.be.eq('&#9698;');
+        expect(await crystalInstance.getSlab(2000001, 1)).to.be.eq('&#9699;');
+        expect(await crystalInstance.getSlab(3000001, 1)).to.be.eq('&#9700;');
+        expect(await crystalInstance.getSlab(4000001, 1)).to.be.eq('&#9701;');
+
+        const slab2 = await crystalInstance.getSlab(MOCK_0001.id, 2);
+
+        expect(slab2).to.be.eq('&#9701;');
+        expect(await crystalInstance.getSlab(1000001, 2)).to.be.eq('&#9698;');
+        expect(await crystalInstance.getSlab(2000001, 2)).to.be.eq('&#9699;');
+        expect(await crystalInstance.getSlab(3000001, 2)).to.be.eq('&#9700;');
+        expect(await crystalInstance.getSlab(4000001, 2)).to.be.eq('&#9701;');
+
+        const slab3 = await crystalInstance.getSlab(MOCK_0001.id, 3);
+
+        expect(slab3).to.be.eq('&#9700;');
+        expect(await crystalInstance.getSlab(1000001, 3)).to.be.eq('&#9701;');
+        expect(await crystalInstance.getSlab(2000001, 3)).to.be.eq('&#9698;');
+        expect(await crystalInstance.getSlab(3000001, 3)).to.be.eq('&#9699;');
+        expect(await crystalInstance.getSlab(4000001, 3)).to.be.eq('&#9700;');
+    });
+
     it('should getSpin', async () => {
         const spin = await crystalInstance.getSpin(MOCK_0001.id);
         expect(spin).to.be.bignumber.equal(MOCK_0001.spin);

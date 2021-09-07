@@ -3,11 +3,13 @@ const { contract } = require('@openzeppelin/test-environment');
 const { getArgs, hasFlag } = require('./helpers');
 
 const Crystals = contract.fromArtifact('Crystals');
+const Mana = contract.fromArtifact('Mana');
 
 const args = getArgs();
 
 (async () => {
-  const crystalInstance = await Crystals.new();
+  const manaInstance = await Mana.new();
+  const crystalInstance = await Crystals.new(manaInstance.address);
   const printStatsForId =  async (id) => {
     const name = await crystalInstance.getName(id);
     const level = await crystalInstance.getLevel(id);

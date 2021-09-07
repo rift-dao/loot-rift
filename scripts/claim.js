@@ -12,6 +12,7 @@ const args = getArgs();
   console.log('\n🔮 generating stats for #' + args.seeds.join(', #'), '\n\n');
   const manaInstance = await Mana.new();
 
+  const manaInstance = await Mana.new();
   const crystalInstance = await Crystals.new(manaInstance.address);
 
   const tokens = [...args.seeds];
