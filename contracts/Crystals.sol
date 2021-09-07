@@ -78,7 +78,7 @@ contract Crystals is
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
     uint256 private constant slabsLength = 4;
 
-    uint256 private constant _MAX = 1000000;
+    uint256 private constant _MAX = 10000000;
 
     struct Visits {
         uint64 lastCharge;
@@ -408,15 +408,17 @@ contract Crystals is
     }
 
     function getResonance(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-
-        return level + getRoll(tokenId, "%RESONANCE", 5, 1);
+        return getLevelRolls(tokenId, "%RESONANCE", 3, 1);
     }
 
     function getSpin(uint256 tokenId) public pure returns (uint256) {
-        uint256 resonance = getResonance(tokenId);
+        uint256 level = getLevel(tokenId);
 
-        return resonance + getLevelRolls(tokenId, "%SPIN", 8, 1);
+        if (level == 1) {
+            return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1);
+        } else {
+            return 3 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 2, 1);
+        }
     }
 
     function getColor(uint256 tokenId) public pure returns (string memory) {

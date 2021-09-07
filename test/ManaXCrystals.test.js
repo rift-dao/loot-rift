@@ -8,7 +8,7 @@ const Mana = contract.fromArtifact('Mana');
 let manaInstance = null;
 let crystalsInstance = null;
 // TODO: this should match _MAX in Crystals.sol
-const _MAX = 1000000;
+const _MAX = 10000000;
 
 describe('Mana X Crystals Pre-Claim', () => {
   before(async () => {
