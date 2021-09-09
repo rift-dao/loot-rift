@@ -25,9 +25,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 interface IMANA {
-    function ccMintTo(address recipient, uint256 amount) external;
-
+    function approve(address spender, uint256 amount) external returns (bool);
     function burn(uint256 amount) external;
+    function burnFrom(address account, uint256 amount) external;
+    function balanceOf(address owner) external returns (uint256);
+    function ccMintTo(address recipient, uint256 amount) external;
 }
 
 contract Crystals is
@@ -107,6 +109,41 @@ contract Crystals is
         return (toTimestamp - fromTimestamp) / (24 * 60 * 60);
     }
 
+    
+    function slabRow(uint256 tokenId, uint256 row, uint256 y) internal pure returns (string memory output) {
+        output = "";
+        for (uint i = 1; i < 19; i++) {
+            output = string(abi.encodePacked(
+                output,
+                getSlab(tokenId, i + ((row - 1) * 18))
+            ));
+        }
+
+        output = string(abi.encodePacked(
+            '<text class="slab" x="285" y="', toString(y), '">',
+            output,
+            '</text>'
+        ));
+
+        return output;
+    }
+
+
+    // function getSlab(uint256 tokenId, uint256 indexX, uint indexY) internal pure returns (string memory)  {
+    //     uint256 rand = getRandom(tokenId, string(abi.encodePacked("SLAB_", toString(indexX), toString(indexY))), true);
+
+    //     return getItemFromCSV(slabs, rand % slabsLength);
+    // }
+
+    // function sqrt(uint x) internal pure returns (uint y) {
+    //     uint z = (x + 1) / 2;
+    //     y = x;
+    //     while (z < y) {
+    //         y = z;
+    //         z = (x / z + z) / 2;
+    //     }
+    // }
+
     function tokenURI(uint256 tokenId)
         public
         pure
@@ -177,47 +214,112 @@ contract Crystals is
                 output,
                 '</text><text x="10" y="40">',
                 "Resonance: ",
-                toString(getResonance(tokenId))
+                toString(getResonance(tokenId)),
+                '</text>'
             )
         );
         output = string(
             abi.encodePacked(
                 output,
-                '</text><text x="10" y="60">',
+                '<text x="10" y="60">',
                 "Spin: ",
-                toString(getSpin(tokenId))
+                toString(getSpin(tokenId)),
+                '</text>'
             )
         );
 
-        // level 2
+        // output = string(
+        //     abi.encodePacked(
+        //         output, 
+        //         formSlabs(tokenId), '</text></svg>'
+        //     )
+        // );
+
+        // ROW 1
         output = string(
             abi.encodePacked(
                 output,
-                '</text><text x="285" y="295" class="slab">',
-                getSlab(tokenId, 1),
-                getSlab(tokenId, 2),
-                getSlab(tokenId, 3)
-            )
-        );
+                slabRow(tokenId, 1, 295),
+                slabRow(tokenId, 2, 314),
+                slabRow(tokenId, 3, 333),
+                slabRow(tokenId, 4, 352),
+                slabRow(tokenId, 5, 371),
+                slabRow(tokenId, 6, 390)
+        ));
+
         output = string(
             abi.encodePacked(
                 output,
-                '</text><text x="285" y="314" class="slab">',
-                getSlab(tokenId, 4),
-                getSlab(tokenId, 5),
-                getSlab(tokenId, 6)
-            )
-        );
-        output = string(
-            abi.encodePacked(
-                output,
-                '</text><text x="285" y="333" class="slab">',
-                getSlab(tokenId, 7),
-                getSlab(tokenId, 8),
-                getSlab(tokenId, 9),
-                "</text></svg>"
-            )
-        );
+                slabRow(tokenId, 7, 409),
+                slabRow(tokenId, 8, 428),
+                slabRow(tokenId, 9, 447),
+                slabRow(tokenId, 10, 466),
+                slabRow(tokenId, 11, 485),
+                '</svg>'
+        ));
+
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         getSlab(tokenId, 7),
+        //         getSlab(tokenId, 8),
+        //         getSlab(tokenId, 9),
+        //         getSlab(tokenId, 10),
+        //         getSlab(tokenId, 11),
+        //         getSlab(tokenId, 12)
+        //     )
+        // );
+
+        // // ROW 2
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         '</text><text x="285" y="314" class="slab">',
+        //         getSlab(tokenId, 13),
+        //         getSlab(tokenId, 14),
+        //         getSlab(tokenId, 15),
+        //         getSlab(tokenId, 16),
+        //         getSlab(tokenId, 17),
+        //         getSlab(tokenId, 18)
+        // ));
+                
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         getSlab(tokenId, 19),
+        //         getSlab(tokenId, 20),
+        //         getSlab(tokenId, 21),
+        //         getSlab(tokenId, 22),
+        //         getSlab(tokenId, 23),
+        //         getSlab(tokenId, 24)
+        //     )
+        // );
+
+        // // ROW 3
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         '<text x="285" y="333" class="slab">',
+        //         getSlab(tokenId, 25),
+        //         getSlab(tokenId, 26),
+        //         getSlab(tokenId, 27),
+        //         getSlab(tokenId, 28),
+        //         getSlab(tokenId, 29),
+        //         getSlab(tokenId, 30)
+        // ));
+
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         getSlab(tokenId, 31),
+        //         getSlab(tokenId, 32),
+        //         getSlab(tokenId, 33),
+        //         getSlab(tokenId, 34),
+        //         getSlab(tokenId, 35),
+        //         getSlab(tokenId, 36),
+        //         "</text></svg>"
+        //     )
+        // );
 
         string memory stats = string(
             abi.encodePacked(
@@ -263,14 +365,14 @@ contract Crystals is
 
     function claimWithMLoot(uint256 tokenId) public {
         require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
-        require(mLoot.ownerOf(tokenId) == msg.sender, "Not mLoot owner");
+        require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
         mana.ccMintTo(_msgSender(), 1);
         _claim(tokenId);
     }
 
     function claimWithLoot(uint256 tokenId) public nonReentrant {
         require(tokenId > 0 && tokenId < 8001, "Token ID for Loot invalid");
-        require(loot.ownerOf(tokenId) == msg.sender, "Not Loot owner");
+        require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
         mana.ccMintTo(_msgSender(), 3);
         _claim(tokenId);
     }
@@ -283,7 +385,7 @@ contract Crystals is
     }
 
     function chargeCrystal(uint256 tokenId) public nonReentrant {
-        require(ownerOf(tokenId) == msg.sender, "Not Crystal owner");
+        require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
 
         uint256 daysSinceCharge = diffDays(
             visits[tokenId].lastCharge,
@@ -307,7 +409,9 @@ contract Crystals is
     // leveling up burns the crystal and mints a new one with id = _MAX + old.id
     // leveling up also gains bonus mana equal to level - 1
     function levelUpCrystal(uint256 tokenId) public nonReentrant {
-        require(ownerOf(tokenId) == msg.sender, "Not Crystal owner");
+        require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
+        require(mana.balanceOf(_msgSender()) >= getSpin(tokenId), "Not enough Mana");
+        
         uint256 dayDiff = diffDays(
             visits[tokenId].lastLevelUp,
             block.timestamp
@@ -317,6 +421,10 @@ contract Crystals is
             ? 1
             : 0;
         require(isMaxCharge == 1, "This crystal is not ready to be leveled up");
+        
+        // mana.approve(manaAddress, getSpin(tokenId));
+        // mana.burn(getSpin(tokenId));
+
         _burn(tokenId);
         _claim(tokenId + _MAX);
         mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
@@ -408,9 +516,7 @@ contract Crystals is
     }
 
     function getResonance(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-
-        return level + getRoll(tokenId, "%RESONANCE", 5, 1);
+        return getLevelRolls(tokenId, "%RESONANCE", 3, 1);
     }
 
     function getSpin(uint256 tokenId) public pure returns (uint256) {

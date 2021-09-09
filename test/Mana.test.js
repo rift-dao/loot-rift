@@ -1,5 +1,5 @@
 const { accounts, contract } = require('@openzeppelin/test-environment');
-const { BN } = require('@openzeppelin/test-helpers');
+const { BN, expectRevert } = require('@openzeppelin/test-helpers');
 const expectEvent = require('@openzeppelin/test-helpers/src/expectEvent');
 const { expect } = require('chai');
 
@@ -25,7 +25,7 @@ describe('Mana', () => {
         const owner = await manaInstance.owner();
         const output = await manaInstance.balanceOf(owner);
 
-        expect(output).to.be.bignumber.eq('20');
+        expect(output).to.be.bignumber.eq('100');
     });
 
     // testing some tests
@@ -35,7 +35,21 @@ describe('Mana', () => {
         await manaInstance.burn(13);
         const output = await manaInstance.balanceOf(owner);
 
-        expect(output).to.be.bignumber.eq('7');
+        expect(output).to.be.bignumber.eq('87');
+    });
+
+    it('should not burn someone elses mana', async () => {
+        const owner = await manaInstance.owner();
+        const ownerStartBalance = await manaInstance.balanceOf(owner);
+
+        await expectRevert(
+            manaInstance.burnFrom(owner, 2, { from: accounts[1] }),
+            "Not allowed to burn from this address"
+          );
+        // await manaInstance.burnFrom(owner, 2, { from: accounts[1] });
+        // const ownerBalance = await manaInstance.balanceOf(owner);
+
+        // expect(ownerBalance).to.be.bignumber.eq(ownerStartBalance);
     });
 
     // TODO: make sure crystalsInstance.address is testing the right thing
