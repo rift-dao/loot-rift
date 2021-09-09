@@ -412,10 +412,7 @@ contract Crystals is
     }
 
     function _mint(uint256 tokenId) internal {
-        
-        visits[originalSeed(tokenId)].lastCharge = uint64(block.timestamp);
-        visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
-
+        crystals[originalSeed(tokenId)].tokenId = tokenId;
         crystals[originalSeed(tokenId)].minted = true;
 
         _safeMint(_msgSender(), tokenId);
@@ -482,6 +479,7 @@ contract Crystals is
         crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
 
         mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX) - 1);
+        visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
 
         // mana.approve(manaAddress, getSpin(tokenId));
         // mana.burn(getSpin(tokenId));
