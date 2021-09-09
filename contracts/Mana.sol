@@ -22,6 +22,10 @@ contract Mana is Context, Ownable, ERC20 {
         return 0;
     }
 
+    function symbol() public pure override returns (string memory) {
+        return "AMNA";
+    }
+
     /// @notice function for Crystals contract to mint on behalf of to
     /// @param recipient address to send mana to
     /// @param amount number of mana to mint
@@ -34,6 +38,7 @@ contract Mana is Context, Ownable, ERC20 {
 
     function burnFrom(address account, uint256 amount) external {
         uint256 amountAllowed = allowance(account, _msgSender());
+        require(_msgSender() == ccAddress, "Address Not Allowed");
         require(amount <= amountAllowed, "Not allowed to burn from this address");
         _approve(account, _msgSender(), balanceOf(account) - amount);
         _burn(account, amount);
