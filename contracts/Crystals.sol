@@ -418,6 +418,14 @@ contract Crystals is
         _safeMint(_msgSender(), tokenId);
     }
 
+    /**
+     * @dev Return the token URI through the Loot Expansion interface
+     * @param lootId The Loot Character URI
+     */
+    function lootExpansionTokenUri(uint256 lootId) public pure returns (string memory) {
+        return tokenURI(lootId);
+    }
+
     // the loot bag is the tokenId
     function claimCrystalMana(uint256 tokenId) public nonReentrant {
         if (crystals[originalSeed(tokenId)].minted == false) {
