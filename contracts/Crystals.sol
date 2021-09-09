@@ -86,7 +86,15 @@ contract Crystals is
         uint64 lastCharge;
         uint64 lastLevelUp;
     }
+
+    struct Crystal {
+        uint256 tokenId;
+        bool minted;
+    }
+
     mapping(uint256 => Visits) public visits;
+    // indexed by original tokenId
+    mapping(uint256 => Crystal) public crystals;
 
     constructor(address manaAddress_)
         ERC721("Loot Crystals", "CRYSTAL")
@@ -143,6 +151,18 @@ contract Crystals is
     //         z = (x / z + z) / 2;
     //     }
     // }
+
+    function registerCrystalWithLoot(uint256 tokenId) public nonReentrant {
+        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+        if (tokenId < 8001) {
+            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+        } else {
+            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+        }
+        require(crystals[tokenId].tokenId != 0, "This loot has already claimed a Crystal");
+
+        crystals[tokenId].tokenId = tokenId;
+    }
 
     function tokenURI(uint256 tokenId)
         public
@@ -360,35 +380,69 @@ contract Crystals is
     function claim(uint256 tokenId) public {
         uint256 asLoot = tokenId < 8001 ? 1 : 0;
         mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
-        _claim(tokenId);
+        _mint(tokenId);
     }
 
     function claimWithMLoot(uint256 tokenId) public {
         require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
         require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
         mana.ccMintTo(_msgSender(), 1);
-        _claim(tokenId);
+        _mint(tokenId);
     }
 
     function claimWithLoot(uint256 tokenId) public nonReentrant {
         require(tokenId > 0 && tokenId < 8001, "Token ID for Loot invalid");
         require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
         mana.ccMintTo(_msgSender(), 3);
-        _claim(tokenId);
+        _mint(tokenId);
     }
 
-    function _claim(uint256 tokenId) internal {
-        visits[tokenId].lastCharge = uint64(block.timestamp);
-        visits[tokenId].lastLevelUp = uint64(block.timestamp);
+    function mintRegisteredCrystal(uint256 tokenId) internal {
+        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+        if (tokenId < 8001) {
+            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+        } else {
+            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+        }
+        require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
+        require (crystals[tokenId].minted == false, "This crystal has already been minted");
+
+        crystals[tokenId].minted = true;
+        _safeMint(_msgSender(), tokenId);
+    }
+
+    function _mint(uint256 tokenId) internal {
+        
+        visits[originalSeed(tokenId)].lastCharge = uint64(block.timestamp);
+        visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
+
+        crystals[originalSeed(tokenId)].minted = true;
 
         _safeMint(_msgSender(), tokenId);
+    }
+
+    // the loot bag is the tokenId
+    function chargeRegisteredCrystal(uint256 tokenId) public nonReentrant {
+        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+        if (tokenId < 8001) {
+            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+        } else {
+            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+        }
+        require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
+
+        _chargeCrystal(crystals[tokenId].tokenId);
     }
 
     function chargeCrystal(uint256 tokenId) public nonReentrant {
         require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
 
+        _chargeCrystal(tokenId);
+    }
+
+    function _chargeCrystal(uint256 tokenId) internal {
         uint256 daysSinceCharge = diffDays(
-            visits[tokenId].lastCharge,
+            visits[originalSeed(tokenId)].lastCharge,
             block.timestamp
         );
         require(
@@ -401,8 +455,22 @@ contract Crystals is
             manaGained = getSpin(tokenId);
         }
 
-        visits[tokenId].lastCharge = uint64(block.timestamp);
+        visits[originalSeed(tokenId)].lastCharge = uint64(block.timestamp);
         mana.ccMintTo(_msgSender(), manaGained);
+    }
+
+    function levelUpRegisteredCrystal(uint256 tokenId) public nonReentrant {
+        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+        if (tokenId < 8001) {
+            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+        } else {
+            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+        }
+        require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
+        require(_canLevelCrystal(crystals[tokenId].tokenId), "This crystal is not ready to be leveled up");
+
+        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
+        mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
     }
 
     // in order to level up the crystal must reach max capacity (d * mb >= cap)
@@ -410,24 +478,16 @@ contract Crystals is
     // leveling up also gains bonus mana equal to level - 1
     function levelUpCrystal(uint256 tokenId) public nonReentrant {
         require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
-        require(mana.balanceOf(_msgSender()) >= getSpin(tokenId), "Not enough Mana");
-        
-        // time since last charge
-        uint256 dayDiff = diffDays(
-            visits[tokenId].lastCharge,
-            block.timestamp
-        );
-        uint256 isMaxCharge = dayDiff * getResonance(tokenId) >=
-            getSpin(tokenId)
-            ? 1
-            : 0;
-        require(isMaxCharge == 1, "This crystal is not ready to be leveled up");
+        require(_canLevelCrystal(tokenId), "This crystal is not ready to be leveled up");
         
         // mana.approve(manaAddress, getSpin(tokenId));
         // mana.burn(getSpin(tokenId));
 
-        _burn(tokenId);
-        _claim(tokenId + _MAX);
+        // _burn(tokenId);
+        // _mint(tokenId + _MAX);
+        
+        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
+
         mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
 
         // req
@@ -438,6 +498,20 @@ contract Crystals is
         // if lup.days_ago >= cap
         // levelUpClaim(_MAX + tokenId)
         // mana.mint(level - 1)
+    }
+
+    function _canLevelCrystal(uint256 tokenId) internal view returns (bool) {
+        // time since last charge
+        uint256 dayDiff = diffDays(
+            visits[originalSeed(tokenId)].lastCharge,
+            block.timestamp
+        );
+        uint256 isMaxCharge = dayDiff * getResonance(tokenId) >=
+            getSpin(tokenId)
+            ? 1
+            : 0;
+
+        return isMaxCharge == 1;
     }
 
     function originalSeed(uint256 tokenId) internal pure returns (uint256) {
