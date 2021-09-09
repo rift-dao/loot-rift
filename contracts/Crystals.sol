@@ -422,25 +422,25 @@ contract Crystals is
     }
 
     // the loot bag is the tokenId
-    function chargeRegisteredCrystal(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
-        if (tokenId < 8001) {
-            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+    function claimCrystalMana(uint256 tokenId) public nonReentrant {
+        if (crystals[originalSeed(tokenId)].minted == false) {
+            // using a virtual crystal
+            require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+            if (tokenId < 8001) {
+                require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+            } else {
+                require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+            }
+            require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
         } else {
-            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+            // using a Crystal Token
+            require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
         }
-        require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
-
-        _chargeCrystal(crystals[tokenId].tokenId);
+        
+        _claimCrystalMana(crystals[originalSeed(tokenId)].tokenId);
     }
 
-    function chargeCrystal(uint256 tokenId) public nonReentrant {
-        require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
-
-        _chargeCrystal(tokenId);
-    }
-
-    function _chargeCrystal(uint256 tokenId) internal {
+    function _claimCrystalMana(uint256 tokenId) internal {
         uint256 daysSinceCharge = diffDays(
             visits[originalSeed(tokenId)].lastCharge,
             block.timestamp
@@ -459,36 +459,35 @@ contract Crystals is
         mana.ccMintTo(_msgSender(), manaGained);
     }
 
-    function levelUpRegisteredCrystal(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
-        if (tokenId < 8001) {
-            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
-        } else {
-            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
-        }
-        require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
-        require(_canLevelCrystal(crystals[tokenId].tokenId), "This crystal is not ready to be leveled up");
-
-        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
-        mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
-    }
-
     // in order to level up the crystal must reach max capacity (d * mb >= cap)
     // leveling up burns the crystal and mints a new one with id = _MAX + old.id
     // leveling up also gains bonus mana equal to level - 1
     function levelUpCrystal(uint256 tokenId) public nonReentrant {
-        require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
+        if (crystals[originalSeed(tokenId)].minted == false) {
+            // using a virtual crystal
+            require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+            if (tokenId < 8001) {
+                require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+            } else {
+                require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+            }
+            require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
+        } else {
+            // using a Crystal Token
+            require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
+        }
+
         require(_canLevelCrystal(tokenId), "This crystal is not ready to be leveled up");
         
+        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
+
+        mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX) - 1);
+
         // mana.approve(manaAddress, getSpin(tokenId));
         // mana.burn(getSpin(tokenId));
 
         // _burn(tokenId);
         // _mint(tokenId + _MAX);
-        
-        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
-
-        mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
 
         // req
         // last level up was >= (d * mb) days ago

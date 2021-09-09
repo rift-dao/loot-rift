@@ -57,7 +57,7 @@ describe('Mana X Crystals With Claimed', () => {
 
   it('should generate mana on charge', async () => {
     const manaBefore = (await manaInstance.balanceOf(accounts[0])).toNumber();
-    await crystalsInstance.chargeCrystal(8999, { from: accounts[0] });
+    await crystalsInstance.claimCrystalMana(8999, { from: accounts[0] });
     const manaAfter = await manaInstance.balanceOf(accounts[0]);
     const resonance = (await crystalsInstance.getResonance(8999)).toNumber();
 
@@ -65,14 +65,14 @@ describe('Mana X Crystals With Claimed', () => {
   });
 
   it('should not be chargeable twice', async () => {
-    await crystalsInstance.chargeCrystal(8998, { from: accounts[1] });
+    await crystalsInstance.claimCrystalMana(8998, { from: accounts[1] });
     
     const dayInSeconds = 24 * 60 * 60;
     // add ~23 hours to the blockchain
     await time.increase(dayInSeconds - (60 * 60));
 
     await expectRevert(
-      crystalsInstance.chargeCrystal(8998, { from: accounts[1] }),
+      crystalsInstance.claimCrystalMana(8998, { from: accounts[1] }),
       "You must wait before you can charge this Crystal again"
     );
   });
