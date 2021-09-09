@@ -378,7 +378,7 @@ contract Crystals is
     }
 
     function _claim(uint256 tokenId) internal {
-        visits[tokenId].lastCharge = uint64(block.timestamp - 1 days);
+        visits[tokenId].lastCharge = uint64(block.timestamp);
         visits[tokenId].lastLevelUp = uint64(block.timestamp);
 
         _safeMint(_msgSender(), tokenId);
@@ -429,7 +429,6 @@ contract Crystals is
         _burn(tokenId);
         _claim(tokenId + _MAX);
         mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
-        visits[tokenId + _MAX].lastCharge = uint64(block.timestamp);
 
         // req
         // last level up was >= (d * mb) days ago
