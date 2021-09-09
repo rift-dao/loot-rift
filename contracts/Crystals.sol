@@ -412,8 +412,9 @@ contract Crystals is
         require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
         require(mana.balanceOf(_msgSender()) >= getSpin(tokenId), "Not enough Mana");
         
+        // time since last charge
         uint256 dayDiff = diffDays(
-            visits[tokenId].lastLevelUp,
+            visits[tokenId].lastCharge,
             block.timestamp
         );
         uint256 isMaxCharge = dayDiff * getResonance(tokenId) >=
@@ -428,7 +429,7 @@ contract Crystals is
         _burn(tokenId);
         _claim(tokenId + _MAX);
         mana.ccMintTo(_msgSender(), getLevel(tokenId + _MAX) - 1);
-        visits[tokenId + _MAX].lastCharge = visits[tokenId].lastCharge;
+        visits[tokenId + _MAX].lastCharge = uint64(block.timestamp);
 
         // req
         // last level up was >= (d * mb) days ago
