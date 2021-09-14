@@ -428,15 +428,15 @@ contract Crystals is
 
     // the loot bag is the tokenId
     function claimCrystalMana(uint256 tokenId) public nonReentrant {
+        uint256 originalId = originalSeed(tokenId);
         if (crystals[originalSeed(tokenId)].minted == false) {
             // using a virtual crystal
-            require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
-            if (tokenId < 8001) {
-                require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+            require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
+            if (originalId < 8001) {
+                require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
             } else {
-                require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+                require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
             }
-            require (crystals[tokenId].tokenId > 0, "This crystal isn't registered");
         } else {
             // using a Crystal Token
             require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
@@ -604,7 +604,7 @@ contract Crystals is
         if (level == 1) {
             return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1);
         } else {
-            return 5 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 2, 1) - 1;
+            return 5 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1);
         }
     }
 
