@@ -95,6 +95,7 @@ contract Crystals is
     mapping(uint256 => Visits) public visits;
     // indexed by original tokenId
     mapping(uint256 => Crystal) public crystals;
+    mapping(uint256 => uint256) public manaProduced;
 
     constructor(address manaAddress_)
         ERC721("Loot Crystals", "CRYSTAL")
@@ -357,7 +358,7 @@ contract Crystals is
             require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
         }
         
-        _claimCrystalMana(crystals[originalSeed(tokenId)].tokenId);
+        _claimCrystalMana(tokenId);
     }
 
     function _claimCrystalMana(uint256 tokenId) internal {
@@ -367,24 +368,46 @@ contract Crystals is
         );
         require(
             daysSinceCharge >= 1,
-            "You must wait before you can charge this Crystal again"
+            "You must wait before you can use this Crystal again"
         );
 
-        uint256 manaGained = daysSinceCharge * dailyMana(tokenId);
-        if (daysSinceCharge > getLevel(tokenId)) {
-            manaGained = getLevel(tokenId) * dailyMana(tokenId);
-        }
+        uint256 manaToProduce = extractableMana(tokenId);
 
         visits[originalSeed(tokenId)].lastCharge = uint64(block.timestamp);
-        mana.ccMintTo(_msgSender(), manaGained);
+        manaProduced[tokenId] = manaProduced[tokenId] + manaToProduce;
+        mana.ccMintTo(_msgSender(), manaToProduce);
+    }
+
+    function extractableMana(uint256 tokenId) internal view returns (uint256) {
+        uint256 daysSinceCharge = diffDays(
+            visits[originalSeed(tokenId)].lastCharge,
+            block.timestamp
+        );
+
+        uint256 manaToProduce = daysSinceCharge * dailyMana(tokenId);
+        uint256 manaProducedAtLevel = manaProduced[tokenId];
+        // don't give more mana than the crystal's capacity
+        if (daysSinceCharge > getLevel(tokenId)) {
+            manaToProduce = getLevel(tokenId) * dailyMana(tokenId);
+        }
+
+        if ((manaToProduce + manaProducedAtLevel) > levelMana(tokenId)) {
+            return levelMana(tokenId) - manaProducedAtLevel;
+        } else {
+            return manaToProduce;
+        }
+    }
+
+    function levelMana(uint256 tokenId) internal pure returns (uint256) {
+        return _isOGCrystal(tokenId) ? getSpin(tokenId) * 10 : getSpin(tokenId);
     }
 
     function dailyMana(uint256 tokenId) internal pure returns (uint256) {
-        return isOGCrystal(tokenId) ? getResonance(tokenId) * 10 : getResonance(tokenId);
+        return _isOGCrystal(tokenId) ? getResonance(tokenId) * 10 : getResonance(tokenId);
     }
 
-    function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
-        return tokenId < 8001;
+    function _isOGCrystal(uint256 tokenId) internal pure returns (bool) {
+        return originalSeed(tokenId) < 8001;
     }
 
     // in order to level up the crystal must reach max capacity (d * mb >= cap)
