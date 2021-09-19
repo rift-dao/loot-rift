@@ -434,21 +434,7 @@ contract Crystals is
 
         mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX) - 1);
         visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
-
-        // mana.approve(manaAddress, getSpin(tokenId));
-        // mana.burn(getSpin(tokenId));
-
-        // _burn(tokenId);
-        // _mint(tokenId + _MAX);
-
-        // req
-        // last level up was >= (d * mb) days ago
-        // has not been transfered in cap days
-
-        // # of days since last level up or transfer * mana bonus
-        // if lup.days_ago >= cap
-        // levelUpClaim(_MAX + tokenId)
-        // mana.mint(level - 1)
+    
     }
 
     function _canLevelCrystal(uint256 tokenId) internal view returns (bool) {
@@ -457,8 +443,7 @@ contract Crystals is
             visits[originalSeed(tokenId)].lastCharge,
             block.timestamp
         );
-        uint256 isMaxCharge = dayDiff * getResonance(tokenId) >=
-            getSpin(tokenId)
+        uint256 isMaxCharge = dayDiff == getLevel(tokenId)
             ? 1
             : 0;
 
