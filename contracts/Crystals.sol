@@ -550,7 +550,7 @@ contract Crystals is
         if (level == 1) {
             return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1);
         } else {
-            return 5 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1);
+            return 88 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1);
         }
     }
 
