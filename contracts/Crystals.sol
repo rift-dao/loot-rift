@@ -53,6 +53,23 @@ contract Crystals is
     address public manaAddress;
     IMANA public mana;
 
+    uint256 public lootersPrice = 200000000000000000; //0.2 ETH
+    uint256 public mlootersPrice = 20000000000000000; //0.02 ETH
+
+    function withdraw() public onlyOwner {
+        uint balance = address(this).balance;
+        msg.sender.transfer(balance);
+    }
+
+    function deposit() public payable onlyOwner {}
+
+     function setLootersPrice(uint256 newPrice) public onlyOwner {
+        lootersPrice = newPrice;
+    }
+     function setmLootersPrice(uint256 newPrice) public onlyOwner {
+        mlootersPrice = newPrice;
+    }
+
     string private constant cursedPrefixes =
         "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     uint256 private constant cursedPrefixesLength = 8;
@@ -312,13 +329,15 @@ contract Crystals is
         _mint(tokenId);
     }
 
-    function mintRegisteredCrystal(uint256 tokenId) internal {
+    function mintRegisteredCrystal(uint256 tokenId) public payable nonReentrant {
         uint256 originalId = originalSeed(tokenId);
         require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
         if (originalId < 8001) {
             require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
+            require(lootersPrice <= msg.value, "Ether value sent is not correct");
         } else {
             require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
+            require(mlootersPrice <= msg.value, "Ether value sent is not correct");
         }
         require (crystals[originalId].tokenId > 0, "This crystal isn't registered");
         require (crystals[originalId].minted == false, "This crystal has already been minted");
