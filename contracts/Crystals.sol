@@ -136,22 +136,6 @@ contract Crystals is
         return output;
     }
 
-
-    // function getSlab(uint256 tokenId, uint256 indexX, uint indexY) internal pure returns (string memory)  {
-    //     uint256 rand = getRandom(tokenId, string(abi.encodePacked("SLAB_", toString(indexX), toString(indexY))), true);
-
-    //     return getItemFromCSV(slabs, rand % slabsLength);
-    // }
-
-    // function sqrt(uint x) internal pure returns (uint y) {
-    //     uint z = (x + 1) / 2;
-    //     y = x;
-    //     while (z < y) {
-    //         y = z;
-    //         z = (x / z + z) / 2;
-    //     }
-    // }
-
     function registerCrystalWithLoot(uint256 tokenId) public nonReentrant {
         require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
         if (tokenId < 8001) {
@@ -248,13 +232,6 @@ contract Crystals is
             )
         );
 
-        // output = string(
-        //     abi.encodePacked(
-        //         output, 
-        //         formSlabs(tokenId), '</text></svg>'
-        //     )
-        // );
-
         // ROW 1
         output = string(
             abi.encodePacked(
@@ -277,69 +254,6 @@ contract Crystals is
                 slabRow(tokenId, 11, 485),
                 '</svg>'
         ));
-
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         getSlab(tokenId, 7),
-        //         getSlab(tokenId, 8),
-        //         getSlab(tokenId, 9),
-        //         getSlab(tokenId, 10),
-        //         getSlab(tokenId, 11),
-        //         getSlab(tokenId, 12)
-        //     )
-        // );
-
-        // // ROW 2
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         '</text><text x="285" y="314" class="slab">',
-        //         getSlab(tokenId, 13),
-        //         getSlab(tokenId, 14),
-        //         getSlab(tokenId, 15),
-        //         getSlab(tokenId, 16),
-        //         getSlab(tokenId, 17),
-        //         getSlab(tokenId, 18)
-        // ));
-                
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         getSlab(tokenId, 19),
-        //         getSlab(tokenId, 20),
-        //         getSlab(tokenId, 21),
-        //         getSlab(tokenId, 22),
-        //         getSlab(tokenId, 23),
-        //         getSlab(tokenId, 24)
-        //     )
-        // );
-
-        // // ROW 3
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         '<text x="285" y="333" class="slab">',
-        //         getSlab(tokenId, 25),
-        //         getSlab(tokenId, 26),
-        //         getSlab(tokenId, 27),
-        //         getSlab(tokenId, 28),
-        //         getSlab(tokenId, 29),
-        //         getSlab(tokenId, 30)
-        // ));
-
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         getSlab(tokenId, 31),
-        //         getSlab(tokenId, 32),
-        //         getSlab(tokenId, 33),
-        //         getSlab(tokenId, 34),
-        //         getSlab(tokenId, 35),
-        //         getSlab(tokenId, 36),
-        //         "</text></svg>"
-        //     )
-        // );
 
         string memory stats = string(
             abi.encodePacked(
@@ -377,11 +291,11 @@ contract Crystals is
         return output;
     }
 
-    function claim(uint256 tokenId) public {
-        uint256 asLoot = tokenId < 8001 ? 1 : 0;
-        mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
-        _mint(tokenId);
-    }
+    // function claim(uint256 tokenId) public {
+    //     uint256 asLoot = tokenId < 8001 ? 1 : 0;
+    //     mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
+    //     _mint(tokenId);
+    // }
 
     function claimWithMLoot(uint256 tokenId) public {
         require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
@@ -456,13 +370,21 @@ contract Crystals is
             "You must wait before you can charge this Crystal again"
         );
 
-        uint256 manaGained = daysSinceCharge * getResonance(tokenId);
-        if (manaGained > getSpin(tokenId)) {
-            manaGained = getSpin(tokenId);
+        uint256 manaGained = daysSinceCharge * dailyMana(tokenId);
+        if (daysSinceCharge > getLevel(tokenId)) {
+            manaGained = getLevel(tokenId) * dailyMana(tokenId);
         }
 
         visits[originalSeed(tokenId)].lastCharge = uint64(block.timestamp);
         mana.ccMintTo(_msgSender(), manaGained);
+    }
+
+    function dailyMana(uint256 tokenId) internal pure returns (uint256) {
+        return isOGCrystal(tokenId) ? getResonance(tokenId) * 10 : getResonance(tokenId);
+    }
+
+    function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
+        return tokenId < 8001;
     }
 
     // in order to level up the crystal must reach max capacity (d * mb >= cap)
