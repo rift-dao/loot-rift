@@ -16,11 +16,14 @@ contract Mana is Context, Ownable, ERC20 {
 
     constructor() Ownable() ERC20("Mana", "MANA") {
         _mint(_msgSender(), 100);
-        // _mint('TONYS_WALLET', 100);
     }
 
     function decimals() public pure override returns (uint8) {
         return 0;
+    }
+
+    function symbol() public pure override returns (string memory) {
+        return "AMNA";
     }
 
     /// @notice function for Crystals contract to mint on behalf of to
@@ -28,9 +31,21 @@ contract Mana is Context, Ownable, ERC20 {
     /// @param amount number of mana to mint
     function ccMintTo(address recipient, uint256 amount) external {
         // Check that the msgSender is from Crystals
-        require(_msgSender() == ccAddress, "MUST_BE_FROM_CRYSTALS_CONTRACT");
+        require(_msgSender() == ccAddress, "Address Not Allowed");
 
         _mint(recipient, amount);
+    }
+
+    function burnFrom(address account, uint256 amount) external {
+        uint256 amountAllowed = allowance(account, _msgSender());
+        require(_msgSender() == ccAddress, "Address Not Allowed");
+        require(amount <= amountAllowed, "Not allowed to burn from this address");
+        _approve(account, _msgSender(), balanceOf(account) - amount);
+        _burn(account, amount);
+    }
+
+    function mint(uint256 amount) external {
+        _mint(_msgSender(), amount);
     }
 
     function burn(uint256 amount) external {
