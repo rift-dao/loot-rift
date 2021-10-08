@@ -53,6 +53,8 @@ contract Crystals is
     address public manaAddress;
     IMANA public mana;
 
+    uint256 public mintedCrystals;
+
     uint256 public lootersPrice = 200000000000000000; //0.2 ETH
     uint256 public mlootersPrice = 20000000000000000; //0.02 ETH
 
