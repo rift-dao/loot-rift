@@ -24,7 +24,7 @@ contract Mana is Context, Ownable, ERC20 {
     // decided by the DAO.
     uint256 public gaSeason = 0;
     uint256 public gaTokenIdStart = 1;
-    uint256 public gaTokenIdEnd = 2550;
+    uint256 public gaTokenIdEnd = 2540;
 
     // Track claimed tokens within a season
     // IMPORTANT: The format of the mapping is:
@@ -208,12 +208,6 @@ contract Mana is Context, Ownable, ERC20 {
         gaSeason = season_;
     }
 
-    /// @notice Allows the DAO to set the amount of Mana that is
-    /// claimed per token ID
-    /// @param ManaDisplayValue The amount of Mana a user can claim.
-    /// This should be input as the display value, not in raw decimals. If you
-    /// want to mint 100 Mana, you should enter "100" rather than the value of
-    /// 100 * 10^18.
     function daoSetManaPerGATokenId(uint256 manaDisplayValue)
         public
         onlyOwner

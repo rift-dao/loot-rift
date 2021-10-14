@@ -60,7 +60,7 @@ contract Crystals is
 
     function withdraw() public onlyOwner {
         uint balance = address(this).balance;
-        msg.sender.transfer(balance);
+        payable(msg.sender).transfer(balance);
     }
 
     function deposit() public payable onlyOwner {}
