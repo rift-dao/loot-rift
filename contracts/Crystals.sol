@@ -50,14 +50,17 @@ contract Crystals is
     ERC721 public constant mLoot =
         ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
 
+    ERC721 public constant genesisAdventure =
+        ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
+
     address public manaAddress;
     IMANA public mana;
 
     uint256 public mintedCrystals;
 
     uint256 public numFreeCrystals = 2000;
-    uint256 public lootersPrice = 200000000000000000; //0.2 ETH
-    uint256 public mlootersPrice = 20000000000000000; //0.02 ETH
+    uint256 public lootersPrice = 90000000000000000; //0.09 ETH
+    uint256 public mlootersPrice = 30000000000000000; //0.03 ETH
 
     function withdraw() public onlyOwner {
         uint balance = address(this).balance;
@@ -105,7 +108,8 @@ contract Crystals is
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
     uint256 private constant slabsLength = 4;
 
-    uint256 private constant _MAX = 10000000;
+    uint256 private constant _MAX_CRYSTALS = 10000000;
+    uint256 private constant _GA_OFFSET = 10000000 - 2541; // total number of GAs
     uint256 public constant _MAX_LEVEL = 20;
 
     struct Visits {
@@ -164,7 +168,7 @@ contract Crystals is
     }
 
     function registerCrystalWithLoot(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
+        require(tokenId > 0 && tokenId < _MAX_CRYSTALS, "Token ID for Loot invalid");
         if (tokenId < 8001) {
             require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
         } else {
@@ -344,18 +348,18 @@ contract Crystals is
 
     function mintRegisteredCrystal(uint256 tokenId) public payable nonReentrant {
         uint256 originalId = originalSeed(tokenId);
-        require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
+        require(originalId > 0 && originalId < _MAX_CRYSTALS, "Token ID for Loot invalid");
         if (originalId < 8001) {
             require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
             if (mintedCrystals >= numFreeCrystals) {
                 require(lootersPrice <= msg.value, "Ether value sent is not correct");
             }
-        } else {
+        } else if (originalId < _GA_OFFSET) {
             require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
             if (mintedCrystals >= numFreeCrystals) {
                 require(mlootersPrice <= msg.value, "Ether value sent is not correct");
             }
-        }
+        } 
         require (crystals[originalId].tokenId > 0, "This crystal isn't registered");
         require (crystals[originalId].minted == false, "This crystal has already been minted");
 
@@ -385,7 +389,7 @@ contract Crystals is
         uint256 originalId = originalSeed(tokenId);
         if (crystals[originalSeed(tokenId)].minted == false) {
             // using a virtual crystal
-            require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
+            require(originalId > 0 && originalId < _MAX_CRYSTALS, "Token ID for Loot invalid");
             if (originalId < 8001) {
                 require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
             } else {
@@ -455,7 +459,7 @@ contract Crystals is
         uint256 originalId = originalSeed(tokenId);
         if (crystals[originalSeed(tokenId)].minted == false) {
             // using a virtual crystal
-            require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
+            require(originalId > 0 && originalId < _MAX_CRYSTALS, "Token ID for Loot invalid");
             if (originalId < 8001) {
                 require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
             } else {
@@ -468,9 +472,9 @@ contract Crystals is
 
         require(_canLevelCrystal(tokenId), "This crystal is not ready to be leveled up");
         
-        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
+        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX_CRYSTALS;
 
-        mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX) - 1);
+        mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX_CRYSTALS) - 1);
         visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
     
     }
@@ -492,11 +496,11 @@ contract Crystals is
     }
 
     function originalSeed(uint256 tokenId) internal pure returns (uint256) {
-        if (tokenId <= _MAX) {
+        if (tokenId <= _MAX_CRYSTALS) {
             return tokenId;
         }
 
-        return tokenId - (_MAX * (tokenId / _MAX));
+        return tokenId - (_MAX_CRYSTALS * (tokenId / _MAX_CRYSTALS));
     }
 
     function getRandom(uint256 tokenId, string memory key)
@@ -550,7 +554,7 @@ contract Crystals is
         uint256 score = getRoll(tokenId, key, size, times);
 
         while (index < getLevel(tokenId)) {
-            score += getRoll((index * _MAX) + oSeed, key, size, times, true);
+            score += getRoll((index * _MAX_CRYSTALS) + oSeed, key, size, times, true);
             index++;
         }
 
@@ -563,7 +567,7 @@ contract Crystals is
             return 1;
         }
 
-        return (tokenId / _MAX) + 1;
+        return (tokenId / _MAX_CRYSTALS) + 1;
     }
 
     function getResonance(uint256 tokenId) public pure returns (uint256) {
