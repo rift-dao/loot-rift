@@ -23,13 +23,13 @@ describe('Mana X Crystals Pre-Claim', () => {
   });
 
   it('should be claimed', async () => {
-    await crystalsInstance.claim(8999, { from: accounts[0] });
+    await crystalsInstance.mint(8999, { from: accounts[0] });
     const token = await crystalsInstance.tokenOfOwnerByIndex(accounts[0], 0);
     expect(token).to.be.bignumber.equal('8999')
   });
 
   it('should generate mana on claim', async () => {
-    await crystalsInstance.claim(8998, { from: accounts[1] });
+    await crystalsInstance.mint(8998, { from: accounts[1] });
 
     const manaBalance = await manaInstance.balanceOf(accounts[1]);
     expect(manaBalance).to.be.bignumber.equal('1');
@@ -43,9 +43,9 @@ describe('Mana X Crystals With Claimed', () => {
       manaInstance = await Mana.new();
       crystalsInstance = await Crystals.new(manaInstance.address);
       await manaInstance.ownerSetCContractAddress(crystalsInstance.address);
-      await crystalsInstance.claim(8999, { from: accounts[0] });
-      await crystalsInstance.claim(8998, { from: accounts[1] });
-      await crystalsInstance.claim(8997, { from: accounts[2] });
+      await crystalsInstance.mint(8999, { from: accounts[0] });
+      await crystalsInstance.mint(8998, { from: accounts[1] });
+      await crystalsInstance.mint(8997, { from: accounts[2] });
 
       await manaInstance.mint(100, { from: accounts[0] });
   });
@@ -57,7 +57,7 @@ describe('Mana X Crystals With Claimed', () => {
 
   it('should generate mana on charge', async () => {
     const manaBefore = (await manaInstance.balanceOf(accounts[0])).toNumber();
-    await crystalsInstance.claimCrystalMana(8999, { from: accounts[0] });
+    await crystalsInstance.mintCrystalMana(8999, { from: accounts[0] });
     const manaAfter = await manaInstance.balanceOf(accounts[0]);
     const resonance = (await crystalsInstance.getResonance(8999)).toNumber();
 
@@ -65,14 +65,14 @@ describe('Mana X Crystals With Claimed', () => {
   });
 
   it('should not be chargeable twice', async () => {
-    await crystalsInstance.claimCrystalMana(8998, { from: accounts[1] });
+    await crystalsInstance.mintCrystalMana(8998, { from: accounts[1] });
     
     const dayInSeconds = 24 * 60 * 60;
     // add ~23 hours to the blockchain
     await time.increase(dayInSeconds - (60 * 60));
 
     await expectRevert(
-      crystalsInstance.claimCrystalMana(8998, { from: accounts[1] }),
+      crystalsInstance.mintCrystalMana(8998, { from: accounts[1] }),
       "You must wait before you can charge this Crystal again"
     );
   });
@@ -92,7 +92,7 @@ describe('Mana X Crystals With Claimed', () => {
   });
 
   it('should not be levelable', async () => {
-    await crystalsInstance.claim(8996, { from: accounts[0] });
+    await crystalsInstance.mint(8996, { from: accounts[0] });
     // const dayInSeconds = 24 * 60 * 60;
     // // add ~23hours to the blockchain
     // time.increase(dayInSeconds - (60 * 60));
@@ -105,7 +105,7 @@ describe('Mana X Crystals With Claimed', () => {
   });
 
   it('should be levelable after 1 day', async () => {
-    await crystalsInstance.claim(8995, { from: accounts[0] });
+    await crystalsInstance.mint(8995, { from: accounts[0] });
 
     const spin = (await crystalsInstance.getSpin(8995)).toNumber();
     const resonance = (await crystalsInstance.getResonance(8995)).toNumber();

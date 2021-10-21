@@ -316,20 +316,20 @@ contract Crystals is
         return output;
     }
 
-    function claim(uint256 tokenId) public {
+    function mint(uint256 tokenId) public {
         uint256 asLoot = tokenId < 8001 ? 1 : 0;
         mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
         _mint(tokenId);
     }
 
-    function claimWithMLoot(uint256 tokenId) public {
+    function mintWithMLoot(uint256 tokenId) public {
         require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
         require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
         mana.ccMintTo(_msgSender(), 1);
         _mint(tokenId);
     }
 
-    function claimWithLoot(uint256 tokenId) public nonReentrant {
+    function mintWithLoot(uint256 tokenId) public nonReentrant {
         require(tokenId > 0 && tokenId < 8001, "Token ID for Loot invalid");
         require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
         mana.ccMintTo(_msgSender(), 3);
