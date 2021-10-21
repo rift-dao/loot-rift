@@ -62,6 +62,11 @@ contract Crystals is
     uint256 public lootersPrice = 90000000000000000; //0.09 ETH
     uint256 public mlootersPrice = 30000000000000000; //0.03 ETH
 
+    uint256 private constant _MAX_CRYSTALS = 10000000;
+    uint256 private constant _GA_OFFSET = 10000000 - 2541; // total number of GAs
+    uint256 public maxLevel = 20;
+    uint256 public gaStartLevel = 10;
+
     function withdraw() public onlyOwner {
         uint balance = address(this).balance;
         payable(msg.sender).transfer(balance);
@@ -79,6 +84,10 @@ contract Crystals is
 
     function setNumFreeCrystals(uint256 newValue) public onlyOwner {
         numFreeCrystals = newValue;
+    }
+
+    function setGAStartingCrystalLevel(uint256 newValue) public onlyOwner {
+        gaStartLevel = newValue;
     }
 
     string private constant cursedPrefixes =
@@ -107,10 +116,6 @@ contract Crystals is
 
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
     uint256 private constant slabsLength = 4;
-
-    uint256 private constant _MAX_CRYSTALS = 10000000;
-    uint256 private constant _GA_OFFSET = 10000000 - 2541; // total number of GAs
-    uint256 public maxLevel = 20;
 
     struct Visits {
         uint64 lastCharge;
@@ -177,6 +182,13 @@ contract Crystals is
         require(crystals[tokenId].tokenId != 0, "This loot has already claimed a Crystal");
 
         crystals[tokenId].tokenId = tokenId;
+    }
+
+    function registerCrystalWithGA(uint256 tokenId) public nonReentrant {
+        require(tokenId > 0 && tokenId <= 2540, "Token ID for GA invalid");
+        require(genesisAdventure.ownerOf(tokenId) == _msgSender(), "Not GA owner");
+
+        crystals[tokenId + _GA_OFFSET].tokenId = tokenId + (_MAX_CRYSTALS * 10); // register a level 10 crystal
     }
 
     function registerCrystalById(uint256 tokenId) public nonReentrant {
