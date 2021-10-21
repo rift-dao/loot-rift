@@ -190,8 +190,9 @@ contract Crystals is
 
         crystals[tokenId + _GA_OFFSET].tokenId = tokenId + (_MAX_CRYSTALS * 10); // register a level 10 crystal
     }
-
-    function registerCrystalById(uint256 tokenId) public nonReentrant {
+    
+    // TODO: REMOVE AFTER TESTING
+    function testRegister(uint256 tokenId) public nonReentrant {
         crystals[tokenId].tokenId = tokenId;
     }
 
@@ -346,7 +347,8 @@ contract Crystals is
         return output;
     }
 
-    function mint(uint256 tokenId) public {
+    // TODO: REMOVE AFTER TESTING
+    function testMint(uint256 tokenId) public {
         uint256 asLoot = tokenId < 8001 ? 1 : 0;
         mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
         _mint(tokenId);
@@ -388,7 +390,7 @@ contract Crystals is
         crystals[originalId].minted = true;
         mintedCrystals = mintedCrystals + 1;
 
-        _safeMint(_msgSender(), tokenId);
+        _mint(tokenId);
     }
 
     function _mint(uint256 tokenId) internal {
@@ -486,16 +488,17 @@ contract Crystals is
     // leveling up burns the crystal and mints a new one with id = _MAX + old.id
     // leveling up also gains bonus mana equal to level - 1
     function levelUpCrystal(uint256 tokenId) public nonReentrant {
-        uint256 originalId = originalSeed(tokenId);
-        if (crystals[originalSeed(tokenId)].minted == false) {
+        uint256 oSeed = originalSeed(tokenId);
+
+        if (crystals[oSeed].minted == false) {
             // using a virtual crystal
-            require(originalId > 0 && originalId < _MAX_CRYSTALS, "Token ID for Loot invalid");
-            if (originalId < 8001) {
-                require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            } else if (originalId < _GA_OFFSET) {
-                require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
+            require(oSeed > 0 && oSeed < _MAX_CRYSTALS, "Token ID for Loot invalid");
+            if (oSeed < 8001) {
+                require(loot.ownerOf(oSeed) == _msgSender(), "Not Loot owner");
+            } else if (oSeed < _GA_OFFSET) {
+                require(mLoot.ownerOf(oSeed) == _msgSender(), "Not mLoot owner");
             } else {
-                require(genesisAdventure.ownerOf(originalId - _GA_OFFSET) == _msgSender(), "Not GA Owner");
+                require(genesisAdventure.ownerOf(oSeed - _GA_OFFSET) == _msgSender(), "Not GA Owner");
             }
         } else {
             // using a Crystal Token
@@ -504,11 +507,15 @@ contract Crystals is
 
         require(_canLevelCrystal(tokenId), "This crystal is not ready to be leveled up");
         
-        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX_CRYSTALS;
+        crystals[oSeed].tokenId = crystals[oSeed].tokenId + _MAX_CRYSTALS;
 
-        mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX_CRYSTALS) - 1);
-        visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
+        mana.ccMintTo(_msgSender(), getLevel(crystals[oSeed].tokenId + _MAX_CRYSTALS) - 1);
+        visits[oSeed].lastLevelUp = uint64(block.timestamp);
     
+        if (crystals[oSeed].minted == true) {
+            _burn(tokenId);
+            _mint(tokenId + _MAX_CRYSTALS);
+        }
     }
 
     function _canLevelCrystal(uint256 tokenId) internal view returns (bool) {
