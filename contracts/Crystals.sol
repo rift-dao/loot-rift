@@ -447,6 +447,7 @@ contract Crystals is
         mana.ccMintTo(_msgSender(), manaToProduce);
     }
 
+    // Mana available to be extracted from the crystal right now
     function extractableMana(uint256 tokenId) internal view returns (uint256) {
         uint256 daysSinceCharge = diffDays(
             visits[originalSeed(tokenId)].lastCharge,
@@ -863,12 +864,12 @@ contract Crystals is
         return super.supportsInterface(interfaceId);
     }
 
-    function ownerUpdateMaxLevel(uint256 maxLevel)
+    function ownerUpdateMaxLevel(uint256 maxLevel_)
         public
         onlyOwner
     {
-        require(maxLevel > maxLevel, "You may only increase the max level");
-        maxLevel = maxLevel;
+        require(maxLevel_ > maxLevel, "You may only increase the max level");
+        maxLevel = maxLevel_;
     }
 }
 
