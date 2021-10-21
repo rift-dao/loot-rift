@@ -475,7 +475,11 @@ contract Crystals is
 
     function _isOGCrystal(uint256 tokenId) internal pure returns (bool) {
         // treat OG Loot and GA Crystals as OG
-        return originalSeed(tokenId) < 8001 || originalSeed(tokenId) > _GA_OFFSET;
+        return originalSeed(tokenId) < 8001 || _isGACrystal(tokenId);
+    }
+
+    function _isGACrystal(uint256 tokenId) internal pure returns (bool) {
+        return originalSeed(tokenId) > _GA_OFFSET;
     }
 
     // in order to level up the crystal must reach max capacity (d * mb >= cap)
