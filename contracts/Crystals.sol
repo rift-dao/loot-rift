@@ -106,7 +106,7 @@ contract Crystals is
     uint256 private constant slabsLength = 4;
 
     uint256 private constant _MAX = 10000000;
-    uint256 public constant _MAX_LEVEL = 20;
+    uint256 public maxLevel = 20;
 
     struct Visits {
         uint64 lastCharge;
@@ -286,15 +286,15 @@ contract Crystals is
                 '</svg>'
         ));
 
-        string memory stats = string(
+        string memory attributes = string(
             abi.encodePacked(
-                '"stats": { "level": ',
-                toString(getLevel(tokenId)),
-                ', "resonance": ',
-                toString(getResonance(tokenId)),
-                ', "spin": ',
-                toString(getSpin(tokenId)),
-                " }"
+                '"attributes": [ ',
+                '{ "trait_type": "Level", "value": ', toString(getLevel(tokenId)), ' }, ',
+                '{ "trait_type": "Resonance", "value": ', toString(getResonance(tokenId)), ' }, ',
+                '{ "trait_type": "Spin", "value": ', toString(getSpin(tokenId)), ' }, ',
+                '{ "trait_type": "Loot Type", "value": ', getLootType(tokenId) ,' }',
+                '{ "trait_type": "Color", "value": ', getColor(tokenId) ,' }',
+                ' ]'
             )
         );
 
@@ -302,15 +302,23 @@ contract Crystals is
             bytes(
                 string(
                     abi.encodePacked(
-                        '{"id": ',
-                        toString(tokenId),
-                        ', "name": "Crystal #',
-                        toString(originalSeed(tokenId)),
-                        '", ',
-                        stats,
-                        ', "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,',
-                        Base64.encode(bytes(output)),
-                        '"}'
+                        '{"id": ', toString(tokenId), ', ',
+                        '"name": ', getName(tokenId), 
+                        (
+                            getLevel(tokenId) > 1
+                                ? string(
+                                    abi.encodePacked(
+                                        " +",
+                                        toString(getLevel(tokenId) - 1)
+                                    )
+                                )
+                                : ""
+                        ), ', ',
+                        '"seedId": ', toString(originalSeed(tokenId)), ', ',
+                        attributes, ', ',
+                        '"description": "This crystal vibrates with energy from the Rift!", ',
+                        '"background_color": "000000", ',
+                        '"image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'
                     )
                 )
             )
@@ -483,7 +491,7 @@ contract Crystals is
         );
         uint256 currentLevel = getLevel(tokenId);
         // can't level up if at max level
-        if (currentLevel == _MAX_LEVEL) { return false; }
+        if (currentLevel == maxLevel) { return false; }
         uint256 isMaxCharge = dayDiff == currentLevel
             ? 1
             : 0;
@@ -578,6 +586,13 @@ contract Crystals is
         } else {
             return 88 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1);
         }
+    }
+
+    function getLootType(uint256 tokenId) public pure returns (string memory) {
+        uint256 oSeed = originalSeed(tokenId);
+        uint256 isFromLoot = oSeed > 0 && oSeed < 8001 ? 1 : 0;
+
+        return isFromLoot == 1 ? 'Loot' : 'mLoot';
     }
 
     function getColor(uint256 tokenId) public pure returns (string memory) {
@@ -731,10 +746,12 @@ contract Crystals is
             string(abi.encodePacked("SLAB_", toString(slot)))
         ) % slabsLength;
         uint256 level = getLevel(tokenId);
-        csvIndex = (csvIndex + (level - 1)) % slabsLength;
-        if (csvIndex > 3) {
-            csvIndex = 0;
-        }
+        
+        // "rotate" each slab one position every level
+        // csvIndex = (csvIndex + (level - 1)) % slabsLength;
+        // if (csvIndex > 3) {
+        //     csvIndex = 0;
+        // }
 
         return
             level > 1 && slot < level ? getItemFromCSV(slabs, csvIndex) : " ";
@@ -815,8 +832,8 @@ contract Crystals is
         public
         onlyOwner
     {
-        require(maxLevel > _MAX_LEVEL, "You may only increase the max level");
-        _MAX_LEVEL = maxLevel;
+        require(maxLevel > maxLevel, "You may only increase the max level");
+        maxLevel = maxLevel;
     }
 }
 
