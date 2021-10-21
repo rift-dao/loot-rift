@@ -169,6 +169,10 @@ contract Crystals is
         crystals[tokenId].tokenId = tokenId;
     }
 
+    function registerCrystalById(uint256 tokenId) public nonReentrant {
+        crystals[tokenId].tokenId = tokenId;
+    }
+
     function tokenURI(uint256 tokenId)
         public
         pure
