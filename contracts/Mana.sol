@@ -14,7 +14,7 @@ contract Mana is Context, Ownable, ERC20 {
     address public ccAddress;
     IERC721Enumerable public crystalsContract;
 
-    constructor() Ownable() ERC20("Adventure Mana", "AMANA") {
+    constructor() Ownable() ERC20("Adventure Mana", "AMNA") {
         _mint(_msgSender(), 100000);
     }
 
@@ -44,7 +44,8 @@ contract Mana is Context, Ownable, ERC20 {
         _burn(account, amount);
     }
 
-    function mint(uint256 amount) external {
+    // TODO: REMOVE AFTER TESTING
+    function testMint(uint256 amount) external {
         _mint(_msgSender(), amount);
     }
 

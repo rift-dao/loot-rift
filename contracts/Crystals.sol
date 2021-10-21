@@ -307,34 +307,33 @@ contract Crystals is
             abi.encodePacked(
                 '"attributes": [ ',
                 '{ "trait_type": "Level", "value": ', toString(getLevel(tokenId)), ' }, ',
-                '{ "trait_type": "Resonance", "value": ', toString(getResonance(tokenId)), ' }, ',
+                '{ "trait_type": "Resonance", "value": ', toString(getResonance(tokenId)), ' }, '
+        ));
+        
+        attributes = string(
+            abi.encodePacked(
+                attributes,
                 '{ "trait_type": "Spin", "value": ', toString(getSpin(tokenId)), ' }, ',
-                '{ "trait_type": "Loot Type", "value": ', getLootType(tokenId) ,' }',
-                '{ "trait_type": "Color", "value": ', getColor(tokenId) ,' }',
-                ' ]'
+                '{ "trait_type": "Loot Type", "value": "', getLootType(tokenId), '" }, ',
+                '{ "trait_type": "Color", "value": "', getColor(tokenId) ,'" } ]'
             )
         );
+
+        string memory prefix = string(
+            abi.encodePacked(
+                '{"id": ', toString(tokenId), ', ',
+                '"name": "', getName(tokenId), '", ',
+                '"seedId": ', toString(originalSeed(tokenId)), ', ',
+                '"description": "This crystal vibrates with energy from the Rift!", ',
+                '"background_color": "000000"'
+        ));
 
         string memory json = Base64.encode(
             bytes(
                 string(
                     abi.encodePacked(
-                        '{"id": ', toString(tokenId), ', ',
-                        '"name": ', getName(tokenId), 
-                        (
-                            getLevel(tokenId) > 1
-                                ? string(
-                                    abi.encodePacked(
-                                        " +",
-                                        toString(getLevel(tokenId) - 1)
-                                    )
-                                )
-                                : ""
-                        ), ', ',
-                        '"seedId": ', toString(originalSeed(tokenId)), ', ',
+                        prefix, ', ',
                         attributes, ', ',
-                        '"description": "This crystal vibrates with energy from the Rift!", ',
-                        '"background_color": "000000", ',
                         '"image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'
                     )
                 )
@@ -349,8 +348,7 @@ contract Crystals is
 
     // TODO: REMOVE AFTER TESTING
     function testMint(uint256 tokenId) public {
-        uint256 asLoot = tokenId < 8001 ? 1 : 0;
-        mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
+        mana.ccMintTo(_msgSender(), _isOGCrystal(tokenId) ? 3 : 1);
         _mint(tokenId);
     }
 
@@ -390,6 +388,7 @@ contract Crystals is
         crystals[originalId].minted = true;
         mintedCrystals = mintedCrystals + 1;
 
+        mana.ccMintTo(_msgSender(), _isOGCrystal(tokenId) ? 3 : 1);
         _mint(tokenId);
     }
 
@@ -627,6 +626,10 @@ contract Crystals is
         uint256 oSeed = originalSeed(tokenId);
         uint256 isFromLoot = oSeed > 0 && oSeed < 8001 ? 1 : 0;
 
+        if (_isGACrystal(tokenId)) {
+            return 'GA';
+        }
+
         return isFromLoot == 1 ? 'Loot' : 'mLoot';
     }
 
@@ -863,12 +866,12 @@ contract Crystals is
         return super.supportsInterface(interfaceId);
     }
 
-    function ownerUpdateMaxLevel(uint256 maxLevel)
+    function ownerUpdateMaxLevel(uint256 maxLevel_)
         public
         onlyOwner
     {
-        require(maxLevel > maxLevel, "You may only increase the max level");
-        maxLevel = maxLevel;
+        require(maxLevel_ > maxLevel, "You may only increase the max level");
+        maxLevel = maxLevel_;
     }
 }
 

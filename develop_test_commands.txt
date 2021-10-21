@@ -1,4 +1,5 @@
 truffle develop
+truffle console
 
 migrate
 
@@ -14,10 +15,24 @@ crystals = await Crystals.deployed(mana.address)
 (await mana.balanceOf(accounts[0])) / 1
 
 // claim crystal
-await crystals.claim(1);
+await crystals.testMint(1);
 
 // check owner address
 await crystals.ownerOf(1);
+
+// view token uri
+await crystals.tokenURI(1);
+
+// register crystal
+await crystals.testRegister(2);
+
+// claim crystal mana
+await crystals.claimCrystalMana(1);
+
+
+
+// Paste in browser
+JSON.parse(atob('token'));
 
 
 
