@@ -468,11 +468,11 @@ contract Crystals is
     }
 
     function levelMana(uint256 tokenId) internal pure returns (uint256) {
-        return _isOGCrystal(tokenId) ? getSpin(tokenId) * 10 : getSpin(tokenId);
+        return getSpin(tokenId);
     }
 
     function dailyMana(uint256 tokenId) internal pure returns (uint256) {
-        return _isOGCrystal(tokenId) ? getResonance(tokenId) * 10 : getResonance(tokenId);
+        return getResonance(tokenId);
     }
 
     function _isOGCrystal(uint256 tokenId) internal pure returns (bool) {
@@ -610,16 +610,17 @@ contract Crystals is
     }
 
     function getResonance(uint256 tokenId) public pure returns (uint256) {
-        return getLevelRolls(tokenId, "%RESONANCE", 2, 1);
+        return getLevelRolls(tokenId, "%RESONANCE", 2, 1) * (_isOGCrystal(tokenId) ? 10 : 1);
     }
 
     function getSpin(uint256 tokenId) public pure returns (uint256) {
         uint256 level = getLevel(tokenId);
+        uint256 multiplier = _isOGCrystal(tokenId) ? 10 : 1;
 
         if (level == 1) {
-            return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1);
+            return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1) * multiplier;
         } else {
-            return 88 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1);
+            return 88 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier;
         }
     }
 
