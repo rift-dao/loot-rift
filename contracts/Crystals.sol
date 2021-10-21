@@ -648,9 +648,17 @@ contract Crystals is
 
     function getName(uint256 tokenId) public pure returns (string memory) {
         uint256 oSeed = originalSeed(tokenId);
-        uint256 isFromLoot = oSeed > 0 && oSeed < 8001 ? 1 : 0;
+        bool isFromLoot = oSeed > 0 && oSeed < 8001;
+        bool isFromGA = oSeed > _GA_OFFSET;
 
-        return isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
+        if (isFromLoot) {
+            return getLootName(oSeed, false);
+        } else if (isFromGA) {
+            return getLootName(oSeed, true);
+        } else {
+            return getBasicName(oSeed);
+        }
+        // return isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
         // return level > 1 ? string(abi.encodePacked(isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed), " +", level)) : isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
     }
 
@@ -707,7 +715,7 @@ contract Crystals is
         return output;
     }
 
-    function getLootName(uint256 tokenId)
+    function getLootName(uint256 tokenId, bool isGA)
         internal
         pure
         returns (string memory)
@@ -718,16 +726,23 @@ contract Crystals is
         uint256 isAncient = getRandom(tokenId, "%IS_ANCIENT") % 100000;
 
         string memory output = "";
+        string memory baseName = isGA ? "Genesis Crystal" : "Crystal";
 
         // average
         if (alignment == 10 && colorSpecialness == 10) {
-            output = "Perfectly Average Crystal";
+            output = string(
+                abi.encodePacked(
+                    "Perfectly Average ",
+                    baseName
+                )
+            );
         }
         // cursed
         else if (alignment < 3) {
             output = string(
                 abi.encodePacked(
-                    (alignment == 1 ? "Demonic Crystal " : "Crystal "),
+                    (alignment == 1 ? "Demonic Crystal" : baseName),
+                    " ",
                     getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
                 )
             );
@@ -737,7 +752,8 @@ contract Crystals is
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal"
+                    " ",
+                    baseName
                 )
             );
         }
@@ -746,7 +762,9 @@ contract Crystals is
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal ",
+                    " ",
+                    baseName,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
@@ -756,14 +774,21 @@ contract Crystals is
             output = string(
                 abi.encodePacked(
                     "Divine ",
-                    " Crystal ",
+                    " ",
+                    baseName,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
         }
         // shouldn't happen lol
         else {
-            output = "Forgotten Crystal";
+            output = string(
+                abi.encodePacked(
+                    "Forgotten ",
+                    baseName
+                )
+            );
         }
 
         if (isAncient == 1) {
