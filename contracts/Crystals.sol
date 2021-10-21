@@ -379,7 +379,9 @@ contract Crystals is
             if (mintedCrystals >= numFreeCrystals) {
                 require(mlootersPrice <= msg.value, "Ether value sent is not correct");
             }
-        } 
+        } else {
+            require(genesisAdventure.ownerOf(originalId - _GA_OFFSET) == _msgSender(), "Not GA Owner");
+        }
         require (crystals[originalId].tokenId > 0, "This crystal isn't registered");
         require (crystals[originalId].minted == false, "This crystal has already been minted");
 
@@ -412,13 +414,16 @@ contract Crystals is
             require(originalId > 0 && originalId < _MAX_CRYSTALS, "Token ID for Loot invalid");
             if (originalId < 8001) {
                 require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            } else {
+            } else if (originalId < _GA_OFFSET) {
                 require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
+            } else {
+                require(genesisAdventure.ownerOf(originalId - _GA_OFFSET) == _msgSender(), "Not GA Owner");
             }
         } else {
             // using a Crystal Token
             require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
         }
+        
         
         _claimCrystalMana(tokenId);
     }
@@ -469,7 +474,8 @@ contract Crystals is
     }
 
     function _isOGCrystal(uint256 tokenId) internal pure returns (bool) {
-        return originalSeed(tokenId) < 8001;
+        // treat OG Loot and GA Crystals as OG
+        return originalSeed(tokenId) < 8001 || originalSeed(tokenId) > _GA_OFFSET;
     }
 
     // in order to level up the crystal must reach max capacity (d * mb >= cap)
@@ -482,8 +488,10 @@ contract Crystals is
             require(originalId > 0 && originalId < _MAX_CRYSTALS, "Token ID for Loot invalid");
             if (originalId < 8001) {
                 require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            } else {
+            } else if (originalId < _GA_OFFSET) {
                 require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
+            } else {
+                require(genesisAdventure.ownerOf(originalId - _GA_OFFSET) == _msgSender(), "Not GA Owner");
             }
         } else {
             // using a Crystal Token
