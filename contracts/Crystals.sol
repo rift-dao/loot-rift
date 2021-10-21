@@ -55,6 +55,7 @@ contract Crystals is
 
     uint256 public mintedCrystals;
 
+    uint256 public numFreeCrystals = 2000;
     uint256 public lootersPrice = 200000000000000000; //0.2 ETH
     uint256 public mlootersPrice = 20000000000000000; //0.02 ETH
 
@@ -68,8 +69,13 @@ contract Crystals is
      function setLootersPrice(uint256 newPrice) public onlyOwner {
         lootersPrice = newPrice;
     }
-     function setmLootersPrice(uint256 newPrice) public onlyOwner {
+
+    function setmLootersPrice(uint256 newPrice) public onlyOwner {
         mlootersPrice = newPrice;
+    }
+
+    function setNumFreeCrystals(uint256 newValue) public onlyOwner {
+        numFreeCrystals = newValue;
     }
 
     string private constant cursedPrefixes =
@@ -322,41 +328,47 @@ contract Crystals is
         _mint(tokenId);
     }
 
-    function mintWithMLoot(uint256 tokenId) public {
-        require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
-        require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
-        mana.ccMintTo(_msgSender(), 1);
-        _mint(tokenId);
-    }
+    // function mintWithMLoot(uint256 tokenId) public {
+    //     require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
+    //     require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+    //     mana.ccMintTo(_msgSender(), 1);
+    //     _mint(tokenId);
+    // }
 
-    function mintWithLoot(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < 8001, "Token ID for Loot invalid");
-        require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
-        mana.ccMintTo(_msgSender(), 3);
-        _mint(tokenId);
-    }
+    // function mintWithLoot(uint256 tokenId) public nonReentrant {
+    //     require(tokenId > 0 && tokenId < 8001, "Token ID for Loot invalid");
+    //     require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+    //     mana.ccMintTo(_msgSender(), 3);
+    //     _mint(tokenId);
+    // }
 
     function mintRegisteredCrystal(uint256 tokenId) public payable nonReentrant {
         uint256 originalId = originalSeed(tokenId);
         require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
         if (originalId < 8001) {
             require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            require(lootersPrice <= msg.value, "Ether value sent is not correct");
+            if (mintedCrystals >= numFreeCrystals) {
+                require(lootersPrice <= msg.value, "Ether value sent is not correct");
+            }
         } else {
             require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
-            require(mlootersPrice <= msg.value, "Ether value sent is not correct");
+            if (mintedCrystals >= numFreeCrystals) {
+                require(mlootersPrice <= msg.value, "Ether value sent is not correct");
+            }
         }
         require (crystals[originalId].tokenId > 0, "This crystal isn't registered");
         require (crystals[originalId].minted == false, "This crystal has already been minted");
 
         crystals[originalId].minted = true;
+        mintedCrystals = mintedCrystals + 1;
+
         _safeMint(_msgSender(), tokenId);
     }
 
     function _mint(uint256 tokenId) internal {
         crystals[originalSeed(tokenId)].tokenId = tokenId;
         crystals[originalSeed(tokenId)].minted = true;
-
+        mintedCrystals = mintedCrystals + 1;
         _safeMint(_msgSender(), tokenId);
     }
 
