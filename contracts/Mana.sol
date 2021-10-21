@@ -31,7 +31,7 @@ contract Mana is Context, Ownable, ERC20 {
     // claimedForSeason[season][tokenId][claimed]
     mapping(uint256 => mapping(uint256 => bool)) public gaSeasonClaimedByTokenId;
 
-    constructor() Ownable() ERC20("Mana", "MANA") {
+    constructor() Ownable() ERC20("Adventure Mana", "AMANA") {
         //_mint(_msgSender(), 100);
         gaContract = IERC721Enumerable(gaAddress);
     }
