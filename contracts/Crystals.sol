@@ -100,6 +100,7 @@ contract Crystals is
     uint256 private constant slabsLength = 4;
 
     uint256 private constant _MAX = 10000000;
+    uint256 public constant _MAX_LEVEL = 20;
 
     struct Visits {
         uint64 lastCharge;
@@ -311,11 +312,11 @@ contract Crystals is
         return output;
     }
 
-    // function claim(uint256 tokenId) public {
-    //     uint256 asLoot = tokenId < 8001 ? 1 : 0;
-    //     mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
-    //     _mint(tokenId);
-    // }
+    function claim(uint256 tokenId) public {
+        uint256 asLoot = tokenId < 8001 ? 1 : 0;
+        mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
+        _mint(tokenId);
+    }
 
     function claimWithMLoot(uint256 tokenId) public {
         require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
@@ -464,7 +465,10 @@ contract Crystals is
             visits[originalSeed(tokenId)].lastCharge,
             block.timestamp
         );
-        uint256 isMaxCharge = dayDiff == getLevel(tokenId)
+        uint256 currentLevel = getLevel(tokenId);
+        // can't level up if at max level
+        if (currentLevel == _MAX_LEVEL) { return false; }
+        uint256 isMaxCharge = dayDiff == currentLevel
             ? 1
             : 0;
 
@@ -789,6 +793,14 @@ contract Crystals is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function ownerUpdateMaxLevel(uint256 maxLevel)
+        public
+        onlyOwner
+    {
+        require(maxLevel > _MAX_LEVEL, "You may only increase the max level");
+        _MAX_LEVEL = maxLevel;
     }
 }
 
