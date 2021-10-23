@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
@@ -18,13 +17,9 @@ contract Mana is Context, Ownable, ERC20 {
         _mint(_msgSender(), 100000);
     }
 
-    function decimals() public pure override returns (uint8) {
-        return 0;
-    }
-
-    function symbol() public pure override returns (string memory) {
-        return "AMNA";
-    }
+    // function testMint(uint256 amount) external {
+    //     _mint(_msgSender(), amount);
+    // }
 
     /// @notice function for Crystals contract to mint on behalf of to
     /// @param recipient address to send mana to
@@ -36,19 +31,6 @@ contract Mana is Context, Ownable, ERC20 {
         _mint(recipient, amount);
     }
 
-    function burnFrom(address account, uint256 amount) external {
-        uint256 amountAllowed = allowance(account, _msgSender());
-        require(_msgSender() == ccAddress, "Address Not Allowed");
-        require(amount <= amountAllowed, "Not allowed to burn from this address");
-        _approve(account, _msgSender(), balanceOf(account) - amount);
-        _burn(account, amount);
-    }
-
-    // TODO: REMOVE AFTER TESTING
-    function testMint(uint256 amount) external {
-        _mint(_msgSender(), amount);
-    }
-
     function burn(uint256 amount) external {
         _burn(_msgSender(), amount);
     }
@@ -58,5 +40,13 @@ contract Mana is Context, Ownable, ERC20 {
     function ownerSetCContractAddress(address ccAddress_) external onlyOwner {
         ccAddress = ccAddress_;
         crystalsContract = IERC721Enumerable(ccAddress);
+    }
+
+    function decimals() public pure override returns (uint8) {
+        return 0;
+    }
+
+    function symbol() public pure override returns (string memory) {
+        return "AMNA";
     }
 }
