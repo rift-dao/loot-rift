@@ -45,8 +45,4 @@ contract Mana is Context, Ownable, ERC20 {
     function decimals() public pure override returns (uint8) {
         return 0;
     }
-
-    function symbol() public pure override returns (string memory) {
-        return "AMNA";
-    }
 }
