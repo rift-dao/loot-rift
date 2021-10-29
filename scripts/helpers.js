@@ -30,4 +30,6 @@ module.exports = {
   decodeToken,
   getArgs,
   hasFlag,
+  MAX_CRYSTALS: 10000000,
+  RESERVED_OFFSET: 9900000,
 };

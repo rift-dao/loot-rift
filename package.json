@@ -8,6 +8,7 @@
     "claim:quick": "node ./scripts/claim.js",
     "compile": "truffle compile",
     "coverage": "truffle run coverage",
+    "develop": "truffle develop",
     "gas": "yarn compile && node ./scripts/gas.js",
     "gas:quick": "node ./scripts/gas.js",
     "lint": "solium -d contracts/",
