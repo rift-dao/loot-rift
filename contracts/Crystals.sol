@@ -548,7 +548,7 @@ contract Crystals is
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
-        } else if (alignment <= 4) {
+        } else if (alignment < 5) {
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength),
@@ -556,7 +556,7 @@ contract Crystals is
                     getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
                 )
             );
-        } else if (alignment > 18) {
+        } else if (alignment > 15) {
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(prefixes, rand % prefixesLength),
@@ -599,7 +599,7 @@ contract Crystals is
             );
         }
         // cursed
-        else if (alignment <= 4) {
+        else if (alignment < 5) {
             if (alignment == 1) {
                 baseName = string(
                     abi.encodePacked(
@@ -619,7 +619,7 @@ contract Crystals is
             );
         }
         // standard
-        else if (alignment < 17) {
+        else if (alignment < 16) {
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(prefixes, rand % prefixesLength),
@@ -629,7 +629,7 @@ contract Crystals is
             );
         }
         // good
-        else if (alignment > 16 && alignment < 20) {
+        else if (alignment > 15 && alignment < 20) {
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(prefixes, rand % prefixesLength),
