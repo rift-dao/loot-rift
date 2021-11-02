@@ -478,14 +478,15 @@ contract Crystals is
             abi.encodePacked(
                 '"attributes": [ ',
                 '{ "trait_type": "Level", "value": ', toString(getLevel(currentToken)), ' }, ',
-                '{ "trait_type": "Resonance", "value": ', toString(getResonance(currentToken)), ' }, '
+                '{ "trait_type": "Resonance", "value": ', toString(getResonance(currentToken)), ' }, ',
+                '{ "trait_type": "Spin", "value": ', toString(getSpin(currentToken)), ' }, '
         ));
         
         attributes = string(
             abi.encodePacked(
                 attributes,
-                '{ "trait_type": "Spin", "value": ', toString(getSpin(currentToken)), ' }, ',
                 '{ "trait_type": "Loot Type", "value": "', getLootType(currentToken), '" }, ',
+                '{ "trait_type": "Surface", "value": ', getSurfaceType(currentToken), ' }, ',
                 '{ "trait_type": "Color", "value": "', getColor(currentToken) ,'" } ]'
             )
         );
@@ -534,8 +535,16 @@ contract Crystals is
         uint256 rand = getRandomOS(tokenId, "%BASIC_NAME");
         uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
 
-        string memory output = "";
-
+        string memory output = "Crystal";
+        // set our surface type
+        output = string(
+            abi.encodePacked(
+                getSurfaceType(tokenId),
+                " ",
+                output
+            )
+        );
+        
         if (
             alignment == 10
             && getRollOS(tokenId, "%COLOR_RARITY", 20, 1) == 10
@@ -544,29 +553,28 @@ contract Crystals is
         } else if (alignment == 20) {
             output = string(
                 abi.encodePacked(
-                    "Crystal ",
+                    output,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
         } else if (alignment < 5) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength),
-                    " Crystal ",
+                    output,
+                    " ",
                     getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
                 )
             );
         } else if (alignment > 15) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal ",
+                    output,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
-        } else {
-            output = string(abi.encodePacked("Crystal"));
-        }
+        } 
 
         return output;
     }
@@ -587,6 +595,17 @@ contract Crystals is
                 collabs[uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)].namePrefix,
                 baseName
             ));
+        }
+
+        // set our surface type
+        if (alignment < 9 || alignment > 11) {
+            baseName = string(
+                abi.encodePacked(
+                    getSurfaceType(tokenId),
+                    " ",
+                    baseName
+                )
+            );
         }
 
         // average
@@ -610,8 +629,6 @@ contract Crystals is
             }
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength),
-                    " ",
                     baseName,
                     " ",
                     getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
@@ -622,8 +639,6 @@ contract Crystals is
         else if (alignment < 16) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " ",
                     baseName
                 )
             );
@@ -632,8 +647,6 @@ contract Crystals is
         else if (alignment > 15 && alignment < 20) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " ",
                     baseName,
                     " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
@@ -645,8 +658,6 @@ contract Crystals is
             output = string(
                 abi.encodePacked(
                     "Divine ",
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " ",
                     baseName,
                     " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
@@ -672,10 +683,17 @@ contract Crystals is
         pure
         returns (string memory) 
     {
-        uint256 rand = getRandomOS(tokenId, "%BASIC_NAME");
+        uint256 rand = getRandomOS(tokenId, "%SURFACE_TYPE");
         uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
 
-        string memory output = "";
+        if (alignment < 9) {
+            return getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength);
+        } else if (alignment > 11) {
+            return getItemFromCSV(prefixes, rand % prefixesLength);
+        } else {
+            return "Plain";
+        }
+
     }
 
     function getItemFromCSV(string memory str, uint256 index)
