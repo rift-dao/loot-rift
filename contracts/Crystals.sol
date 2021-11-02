@@ -68,8 +68,8 @@ contract Crystals is
     }
 
     uint256 public mintedCrystals;
-    // uint256 public lootersPrice = 90000000000000000; //0.09 ETH
-    uint256 public mintFee = 30000000000000000; //0.03 ETH
+
+    uint256 public mintFee = 20000000000000000; //0.03 ETH
     uint256 public lootMintFee = 0;
 
     address public manaAddress;
@@ -98,7 +98,7 @@ contract Crystals is
         "Aqua,black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
 
-    /// @dev indexed by originalSeed (Loot/mLoot id)
+    /// @dev indexed by tokenId % MAX_CRYSTALS (original seed)
     mapping(uint256 => Crystal) public crystals;
 
     /// @notice 0 - 9 => collaboration nft contracts
@@ -162,8 +162,8 @@ contract Crystals is
         uint256 manaToProduce = daysSinceClaim * getResonance(currentToken);
 
         // amount generatable is capped to the crystals spin
-        if (manaToProduce > getSpin(currentToken)) {
-            manaToProduce = getSpin(currentToken);
+        if (daysSinceClaim > getLevel(currentToken)) {
+            manaToProduce = getLevel(currentToken) * getResonance(currentToken);
         }
 
         // if cap is hit, limit mana to cap or level, whichever is greater
@@ -201,11 +201,6 @@ contract Crystals is
 
         IMANA(manaAddress).ccMintTo(_msgSender(), getLevel(currentToken));
 
-        if (crystals[oSeed].minted) {
-            _burn(currentToken);
-            _safeMint(_msgSender(), currentToken + MAX_CRYSTALS);
-        }
-
         crystals[oSeed].tokenId = currentToken + MAX_CRYSTALS;
         crystals[oSeed].lastClaim = uint64(block.timestamp);
         crystals[oSeed].lastLevelUp = uint64(block.timestamp);
@@ -230,8 +225,8 @@ contract Crystals is
 
         uint256 tokenToMint = oSeed;
 
-        isBagHolder(tokenId);
-        if (crystals[tokenId].tokenId == 0) {
+        isBagHolder(oSeed);
+        if (crystals[oSeed].tokenId == 0) {
             // is unregistered
             if(oSeed > RESERVED_OFFSET) {
                 tokenToMint =
@@ -493,7 +488,7 @@ contract Crystals is
             abi.encodePacked(
                 attributes,
                 '{ "trait_type": "Loot Type", "value": "', getLootType(currentToken), '" }, ',
-                '{ "trait_type": "Surface", "value": ', getSurfaceType(currentToken), ' }, ',
+                '{ "trait_type": "Surface", "value": "', getSurfaceType(currentToken), '" }, ',
                 '{ "trait_type": "Color", "value": "', getColor(currentToken) ,'" } ]'
             )
         );
