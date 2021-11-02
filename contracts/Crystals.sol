@@ -70,6 +70,7 @@ contract Crystals is
     uint256 public mintedCrystals;
     // uint256 public lootersPrice = 90000000000000000; //0.09 ETH
     uint256 public mintFee = 30000000000000000; //0.03 ETH
+    uint256 public lootMintFee = 0;
 
     address public manaAddress;
 
@@ -223,6 +224,8 @@ contract Crystals is
         require(oSeed > 0, "TOKEN");
         if (oSeed > 8000) {
             require(msg.value == mintFee, "FEE");
+        } else {
+            require(msg.value == lootMintFee, "FEE");
         }
 
         uint256 tokenToMint = oSeed;
@@ -318,8 +321,12 @@ contract Crystals is
         maxLevel = maxLevel_;
     }
 
-     function ownerSetMintFee(uint256 mintFee_) external onlyOwner {
+    function ownerSetMintFee(uint256 mintFee_) external onlyOwner {
         mintFee = mintFee_;
+    }
+
+    function ownerSetLootMintFee(uint256 lootMintFee_) external onlyOwner {
+        lootMintFee = lootMintFee_;
     }
 
     function ownerWithdraw() external onlyOwner {
