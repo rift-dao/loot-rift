@@ -195,7 +195,7 @@ contract Crystals is
             diffDays(
                 crystals[oSeed].lastClaim,
                 block.timestamp
-            ) * getResonance(currentToken) >= getSpin(currentToken), "WAIT"
+            ) >= getLevel(currentToken), "WAIT"
         );
 
         IMANA(manaAddress).ccMintTo(_msgSender(), getLevel(currentToken));
@@ -541,13 +541,6 @@ contract Crystals is
             && getRollOS(tokenId, "%COLOR_RARITY", 20, 1) == 10
         ) {
             output = "Average Crystal";
-        } else if (alignment == 1) {
-            output = string(
-                abi.encodePacked(
-                    "Crystal ",
-                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
-                )
-            );
         } else if (alignment == 20) {
             output = string(
                 abi.encodePacked(
@@ -555,18 +548,20 @@ contract Crystals is
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
-        } else if (alignment < 3) {
+        } else if (alignment <= 4) {
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength),
-                    " Crystal"
+                    " Crystal ",
+                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
                 )
             );
         } else if (alignment > 18) {
             output = string(
                 abi.encodePacked(
                     getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal"
+                    " Crystal ",
+                    getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
         } else {
@@ -574,6 +569,113 @@ contract Crystals is
         }
 
         return output;
+    }
+
+    function getLootName(uint256 tokenId)
+        internal
+        view
+        returns (string memory)
+    {
+        uint256 rand = getRandomOS(tokenId, "%LOOT_NAME");
+        uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
+
+        string memory output = "";
+        string memory baseName = "Crystal";
+
+        if (tokenId % MAX_CRYSTALS > RESERVED_OFFSET) {
+            baseName = string(abi.encodePacked(
+                collabs[uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)].namePrefix,
+                baseName
+            ));
+        }
+
+        // average
+        if (alignment == 10 && getRollOS(tokenId, "%COLOR_RARITY", 20, 1) == 10) {
+            output = string(
+                abi.encodePacked(
+                    "Perfectly Average ",
+                    baseName
+                )
+            );
+        }
+        // cursed
+        else if (alignment <= 4) {
+            if (alignment == 1) {
+                baseName = string(
+                    abi.encodePacked(
+                        "Demonic ",
+                        baseName
+                    )
+                );
+            }
+            output = string(
+                abi.encodePacked(
+                    getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength),
+                    " ",
+                    baseName,
+                    " ",
+                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
+                )
+            );
+        }
+        // standard
+        else if (alignment < 17) {
+            output = string(
+                abi.encodePacked(
+                    getItemFromCSV(prefixes, rand % prefixesLength),
+                    " ",
+                    baseName
+                )
+            );
+        }
+        // good
+        else if (alignment > 16 && alignment < 20) {
+            output = string(
+                abi.encodePacked(
+                    getItemFromCSV(prefixes, rand % prefixesLength),
+                    " ",
+                    baseName,
+                    " ",
+                    getItemFromCSV(suffixes, rand % suffixesLength)
+                )
+            );
+        }
+        // great
+        else if (alignment == 20) {
+            output = string(
+                abi.encodePacked(
+                    "Divine ",
+                    getItemFromCSV(prefixes, rand % prefixesLength),
+                    " ",
+                    baseName,
+                    " ",
+                    getItemFromCSV(suffixes, rand % suffixesLength)
+                )
+            );
+        }
+        // shouldn't happen lol
+        else {
+            output = string(
+                abi.encodePacked(
+                    "Forgotten ",
+                    baseName
+                )
+            );
+        }
+
+        return output;
+        // return string(abi.encodePacked(toString(alignment), " - ", output));
+    }
+
+    function getSurfaceType(uint256 tokenId)
+        internal
+        pure
+        returns (string memory) 
+    {
+        uint256 rand = getRandomOS(tokenId, "%BASIC_NAME");
+        uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
+
+        string memory output = "";
     }
 
     function getItemFromCSV(string memory str, uint256 index)
@@ -618,91 +720,6 @@ contract Crystals is
         }
 
         return score;
-    }
-
-    function getLootName(uint256 tokenId)
-        internal
-        view
-        returns (string memory)
-    {
-        uint256 rand = getRandomOS(tokenId, "%LOOT_NAME");
-        uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
-
-        string memory output = "";
-        string memory baseName = "Crystal";
-
-        if (tokenId % MAX_CRYSTALS > RESERVED_OFFSET) {
-            baseName = string(abi.encodePacked(
-                collabs[uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)].namePrefix,
-                baseName
-            ));
-        }
-
-        // average
-        if (alignment == 10 && getRollOS(tokenId, "%COLOR_RARITY", 20, 1) == 10) {
-            output = string(
-                abi.encodePacked(
-                    "Perfectly Average ",
-                    baseName
-                )
-            );
-        }
-        // cursed
-        else if (alignment < 3) {
-            output = string(
-                abi.encodePacked(
-                    (alignment == 1 ? "Demonic Crystal" : baseName),
-                    " ",
-                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
-                )
-            );
-        }
-        // standard
-        else if (alignment < 17) {
-            output = string(
-                abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " ",
-                    baseName
-                )
-            );
-        }
-        // good
-        else if (alignment > 16 && alignment < 20) {
-            output = string(
-                abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " ",
-                    baseName,
-                    " ",
-                    getItemFromCSV(suffixes, rand % suffixesLength)
-                )
-            );
-        }
-        // great
-        else if (alignment == 20) {
-            output = string(
-                abi.encodePacked(
-                    "Divine ",
-                    " ",
-                    baseName,
-                    " ",
-                    getItemFromCSV(suffixes, rand % suffixesLength)
-                )
-            );
-        }
-        // shouldn't happen lol
-        else {
-            output = string(
-                abi.encodePacked(
-                    "Forgotten ",
-                    baseName
-                )
-            );
-        }
-
-        return output;
-        // return string(abi.encodePacked(toString(alignment), " - ", output));
     }
 
     /// @dev returns random number based on the original seed (tokenId % MAX_CRYSTALS)
