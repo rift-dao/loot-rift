@@ -7,15 +7,13 @@
 | |      |     __)  \   /  (_____  )   | |   |  ___  || |      (_____  )
 | |      | (\ (      ) (         ) |   | |   | (   ) || |            ) |
 | (____/\| ) \ \__   | |   /\____) |   | |   | )   ( || (____/\/\____) |
-(_______/|/   \__/   \_/   \_______)   )_(   |/     \|(_______/\_______)
-                                                                       
-                                                                        
+(_______/|/   \__/   \_/   \_______)   )_(   |/     \|(_______/\_______)   
     by chris and tony
+    
 */
 
 // SPDX-License-Identifier: MIT
-
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -26,12 +24,12 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 interface IMANA {
     function approve(address spender, uint256 amount) external returns (bool);
-    function burn(uint256 amount) external;
-    function burnFrom(address account, uint256 amount) external;
     function balanceOf(address owner) external returns (uint256);
+    function burn(uint256 amount) external;
     function ccMintTo(address recipient, uint256 amount) external;
 }
 
+/// @title Loot Crystals from the Rift
 contract Crystals is
     ERC721,
     ERC721Enumerable,
@@ -43,170 +41,377 @@ contract Crystals is
     using strings for string;
     using strings for strings.slice;
 
-    // https://etherscan.io/address/0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7
-    ERC721 public constant loot =
-        ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
-    // https://etherscan.io/address/0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF
-    ERC721 public constant mLoot =
-        ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
+    uint8 private constant cursedPrefixesLength = 8;
+    uint8 private constant cursedSuffixesLength = 9;
+    uint8 private constant prefixesLength = 9;
+    uint8 private constant suffixesLength = 18;
+    uint8 private constant colorsLength = 12;
+    uint8 private constant specialColorsLength = 11;
+    uint8 private constant slabsLength = 4;
+    
+    uint32 public maxLevel = 20;
+    uint32 private constant MAX_CRYSTALS = 10000000;
+    uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
 
-    address public manaAddress;
-    IMANA public mana;
-
-    uint256 public lootersPrice = 200000000000000000; //0.2 ETH
-    uint256 public mlootersPrice = 20000000000000000; //0.02 ETH
-
-    function withdraw() public onlyOwner {
-        uint balance = address(this).balance;
-        msg.sender.transfer(balance);
-    }
-
-    function deposit() public payable onlyOwner {}
-
-     function setLootersPrice(uint256 newPrice) public onlyOwner {
-        lootersPrice = newPrice;
-    }
-     function setmLootersPrice(uint256 newPrice) public onlyOwner {
-        mlootersPrice = newPrice;
-    }
-
-    string private constant cursedPrefixes =
-        "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
-    uint256 private constant cursedPrefixesLength = 8;
-
-    string private constant cursedSuffixes =
-        "of Rats,of Crypts,of Nightmares,of Sadness,of Darkness,of Death,of Doom,of Gloom,of Madness";
-    uint256 private constant cursedSuffixesLength = 9;
-
-    string private constant prefixes =
-        "Gleaming,Glowing,Shiny,Smooth,Faceted,Glassy,Polished,Sheeny,Luminous";
-    uint256 private constant prefixesLength = 9;
-
-    string private constant suffixes =
-        "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins,of Relevance,of the Rift";
-    uint256 private constant suffixesLength = 18;
-
-    string private constant colors =
-        "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,White,Brown,Purple";
-    uint256 private constant colorsLength = 12;
-
-    string private constant specialColors =
-        "Aqua,black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
-    uint256 private constant specialColorsLength = 11;
-
-    string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
-    uint256 private constant slabsLength = 4;
-
-    uint256 private constant _MAX = 10000000;
-
-    struct Visits {
-        uint64 lastCharge;
-        uint64 lastLevelUp;
+    struct Collab {
+        address contractAddress;
+        string namePrefix;
+        uint256 levelBonus;
     }
 
     struct Crystal {
-        uint256 tokenId;
         bool minted;
+        uint64 lastClaim;
+        uint64 lastLevelUp;
+        uint256 manaProduced;
+        uint256 tokenId;
     }
 
-    mapping(uint256 => Visits) public visits;
-    // indexed by original tokenId
+    uint256 public mintedCrystals;
+
+    uint256 public mintFee = 20000000000000000; //0.03 ETH
+    uint256 public lootMintFee = 0;
+
+    address public manaAddress;
+
+    // https://etherscan.io/address/0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7
+    address public lootAddress = 0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7;
+
+    // https://etherscan.io/address/0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF
+    address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
+
+    // // https://etherscan.io/address/0x8dB687aCEb92c66f013e1D614137238Cc698fEdb
+    // ERC721 public genesisAdventure =
+    //     ERC721(0x8dB687aCEb92c66f013e1D614137238Cc698fEdb);
+
+    string private constant cursedPrefixes =
+        "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
+    string private constant cursedSuffixes =
+        "of Rats,of Crypts,of Nightmares,of Sadness,of Darkness,of Death,of Doom,of Gloom,of Madness";
+    string private constant prefixes =
+        "Gleaming,Glowing,Shiny,Smooth,Faceted,Glassy,Polished,Sheeny,Luminous";
+    string private constant suffixes =
+        "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins,of Relevance,of the Rift";
+    string private constant colors =
+        "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,White,Brown,Purple";
+    string private constant specialColors =
+        "Aqua,black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
+    string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
+
+    /// @dev indexed by tokenId % MAX_CRYSTALS (original seed)
     mapping(uint256 => Crystal) public crystals;
-    mapping(uint256 => uint256) public manaProduced;
 
-    constructor(address manaAddress_)
-        ERC721("Loot Crystals", "CRYSTAL")
-        Ownable()
-    {
-        manaAddress = manaAddress_;
-        mana = IMANA(manaAddress);
-    }
+    /// @notice 0 - 9 => collaboration nft contracts
+    /// @notice 0 => Genesis Adventurer https://etherscan.io/address/0x8dB687aCEb92c66f013e1D614137238Cc698fEdb
+    mapping(uint8 => Collab) public collabs;
 
-    function random(string memory input) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(input, "%CRYSTALS")));
-    }
+    modifier ownsCrystal(uint256 tokenId) {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
 
-    function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
-        internal
-        pure
-        returns (uint256)
-    {
-        require(fromTimestamp <= toTimestamp);
-        return (toTimestamp - fromTimestamp) / (24 * 60 * 60);
-    }
+        require(oSeed > 0, "TOKEN");
+        require(tokenId <= crystals[oSeed].tokenId, "INVALID");
 
-    
-    function slabRow(uint256 tokenId, uint256 row, uint256 y) internal pure returns (string memory output) {
-        output = "";
-        for (uint i = 1; i < 19; i++) {
-            output = string(abi.encodePacked(
-                output,
-                getSlab(tokenId, i + ((row - 1) * 18))
-            ));
-        }
-
-        output = string(abi.encodePacked(
-            '<text class="slab" x="285" y="', toString(y), '">',
-            output,
-            '</text>'
-        ));
-
-        return output;
-    }
-
-    function registerCrystalWithLoot(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < _MAX, "Token ID for Loot invalid");
-        if (tokenId < 8001) {
-            require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
+        if (crystals[oSeed].minted == true) {
+            require(ownerOf(crystals[oSeed].tokenId) == _msgSender(), "UNAUTH");
         } else {
-            require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
+            isBagHolder(tokenId);
         }
-        require(crystals[tokenId].tokenId != 0, "This loot has already claimed a Crystal");
+        _;
+    }
+
+    modifier unminted(uint256 tokenId) {
+        require(crystals[tokenId % MAX_CRYSTALS].minted == false, "MINTED");
+        _;
+    }
+
+    constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
+
+    // TODO: REMOVE AFTER TESTING
+    function testMint(uint256 tokenId) external unminted(tokenId) {
+        IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
+        crystals[tokenId % MAX_CRYSTALS].tokenId = tokenId;
+        crystals[tokenId % MAX_CRYSTALS].minted = true;
+        mintedCrystals = mintedCrystals + 1;
+        _safeMint(_msgSender(), tokenId);
+    }
+    
+    // TODO: REMOVE AFTER TESTING
+    function testRegister(uint256 tokenId) external unminted(tokenId) nonReentrant {
+        crystals[tokenId].tokenId = tokenId;
+    }
+
+    /// @notice gain AMNA, can be used once a day
+    /// @notice crystals can only generate a certain amount of AMNA every level
+    /// @notice the amount generated is dependent on
+    /// 1. the crystal's resonance
+    /// 2. the number of days since AMNA was claimed from the crystal
+    /// 3. how much mana has been claimed at the crystal's current level
+    /// @notice crystal will charge every day if AMNA is not claimed
+    /// @param tokenId crystal id, loot/mloot id or collab id + collab offset
+    function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+        uint256 currentToken = crystals[oSeed].tokenId;
+
+        uint256 daysSinceClaim = diffDays(
+            crystals[oSeed].lastClaim,
+            block.timestamp
+        );
+
+        require(daysSinceClaim >= 1, "WAIT");
+
+        uint256 manaToProduce = daysSinceClaim * getResonance(currentToken);
+
+        // amount generatable is capped to the crystals spin
+        if (daysSinceClaim > getLevel(currentToken)) {
+            manaToProduce = getLevel(currentToken) * getResonance(currentToken);
+        }
+
+        // if cap is hit, limit mana to cap or level, whichever is greater
+        if ((manaToProduce + crystals[oSeed].manaProduced) > getSpin(currentToken)) {
+            if (getSpin(currentToken) >= crystals[oSeed].manaProduced) {
+                manaToProduce = getSpin(currentToken) - crystals[oSeed].manaProduced;
+            } else {
+                manaToProduce = 0;
+            }
+
+            if (manaToProduce < getLevel(currentToken)) {
+                manaToProduce = getLevel(currentToken);
+            }
+        }
+
+        crystals[oSeed].lastClaim = uint64(block.timestamp);
+        crystals[oSeed].manaProduced += manaToProduce;
+        IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
+    }
+
+    /// @notice level up crystal, must have a fully charged crystal
+    /// @notice gain AMNA equal to crystals level
+    /// @param tokenId crystal id or loot/mloot id
+    function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+        uint256 currentToken = crystals[oSeed].tokenId;
+
+        require(getLevel(currentToken) < maxLevel, "MAX");
+        require(
+            diffDays(
+                crystals[oSeed].lastClaim,
+                block.timestamp
+            ) >= getLevel(currentToken), "WAIT"
+        );
+
+        IMANA(manaAddress).ccMintTo(_msgSender(), getLevel(currentToken));
+
+        crystals[oSeed].tokenId = currentToken + MAX_CRYSTALS;
+        crystals[oSeed].lastClaim = uint64(block.timestamp);
+        crystals[oSeed].lastLevelUp = uint64(block.timestamp);
+        crystals[oSeed].manaProduced = 0;
+    }
+
+    /// @notice mints crystal
+    /// @param tokenId crystal id or loot/mloot id
+    function mintCrystal(uint256 tokenId)
+        external
+        payable
+        unminted(tokenId)
+        nonReentrant
+    {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+        require(oSeed > 0, "TOKEN");
+        if (oSeed > 8000) {
+            require(msg.value == mintFee, "FEE");
+        } else {
+            require(msg.value == lootMintFee, "FEE");
+        }
+
+        uint256 tokenToMint = oSeed;
+
+        isBagHolder(oSeed);
+        if (crystals[oSeed].tokenId == 0) {
+            // is unregistered
+            if(oSeed > RESERVED_OFFSET) {
+                tokenToMint =
+                    oSeed + collabs[uint8((oSeed - RESERVED_OFFSET) / 10000)].levelBonus;
+            }
+        } else {
+            // is registered
+            tokenToMint = crystals[tokenId].tokenId;
+        }
+
+        IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
+        crystals[tokenId % MAX_CRYSTALS].tokenId = tokenId;
+        crystals[tokenId % MAX_CRYSTALS].minted = true;
+        mintedCrystals = mintedCrystals + 1;
+        _safeMint(_msgSender(), tokenId);
+    }
+
+    function registerCrystal(uint256 tokenId) external unminted(tokenId) nonReentrant {
+        require(crystals[tokenId].tokenId == 0, "REGISTERED");
+
+        isBagHolder(tokenId);
 
         crystals[tokenId].tokenId = tokenId;
     }
 
+    function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
+        require(tokenId > 0 && tokenId < 10000, "TOKEN");
+        require(collabIndex >= 0 && collabIndex < 10, "COLLAB");
+        require(collabs[collabIndex].contractAddress != address(0), "COLLAB");
+        uint256 collabToken = RESERVED_OFFSET + tokenId + (collabIndex * 10000);
+        require(crystals[collabToken].tokenId == 0, "REG");
+
+        require(
+            ERC721(collabs[collabIndex].contractAddress).ownerOf(tokenId) == _msgSender(),
+            "UNAUTH"
+        );
+
+        crystals[collabToken].tokenId = collabToken + collabs[collabIndex].levelBonus;
+    }
+
+    /**
+     * @dev Return the token URI through the Loot Expansion interface
+     * @param lootId The Loot Character URI
+     */
+    function lootExpansionTokenUri(uint256 lootId) external view returns (string memory) {
+        return tokenURI(lootId);
+    }
+
+    function ownerInit(
+        address manaAddress_,
+        address lootAddress_,
+        address mLootAddress_
+    ) external onlyOwner {
+        require(manaAddress_ != address(0), "MANAADDR");
+        manaAddress = manaAddress_;
+
+        if (lootAddress_ != address(0)) {
+            lootAddress = lootAddress_;
+        }
+
+        if (mLootAddress_ != address(0)) {
+            mLootAddress = mLootAddress_;
+        }
+    }
+
+    function ownerUpdateCollab(
+        uint8 collabIndex,
+        address contractAddress,
+        uint16 levelBonus,
+        string calldata namePrefix
+    ) external onlyOwner {
+        require(contractAddress != address(0), "ADDRESS");
+        require(collabIndex >= 0 && collabIndex < 10, "COLLAB");
+        require(
+            collabs[collabIndex].contractAddress == contractAddress
+                || collabs[collabIndex].contractAddress == address(0),
+            "TAKEN"
+        );
+        collabs[collabIndex] = Collab(contractAddress, namePrefix, MAX_CRYSTALS * levelBonus);
+        // collabs[collabIndex].contractAddress = contractAddress;
+        // collabs[collabIndex].levelBonus = MAX_CRYSTALS * levelBonus;
+        // collabs[collabIndex].namePrefix = namePrefix;
+    }
+
+    function ownerUpdateMaxLevel(uint32 maxLevel_) external onlyOwner {
+        require(maxLevel_ > maxLevel, "INVALID");
+        maxLevel = maxLevel_;
+    }
+
+    function ownerSetMintFee(uint256 mintFee_) external onlyOwner {
+        mintFee = mintFee_;
+    }
+
+    function ownerSetLootMintFee(uint256 lootMintFee_) external onlyOwner {
+        lootMintFee = lootMintFee_;
+    }
+
+    function ownerWithdraw() external onlyOwner {
+        uint256 balance = address(this).balance;
+        payable(msg.sender).transfer(balance);
+    }
+
+    function getColor(uint256 tokenId) public pure returns (string memory) {
+        if (getRollOS(tokenId, "%COLOR_RARITY", 20, 1) > 18) {
+            return getItemFromCSV(
+                specialColors,
+                getRandomOS(tokenId, "%COLOR") % specialColorsLength
+            );
+        }
+
+        return getItemFromCSV(colors, getRandomOS(tokenId, "%COLOR") % colorsLength);
+    }
+
+    function getLevel(uint256 tokenId) public pure returns (uint256) {
+        if (tokenId % MAX_CRYSTALS == tokenId) {
+            return 1;
+        }
+
+        return (tokenId / MAX_CRYSTALS) + 1;
+    }
+
+    function getLootType(uint256 tokenId) public view returns (string memory) {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+        if (oSeed > 0 && oSeed < 8001) {
+            return 'Loot';
+        }
+
+        if (oSeed > RESERVED_OFFSET) {
+            return collabs[uint8((oSeed - RESERVED_OFFSET) / 10000)].namePrefix;
+        }
+
+        return 'mLoot';
+    }
+
+    function getName(uint256 tokenId) public view returns (string memory) {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+
+        if (oSeed > 8000 && oSeed <= RESERVED_OFFSET) {
+            return getBasicName(oSeed);
+        }
+
+        return getLootName(oSeed);
+        // return isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
+        // return level > 1 ? string(abi.encodePacked(isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed), " +", level)) : isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
+    }
+
+    function getResonance(uint256 tokenId) public pure returns (uint256) {
+        return getLevelRolls(tokenId, "%RESONANCE", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1);
+    }
+
+    function getSpin(uint256 tokenId) public pure returns (uint256) {
+        uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
+
+        if (getLevel(tokenId) == 1) {
+            return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1) * multiplier;
+        } else {
+            return 88 * (getLevel(tokenId) - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier;
+        }
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
     function tokenURI(uint256 tokenId)
         public
-        pure
+        view
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
+        uint256 currentToken = crystals[tokenId % MAX_CRYSTALS].tokenId == 0
+            ? tokenId : crystals[tokenId % MAX_CRYSTALS].tokenId;
         string memory output;
-        // rate at which opacity changes
-        uint256 period = (getResonance(tokenId) % 4) + 1;
-
-        // max opacity
-        // uint256 rotation = getSpin(tokenId) % 360;
-
-        string memory color = getColor(tokenId);
 
         string memory styles = string(
             abi.encodePacked(
-                "<style>@keyframes glow{0%{text-shadow:0 0 12px ",
-                color,
-                "}77%{text-shadow:0 0 20px ",
-                color,
-                "}99%{text-shadow:0 0 11px ",
-                color,
-                "; }}",
-                "@keyframes blink {",
-                toString(period * 10),
-                "% { opacity: 0; }",
-                toString((period * 10) + 20),
-                "% { opacity: 1; }}"
-            )
-        );
-
-        styles = string(
-            abi.encodePacked(
-                styles,
-                "text{fill:",
-                color,
+                "<style>text{fill:",
+                getColor(currentToken),
                 ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);",
-                "transform-origin:bottom right;font-size:22px; animation:glow ",
-                toString(period + 1),
-                "s ease-in-out infinite}</style>"
+                "transform-origin:bottom right;font-size:22px;}</style>"
             )
         );
 
@@ -214,16 +419,14 @@ contract Crystals is
             abi.encodePacked(
                 '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350">',
                 styles,
-                '<rect width="100%" height="100%" fill="',
-                getRandom(tokenId, "%IS_ANCIENT") % 100000 == 1 ? "white" : "black",
-                '" /><text x="10" y="20">',
-                getName(tokenId),
+                '<rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
+                getName(currentToken),
                 (
-                    getLevel(tokenId) > 1
+                    getLevel(currentToken) > 1
                         ? string(
                             abi.encodePacked(
                                 " +",
-                                toString(getLevel(tokenId) - 1)
+                                toString(getLevel(currentToken) - 1)
                             )
                         )
                         : ""
@@ -236,7 +439,7 @@ contract Crystals is
                 output,
                 '</text><text x="10" y="40">',
                 "Resonance: ",
-                toString(getResonance(tokenId)),
+                toString(getResonance(currentToken)),
                 '</text>'
             )
         );
@@ -245,7 +448,7 @@ contract Crystals is
                 output,
                 '<text x="10" y="60">',
                 "Spin: ",
-                toString(getSpin(tokenId)),
+                toString(getSpin(currentToken)),
                 '</text>'
             )
         );
@@ -254,50 +457,58 @@ contract Crystals is
         output = string(
             abi.encodePacked(
                 output,
-                slabRow(tokenId, 1, 295),
-                slabRow(tokenId, 2, 314),
-                slabRow(tokenId, 3, 333),
-                slabRow(tokenId, 4, 352),
-                slabRow(tokenId, 5, 371),
-                slabRow(tokenId, 6, 390)
+                slabRow(currentToken, 1, 295),
+                slabRow(currentToken, 2, 314),
+                slabRow(currentToken, 3, 333),
+                slabRow(currentToken, 4, 352),
+                slabRow(currentToken, 5, 371),
+                slabRow(currentToken, 6, 390)
         ));
 
         output = string(
             abi.encodePacked(
                 output,
-                slabRow(tokenId, 7, 409),
-                slabRow(tokenId, 8, 428),
-                slabRow(tokenId, 9, 447),
-                slabRow(tokenId, 10, 466),
-                slabRow(tokenId, 11, 485),
+                slabRow(currentToken, 7, 409),
+                slabRow(currentToken, 8, 428),
+                slabRow(currentToken, 9, 447),
+                slabRow(currentToken, 10, 466),
+                slabRow(currentToken, 11, 485),
                 '</svg>'
         ));
 
-        string memory stats = string(
+        string memory attributes = string(
             abi.encodePacked(
-                '"stats": { "level": ',
-                toString(getLevel(tokenId)),
-                ', "resonance": ',
-                toString(getResonance(tokenId)),
-                ', "spin": ',
-                toString(getSpin(tokenId)),
-                " }"
+                '"attributes": [ ',
+                '{ "trait_type": "Level", "value": ', toString(getLevel(currentToken)), ' }, ',
+                '{ "trait_type": "Resonance", "value": ', toString(getResonance(currentToken)), ' }, ',
+                '{ "trait_type": "Spin", "value": ', toString(getSpin(currentToken)), ' }, '
+        ));
+        
+        attributes = string(
+            abi.encodePacked(
+                attributes,
+                '{ "trait_type": "Loot Type", "value": "', getLootType(currentToken), '" }, ',
+                '{ "trait_type": "Surface", "value": "', getSurfaceType(currentToken), '" }, ',
+                '{ "trait_type": "Color", "value": "', getColor(currentToken) ,'" } ]'
             )
         );
+
+        string memory prefix = string(
+            abi.encodePacked(
+                '{"id": ', toString(currentToken), ', ',
+                '"name": "', getName(currentToken), '", ',
+                '"seedId": ', toString(currentToken % MAX_CRYSTALS), ', ',
+                '"description": "This crystal vibrates with energy from the Rift!", ',
+                '"background_color": "000000"'
+        ));
 
         string memory json = Base64.encode(
             bytes(
                 string(
                     abi.encodePacked(
-                        '{"id": ',
-                        toString(tokenId),
-                        ', "name": "Crystal #',
-                        toString(originalSeed(tokenId)),
-                        '", ',
-                        stats,
-                        ', "description": "This crystal vibrates with energy from the Rift!", "image": "data:image/svg+xml;base64,',
-                        Base64.encode(bytes(output)),
-                        '"}'
+                        prefix, ', ',
+                        attributes, ', ',
+                        '"image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'
                     )
                 )
             )
@@ -309,272 +520,13 @@ contract Crystals is
         return output;
     }
 
-    // function claim(uint256 tokenId) public {
-    //     uint256 asLoot = tokenId < 8001 ? 1 : 0;
-    //     mana.ccMintTo(_msgSender(), asLoot == 1 ? 3 : 1);
-    //     _mint(tokenId);
-    // }
-
-    function claimWithMLoot(uint256 tokenId) public {
-        require(tokenId > 8000 && tokenId < _MAX, "Token ID for mLoot invalid");
-        require(mLoot.ownerOf(tokenId) == _msgSender(), "Not mLoot owner");
-        mana.ccMintTo(_msgSender(), 1);
-        _mint(tokenId);
-    }
-
-    function claimWithLoot(uint256 tokenId) public nonReentrant {
-        require(tokenId > 0 && tokenId < 8001, "Token ID for Loot invalid");
-        require(loot.ownerOf(tokenId) == _msgSender(), "Not Loot owner");
-        mana.ccMintTo(_msgSender(), 3);
-        _mint(tokenId);
-    }
-
-    function mintRegisteredCrystal(uint256 tokenId) public payable nonReentrant {
-        uint256 originalId = originalSeed(tokenId);
-        require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
-        if (originalId < 8001) {
-            require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            require(lootersPrice <= msg.value, "Ether value sent is not correct");
-        } else {
-            require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
-            require(mlootersPrice <= msg.value, "Ether value sent is not correct");
-        }
-        require (crystals[originalId].tokenId > 0, "This crystal isn't registered");
-        require (crystals[originalId].minted == false, "This crystal has already been minted");
-
-        crystals[originalId].minted = true;
-        _safeMint(_msgSender(), tokenId);
-    }
-
-    function _mint(uint256 tokenId) internal {
-        crystals[originalSeed(tokenId)].tokenId = tokenId;
-        crystals[originalSeed(tokenId)].minted = true;
-
-        _safeMint(_msgSender(), tokenId);
-    }
-
-    /**
-     * @dev Return the token URI through the Loot Expansion interface
-     * @param lootId The Loot Character URI
-     */
-    function lootExpansionTokenUri(uint256 lootId) public pure returns (string memory) {
-        return tokenURI(lootId);
-    }
-
-    // the loot bag is the tokenId
-    function claimCrystalMana(uint256 tokenId) public nonReentrant {
-        uint256 originalId = originalSeed(tokenId);
-        if (crystals[originalSeed(tokenId)].minted == false) {
-            // using a virtual crystal
-            require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
-            if (originalId < 8001) {
-                require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            } else {
-                require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
-            }
-        } else {
-            // using a Crystal Token
-            require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
-        }
-        
-        _claimCrystalMana(tokenId);
-    }
-
-    function _claimCrystalMana(uint256 tokenId) internal {
-        uint256 daysSinceCharge = diffDays(
-            visits[originalSeed(tokenId)].lastCharge,
-            block.timestamp
-        );
-        require(
-            daysSinceCharge >= 1,
-            "You must wait before you can use this Crystal again"
-        );
-
-        uint256 manaToProduce = extractableMana(tokenId);
-
-        visits[originalSeed(tokenId)].lastCharge = uint64(block.timestamp);
-        manaProduced[tokenId] = manaProduced[tokenId] + manaToProduce;
-        mana.ccMintTo(_msgSender(), manaToProduce);
-    }
-
-    function extractableMana(uint256 tokenId) internal view returns (uint256) {
-        uint256 daysSinceCharge = diffDays(
-            visits[originalSeed(tokenId)].lastCharge,
-            block.timestamp
-        );
-
-        uint256 manaToProduce = daysSinceCharge * dailyMana(tokenId);
-        uint256 manaProducedAtLevel = manaProduced[tokenId];
-        // don't give more mana than the crystal's capacity
-        if (daysSinceCharge > getLevel(tokenId)) {
-            manaToProduce = getLevel(tokenId) * dailyMana(tokenId);
-        }
-
-        if ((manaToProduce + manaProducedAtLevel) > levelMana(tokenId)) {
-            return levelMana(tokenId) - manaProducedAtLevel;
-        } else {
-            return manaToProduce;
-        }
-    }
-
-    function levelMana(uint256 tokenId) internal pure returns (uint256) {
-        return _isOGCrystal(tokenId) ? getSpin(tokenId) * 10 : getSpin(tokenId);
-    }
-
-    function dailyMana(uint256 tokenId) internal pure returns (uint256) {
-        return _isOGCrystal(tokenId) ? getResonance(tokenId) * 10 : getResonance(tokenId);
-    }
-
-    function _isOGCrystal(uint256 tokenId) internal pure returns (bool) {
-        return originalSeed(tokenId) < 8001;
-    }
-
-    // in order to level up the crystal must reach max capacity (d * mb >= cap)
-    // leveling up burns the crystal and mints a new one with id = _MAX + old.id
-    // leveling up also gains bonus mana equal to level - 1
-    function levelUpCrystal(uint256 tokenId) public nonReentrant {
-        uint256 originalId = originalSeed(tokenId);
-        if (crystals[originalSeed(tokenId)].minted == false) {
-            // using a virtual crystal
-            require(originalId > 0 && originalId < _MAX, "Token ID for Loot invalid");
-            if (originalId < 8001) {
-                require(loot.ownerOf(originalId) == _msgSender(), "Not Loot owner");
-            } else {
-                require(mLoot.ownerOf(originalId) == _msgSender(), "Not mLoot owner");
-            }
-        } else {
-            // using a Crystal Token
-            require(ownerOf(tokenId) == _msgSender(), "Not Crystal owner");
-        }
-
-        require(_canLevelCrystal(tokenId), "This crystal is not ready to be leveled up");
-        
-        crystals[originalSeed(tokenId)].tokenId = crystals[originalSeed(tokenId)].tokenId + _MAX;
-
-        mana.ccMintTo(_msgSender(), getLevel(crystals[originalSeed(tokenId)].tokenId + _MAX) - 1);
-        visits[originalSeed(tokenId)].lastLevelUp = uint64(block.timestamp);
-    
-    }
-
-    function _canLevelCrystal(uint256 tokenId) internal view returns (bool) {
-        // time since last charge
-        uint256 dayDiff = diffDays(
-            visits[originalSeed(tokenId)].lastCharge,
-            block.timestamp
-        );
-        uint256 isMaxCharge = dayDiff == getLevel(tokenId)
-            ? 1
-            : 0;
-
-        return isMaxCharge == 1;
-    }
-
-    function originalSeed(uint256 tokenId) internal pure returns (uint256) {
-        if (tokenId <= _MAX) {
-            return tokenId;
-        }
-
-        return tokenId - (_MAX * (tokenId / _MAX));
-    }
-
-    function getRandom(uint256 tokenId, string memory key)
+    function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
         internal
         pure
         returns (uint256)
     {
-        uint256 oSeed = originalSeed(tokenId);
-
-        return random(string(abi.encodePacked(oSeed, key)));
-    }
-
-    // This will always return a random number based on tokenId, NOT the original seed!
-    function getRandom(
-        uint256 tokenId,
-        string memory key,
-        bool skipSeed
-    ) internal pure returns (uint256) {
-        return random(string(abi.encodePacked(tokenId, skipSeed ? key : key)));
-    }
-
-    function getRoll(
-        uint256 tokenId,
-        string memory key,
-        uint256 size,
-        uint256 times
-    ) internal pure returns (uint256) {
-        return ((getRandom(tokenId, key) % size) + 1) * times;
-    }
-
-    // This will always return a roll based on tokenId, NOT the original seed!
-    function getRoll(
-        uint256 tokenId,
-        string memory key,
-        uint256 size,
-        uint256 times,
-        bool skipSeed
-    ) internal pure returns (uint256) {
-        return ((getRandom(tokenId, key, skipSeed) % size) + 1) * times;
-    }
-
-    // return dice rolls for each level
-    function getLevelRolls(
-        uint256 tokenId,
-        string memory key,
-        uint256 size,
-        uint256 times
-    ) internal pure returns (uint256) {
-        uint256 oSeed = originalSeed(tokenId);
-        uint256 index = 1;
-        uint256 score = getRoll(tokenId, key, size, times);
-
-        while (index < getLevel(tokenId)) {
-            score += getRoll((index * _MAX) + oSeed, key, size, times, true);
-            index++;
-        }
-
-        return score;
-    }
-
-    function getLevel(uint256 tokenId) public pure returns (uint256) {
-        uint256 oSeed = originalSeed(tokenId);
-        if (oSeed == tokenId) {
-            return 1;
-        }
-
-        return (tokenId / _MAX) + 1;
-    }
-
-    function getResonance(uint256 tokenId) public pure returns (uint256) {
-        return getLevelRolls(tokenId, "%RESONANCE", 2, 1);
-    }
-
-    function getSpin(uint256 tokenId) public pure returns (uint256) {
-        uint256 level = getLevel(tokenId);
-
-        if (level == 1) {
-            return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1);
-        } else {
-            return 88 * (level - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1);
-        }
-    }
-
-    function getColor(uint256 tokenId) public pure returns (string memory) {
-        uint256 rand = getRandom(tokenId, "%COLOR");
-        uint256 colorSpecialness = getRoll(tokenId, "%COLOR_RARITY", 20, 1);
-
-        if (colorSpecialness > 18) {
-            return getItemFromCSV(specialColors, rand % specialColorsLength);
-        }
-
-        return getItemFromCSV(colors, rand % colorsLength);
-    }
-
-    function getName(uint256 tokenId) public pure returns (string memory) {
-        uint256 oSeed = originalSeed(tokenId);
-        uint256 isFromLoot = oSeed > 0 && oSeed < 8001 ? 1 : 0;
-
-        return isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
-        // return level > 1 ? string(abi.encodePacked(isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed), " +", level)) : isFromLoot == 1 ? getLootName(oSeed) : getBasicName(oSeed);
+        require(fromTimestamp <= toTimestamp);
+        return (toTimestamp - fromTimestamp) / (24 * 60 * 60);
     }
 
     function getBasicName(uint256 tokenId)
@@ -582,94 +534,123 @@ contract Crystals is
         pure
         returns (string memory)
     {
-        uint256 rand = getRandom(tokenId, "%BASIC_NAME");
-        uint256 alignment = getRoll(tokenId, "%ALIGNMENT", 20, 1);
-        uint256 colorSpecialness = getRoll(tokenId, "%COLOR_RARITY", 20, 1);
-        uint256 isAncient = getRandom(tokenId, "%IS_ANCIENT") % 100000;
+        uint256 rand = getRandomOS(tokenId, "%BASIC_NAME");
+        uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
 
-        string memory output = "";
-
-        if (alignment == 10 && colorSpecialness == 10 && isAncient != 1) {
+        string memory output = "Crystal";
+        // set our surface type
+        output = string(
+            abi.encodePacked(
+                getSurfaceType(tokenId),
+                " ",
+                output
+            )
+        );
+        
+        if (
+            alignment == 10
+            && getRollOS(tokenId, "%COLOR_RARITY", 20, 1) == 10
+        ) {
             output = "Average Crystal";
-        } else if (alignment == 1) {
-            output = string(
-                abi.encodePacked(
-                    "Crystal ",
-                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
-                )
-            );
         } else if (alignment == 20) {
             output = string(
                 abi.encodePacked(
-                    "Crystal ",
+                    output,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
-        } else if (alignment < 3) {
+        } else if (alignment < 5) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength),
-                    " Crystal"
+                    output,
+                    " ",
+                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
                 )
             );
-        } else if (alignment > 18) {
+        } else if (alignment > 15) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal"
+                    output,
+                    " ",
+                    getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
-        } else {
-            output = string(abi.encodePacked("Crystal"));
-        }
-
-        if (isAncient == 1) {
-            output = string(abi.encodePacked("Ancient ", output));
-        }
+        } 
 
         return output;
     }
 
     function getLootName(uint256 tokenId)
         internal
-        pure
+        view
         returns (string memory)
     {
-        uint256 rand = getRandom(tokenId, "%LOOT_NAME");
-        uint256 alignment = getRoll(tokenId, "%ALIGNMENT", 20, 1);
-        uint256 colorSpecialness = getRoll(tokenId, "%COLOR_RARITY", 20, 1);
-        uint256 isAncient = getRandom(tokenId, "%IS_ANCIENT") % 100000;
+        uint256 rand = getRandomOS(tokenId, "%LOOT_NAME");
+        uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
 
         string memory output = "";
+        string memory baseName = "Crystal";
+
+        if (tokenId % MAX_CRYSTALS > RESERVED_OFFSET) {
+            baseName = string(abi.encodePacked(
+                collabs[uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)].namePrefix,
+                baseName
+            ));
+        }
+
+        // set our surface type
+        if (alignment < 9 || alignment > 11) {
+            baseName = string(
+                abi.encodePacked(
+                    getSurfaceType(tokenId),
+                    " ",
+                    baseName
+                )
+            );
+        }
 
         // average
-        if (alignment == 10 && colorSpecialness == 10) {
-            output = "Perfectly Average Crystal";
-        }
-        // cursed
-        else if (alignment < 3) {
+        if (alignment == 10 && getRollOS(tokenId, "%COLOR_RARITY", 20, 1) == 10) {
             output = string(
                 abi.encodePacked(
-                    (alignment == 1 ? "Demonic Crystal " : "Crystal "),
+                    "Perfectly Average ",
+                    baseName
+                )
+            );
+        }
+        // cursed
+        else if (alignment < 5) {
+            if (alignment == 1) {
+                baseName = string(
+                    abi.encodePacked(
+                        "Demonic ",
+                        baseName
+                    )
+                );
+            }
+            output = string(
+                abi.encodePacked(
+                    baseName,
+                    " ",
                     getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
                 )
             );
         }
         // standard
-        else if (alignment < 17) {
+        else if (alignment < 16) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal"
+                    baseName
                 )
             );
         }
         // good
-        else if (alignment > 16 && alignment < 20) {
+        else if (alignment > 15 && alignment < 20) {
             output = string(
                 abi.encodePacked(
-                    getItemFromCSV(prefixes, rand % prefixesLength),
-                    " Crystal ",
+                    baseName,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
@@ -679,43 +660,140 @@ contract Crystals is
             output = string(
                 abi.encodePacked(
                     "Divine ",
-                    " Crystal ",
+                    baseName,
+                    " ",
                     getItemFromCSV(suffixes, rand % suffixesLength)
                 )
             );
         }
         // shouldn't happen lol
         else {
-            output = "Forgotten Crystal";
-        }
-
-        if (isAncient == 1) {
-            output = string(abi.encodePacked("Ancient ", output));
+            output = string(
+                abi.encodePacked(
+                    "Forgotten ",
+                    baseName
+                )
+            );
         }
 
         return output;
         // return string(abi.encodePacked(toString(alignment), " - ", output));
     }
 
-    // each index has a random start
-    // slab should be level + rstart
-    function getSlab(uint256 tokenId, uint256 slot)
-        public
+    function getSurfaceType(uint256 tokenId)
+        internal
+        pure
+        returns (string memory) 
+    {
+        uint256 rand = getRandomOS(tokenId, "%SURFACE_TYPE");
+        uint256 alignment = getRollOS(tokenId, "%ALIGNMENT", 20, 1);
+
+        if (alignment < 9) {
+            return getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength);
+        } else if (alignment > 11) {
+            return getItemFromCSV(prefixes, rand % prefixesLength);
+        } else {
+            return "Plain";
+        }
+
+    }
+
+    function getItemFromCSV(string memory str, uint256 index)
+        internal
         pure
         returns (string memory)
     {
-        uint256 csvIndex = getRandom(
-            tokenId,
-            string(abi.encodePacked("SLAB_", toString(slot)))
-        ) % slabsLength;
+        strings.slice memory strSlice = str.toSlice();
+        string memory separatorStr = ",";
+        strings.slice memory separator = separatorStr.toSlice();
+        strings.slice memory item;
+        for (uint256 i = 0; i <= index; i++) {
+            item = strSlice.split(separator);
+        }
+        return item.toString();
+    }
+
+    /// @notice makes a roll for each crystal level
+    /// @param tokenId id of crystal
+    /// @param key seed for randomization
+    /// @param size size of dice
+    /// @param times number of die
+    function getLevelRolls(
+        uint256 tokenId,
+        string memory key,
+        uint256 size,
+        uint256 times
+    ) internal pure returns (uint256) {
+        uint256 index = 1;
+        uint256 score = getRollOS(tokenId, key, size, times);
         uint256 level = getLevel(tokenId);
-        csvIndex = (csvIndex + (level - 1)) % slabsLength;
-        if (csvIndex > 3) {
-            csvIndex = 0;
+
+        while (index < level) {
+            score += ((
+                random(string(abi.encodePacked(
+                    (index * MAX_CRYSTALS) + (tokenId % MAX_CRYSTALS),
+                    key
+                ))) % size
+            ) + 1) * times;
+
+            index++;
         }
 
-        return
-            level > 1 && slot < level ? getItemFromCSV(slabs, csvIndex) : " ";
+        return score;
+    }
+
+    /// @dev returns random number based on the original seed (tokenId % MAX_CRYSTALS)
+    function getRandomOS(uint256 tokenId, string memory key)
+        internal
+        pure
+        returns (uint256)
+    {
+        return random(string(abi.encodePacked(tokenId % MAX_CRYSTALS, key)));
+    }
+
+    /// @dev returns random roll based on the original seed (tokenId % MAX_CRYSTALS)
+    function getRollOS(
+        uint256 tokenId,
+        string memory key,
+        uint256 size,
+        uint256 times
+    ) internal pure returns (uint256) {
+        return ((getRandomOS(tokenId, key) % size) + 1) * times;
+    }
+
+    function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
+        // treat OG Loot and GA Crystals as OG
+        return tokenId % MAX_CRYSTALS < 8001 || tokenId % MAX_CRYSTALS > RESERVED_OFFSET;
+    }
+
+    function random(string memory input) internal pure returns (uint256) {
+        return uint256(keccak256(abi.encodePacked(input, "%RIFT-OPEN")));
+    }
+    
+    function slabRow(uint256 tokenId, uint256 row, uint256 y) internal pure returns (string memory output) {
+        output = "";
+        
+        for (uint i = 1; i < 19; i++) {
+            output = string(abi.encodePacked(
+                output,
+                (getLevel(tokenId) > 1 && i + ((row - 1) * 18) < getLevel(tokenId)) ?
+                    getItemFromCSV(
+                        slabs,
+                        getRandomOS(
+                            tokenId,
+                            string(abi.encodePacked("SLAB_", toString(i + ((row - 1) * 18))))
+                        ) % slabsLength
+                    ) : " "
+            ));
+        }
+
+        output = string(abi.encodePacked(
+            '<text class="slab" x="285" y="', toString(y), '">',
+            output,
+            '</text>'
+        ));
+
+        return output;
     }
 
     function toString(uint256 value) internal pure returns (string memory) {
@@ -740,21 +818,6 @@ contract Crystals is
         return string(buffer);
     }
 
-    function getItemFromCSV(string memory str, uint256 index)
-        internal
-        pure
-        returns (string memory)
-    {
-        strings.slice memory strSlice = str.toSlice();
-        string memory separatorStr = ",";
-        strings.slice memory separator = separatorStr.toSlice();
-        strings.slice memory item;
-        for (uint256 i = 0; i <= index; i++) {
-            item = strSlice.split(separator);
-        }
-        return item.toString();
-    }
-
     // The following functions are overrides required by Solidity.
     function _beforeTokenTransfer(
         address from,
@@ -764,31 +827,34 @@ contract Crystals is
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    function _burn(uint256 tokenId)
-        internal
-        override(ERC721, ERC721URIStorage)
-    {
+    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
     }
 
-    // function tokenURI(uint256 tokenId)
-    //     public
-    //     view
-    //     override(ERC721, ERC721URIStorage)
-    //     returns (string memory)
-    // {
-    //     return super.tokenURI(tokenId);
-    // }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
+    function isBagHolder(uint256 tokenId) private view {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+        if (oSeed < 8001) {
+            require(ERC721(lootAddress).ownerOf(oSeed) == _msgSender(), "UNAUTH");
+        } else if (oSeed <= RESERVED_OFFSET) {
+            require(ERC721(mLootAddress).ownerOf(oSeed) == _msgSender(), "UNAUTH");
+        } else {
+            uint256 collabTokenId = tokenId % 10000;
+            uint8 collabIndex = uint8((oSeed - RESERVED_OFFSET) / 10000);
+            if (collabTokenId == 0) {
+                collabTokenId = 10000;
+                collabIndex -= 1;
+            }
+            require(collabIndex >= 0 && collabIndex < 10, "COLLAB");
+            require(collabs[collabIndex].contractAddress != address(0), "NOADDR");
+            require(
+                ERC721(collabs[collabIndex].contractAddress)
+                    .ownerOf(collabTokenId) == _msgSender(),
+                "UNAUTH"
+            );
+        }
     }
 }
+
 
 /// [MIT License]
 /// @title Base64
@@ -861,7 +927,6 @@ library Base64 {
     }
 }
 
-// pragma solidity ^0.8.0;
 
 library strings {
     struct slice {

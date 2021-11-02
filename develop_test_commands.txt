@@ -1,23 +1,46 @@
-truffle develop
-
+# START
+truffle develop || truffle console
+>
 migrate
 
+# VERIFY
+truffle run verify Crystals Mana --network goerli
 
 
-
-// get mana instance
-// get crystals instance
+# SETUP
 mana = await Mana.deployed()
-crystals = await Crystals.deployed(mana.address)
+crystals = await Crystals.deployed()
 
-// check deployer balance
-(await mana.balanceOf(accounts[0])) / 1
 
-// claim crystal
-await crystals.claim(1);
+# OWNER
+crystals.ownerUpdateCollab(0, crystals.address, 10, 'Void ')
 
-// check owner address
+
+# MINT
+await crystals.testMint(1)
+crystals.mintCrystal(9900001, { value: web3.utils.toWei('0.03', 'ether') })
+await crystals.testMint(8001)
+
+
+# REGISTER
+crystals.testRegister(2)
+crystals.registerCrystalCollab(8001, 0)
+
+
+# READ
 await crystals.ownerOf(1);
+await crystals.tokenURI(1);
+(await crystals.crystals(9900001).then(a => a.tokenId)).toString()
+(await crystals.collabs(0).then(a => a.levelBonus)).toString()
+
+# CHECKS
+(await mana.balanceOf(accounts[0])) / 1
+(await crystals.mintedCrystals()) / 1
+
+
+
+// Paste in browser
+JSON.parse(atob('token'));
 
 
 

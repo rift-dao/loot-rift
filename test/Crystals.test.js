@@ -39,8 +39,7 @@ describe('Crystal getters', () => {
     });
 
     it('should getLevel', async () => {
-        // TODO: this should match _MAX in Crystals.sol
-        const _MAX = 1000000;
+        const _MAX = 10000000;
         const level1 = await crystalInstance.getLevel(1);
         expect(level1).to.be.bignumber.equal('1');
         
