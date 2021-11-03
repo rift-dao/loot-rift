@@ -86,10 +86,6 @@ contract Crystals is
     // https://etherscan.io/address/0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF
     address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
 
-    // // https://etherscan.io/address/0x8dB687aCEb92c66f013e1D614137238Cc698fEdb
-    // ERC721 public genesisAdventure =
-    //     ERC721(0x8dB687aCEb92c66f013e1D614137238Cc698fEdb);
-
     string private constant cursedPrefixes =
         "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     string private constant cursedSuffixes =
@@ -135,28 +131,7 @@ contract Crystals is
     }
 
     constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
-
-    // TODO: REMOVE AFTER TESTING
-    function testMint(uint256 tokenId) external unminted(tokenId) {
-        IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
-        crystals[tokenId].minted = true;
-        mintedCrystals = mintedCrystals + 1;
-        _safeMint(_msgSender(), tokenId);
-    }
     
-    // TODO: REMOVE AFTER TESTING
-    function testRegister(uint256 tokenId) external unminted(tokenId) nonReentrant {
-        crystals[tokenId].level = 1;
-    }
-
-    /// @notice gain AMNA, can be used once a day
-    /// @notice crystals can only generate a certain amount of AMNA every level
-    /// @notice the amount generated is dependent on
-    /// 1. the crystal's resonance
-    /// 2. the number of days since AMNA was claimed from the crystal
-    /// 3. how much mana has been claimed at the crystal's current level
-    /// @notice crystal will charge every day if AMNA is not claimed
-    /// @param tokenId crystal id, loot/mloot id or collab id + collab offset
     function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
         uint256 crystalIndex = getCrystalIndex(tokenId);
         uint256 daysSinceClaim = diffDays(
@@ -191,9 +166,6 @@ contract Crystals is
         IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
     }
 
-    /// @notice level up crystal, must have a fully charged crystal
-    /// @notice gain AMNA equal to crystals level
-    /// @param tokenId crystal id or loot/mloot id
     function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
         uint256 crystalIndex = getCrystalIndex(tokenId);
         require(getLevel(crystalIndex) < maxLevel, "MAX");
@@ -212,9 +184,6 @@ contract Crystals is
         crystals[crystalIndex].manaProduced = 0;
     }
 
-    /// @notice mints crystal
-    /// @notice increases source bag's generation level
-    /// @param tokenId crystal id or loot/mloot id
     function mintCrystal(uint256 tokenId)
         external
         payable
@@ -313,9 +282,6 @@ contract Crystals is
             "TAKEN"
         );
         collabs[collabIndex] = Collab(contractAddress, namePrefix, MAX_CRYSTALS * levelBonus);
-        // collabs[collabIndex].contractAddress = contractAddress;
-        // collabs[collabIndex].levelBonus = MAX_CRYSTALS * levelBonus;
-        // collabs[collabIndex].namePrefix = namePrefix;
     }
 
     function ownerUpdateMaxLevel(uint32 maxLevel_) external onlyOwner {
@@ -718,12 +684,6 @@ contract Crystals is
         }
         return item.toString();
     }
-
-    /// @notice makes a roll for each crystal level
-    /// @param tokenId id of crystal
-    /// @param key seed for randomization
-    /// @param size size of dice
-    /// @param times number of die
     function getLevelRolls(
         uint256 tokenId,
         string memory key,
@@ -963,11 +923,6 @@ library strings {
         }
     }
 
-    /*
-     * @dev Returns a slice containing the entire string.
-     * @param self The string to make a slice from.
-     * @return A newly allocated slice containing the entire string.
-     */
     function toSlice(string memory self) internal pure returns (slice memory) {
         uint256 ptr;
         assembly {
@@ -976,11 +931,7 @@ library strings {
         return slice(bytes(self).length, ptr);
     }
 
-    /*
-     * @dev Copies a slice to a new string.
-     * @param self The slice to copy.
-     * @return A newly allocated string containing the slice's text.
-     */
+    
     function toString(slice memory self) internal pure returns (string memory) {
         string memory ret = new string(self._len);
         uint256 retptr;
@@ -992,8 +943,6 @@ library strings {
         return ret;
     }
 
-    // Returns the memory address of the first byte of the first occurrence of
-    // `needle` in `self`, or the first byte after `self` if not found.
     function findPtr(
         uint256 selflen,
         uint256 selfptr,
@@ -1046,16 +995,6 @@ library strings {
         return selfptr + selflen;
     }
 
-    /*
-     * @dev Splits the slice, setting `self` to everything after the first
-     *      occurrence of `needle`, and `token` to everything before it. If
-     *      `needle` does not occur in `self`, `self` is set to the empty slice,
-     *      and `token` is set to the entirety of `self`.
-     * @param self The slice to split.
-     * @param needle The text to search for in `self`.
-     * @param token An output parameter to which the first token is written.
-     * @return `token`.
-     */
     function split(
         slice memory self,
         slice memory needle,
@@ -1074,15 +1013,6 @@ library strings {
         return token;
     }
 
-    /*
-     * @dev Splits the slice, setting `self` to everything after the first
-     *      occurrence of `needle`, and returning everything before it. If
-     *      `needle` does not occur in `self`, `self` is set to the empty slice,
-     *      and the entirety of `self` is returned.
-     * @param self The slice to split.
-     * @param needle The text to search for in `self`.
-     * @return The part of `self` up to the first occurrence of `delim`.
-     */
     function split(slice memory self, slice memory needle)
         internal
         pure
