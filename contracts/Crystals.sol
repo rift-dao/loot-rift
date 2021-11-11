@@ -65,6 +65,7 @@ contract Crystals is
         uint64 lastLevelUp;
         uint256 manaProduced;
         uint256 level;
+        uint256 regNum;
     }
 
     struct Bag {
@@ -226,6 +227,7 @@ contract Crystals is
         // set the source bag bagId
         crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
         registeredCrystals += 1;
+        crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
     }
 
     function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
@@ -307,7 +309,7 @@ contract Crystals is
         payable(msg.sender).transfer(balance);
     }
 
-    function getColor(uint256 tokenId) public pure returns (string memory) {
+    function getColor(uint256 tokenId) public view returns (string memory) {
         if (getRoll(tokenId, "%COLOR_RARITY", 20, 1) > 18) {
             return getItemFromCSV(
                 specialColors,
@@ -513,7 +515,7 @@ contract Crystals is
 
     function getBasicName(uint256 tokenId)
         internal
-        pure
+        view
         returns (string memory)
     {
         uint256 rand = getRandom(tokenId, "%BASIC_NAME");
@@ -655,7 +657,7 @@ contract Crystals is
 
     function getSurfaceType(uint256 tokenId)
         internal
-        pure
+        view
         returns (string memory) 
     {
         uint256 rand = getRandom(tokenId, "%SURFACE_TYPE");
@@ -712,10 +714,10 @@ contract Crystals is
     /// @dev returns random number based on the tokenId
     function getRandom(uint256 tokenId, string memory key)
         internal
-        pure
+        view
         returns (uint256)
     {
-        return random(string(abi.encodePacked(tokenId, key)));
+        return random(string(abi.encodePacked(tokenId, key, crystals[tokenId].regNum)));
     }
 
     /// @dev returns random roll based on the tokenId
@@ -724,11 +726,11 @@ contract Crystals is
         string memory key,
         uint256 size,
         uint256 times
-    ) internal pure returns (uint256) {
+    ) internal view returns (uint256) {
         return ((getRandom(tokenId, key) % size) + 1) * times;
     }
     
-    function getSlab(uint256 tokenId, uint256 x, uint256 y) internal pure returns (string memory output) {
+    function getSlab(uint256 tokenId, uint256 x, uint256 y) internal view returns (string memory output) {
         output = getItemFromCSV(
                         slabs,
                         getRandom(
