@@ -318,7 +318,8 @@ contract Crystals is
     }
 
     function getLevel(uint256 tokenId) public view returns (uint256) {
-        return crystals[tokenId].level;
+        // return crystals[tokenId].level;
+        return 17;
     }
 
     function getLootType(uint256 tokenId) public view returns (string memory) {
@@ -350,11 +351,13 @@ contract Crystals is
     function getSpin(uint256 tokenId) public view returns (uint256) {
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
 
-        if (getLevel(tokenId) == 1) {
-            return (1 + getRandom(tokenId, "%SPIN")) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+        if (getLevel(tokenId) <= 1) {
+            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
         } else {
             return ((88 * (getLevel(tokenId) - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
         }
+        // }
+        // return multiplier;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -364,6 +367,50 @@ contract Crystals is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    // function getSlab(uint256 slabPositionX, uint256, slabPositionY) {
+    //     return 'V';
+    // }
+
+    // 2 - 1
+    // 5 - 4
+    // 10 - 9
+    // 17 - 16
+    // 26 - 25
+    function getSlabs(uint256 tokenId) private view returns (string memory output) {
+        if (getLevel(tokenId) < 2) {
+            return '';
+        }
+
+        output = '';
+
+        uint256 rows = sqrt(getLevel(tokenId) - 1);
+
+        // output = string(abi.encodePacked(
+        //     '<text class="slab" x="285" y="', toString(y), '">',
+        //     output,
+        //     '</text>'
+        // ));
+
+        // 295 + (19 * i)
+        for (uint256 i = 0; i < rows; i++) {
+            output = string(
+                abi.encodePacked(
+                    output,
+                    '<text class="slab" x="285" y="',
+                    toString(295 + (19 * i)),
+                    '">'
+            ));
+
+            for (uint256 j = 0; j < rows; j++) {
+                output = string(abi.encodePacked(output, getSlab(tokenId, i, j)));
+            }
+
+            output = string(abi.encodePacked(output, '</text>'));
+        }
+
+        return output;
     }
 
     function tokenURI(uint256 tokenId)
@@ -420,29 +467,35 @@ contract Crystals is
                 '</text>'
             )
         );
-
-        // ROW 1
         output = string(
             abi.encodePacked(
                 output,
-                slabRow(tokenId, 1, 295),
-                slabRow(tokenId, 2, 314),
-                slabRow(tokenId, 3, 333),
-                slabRow(tokenId, 4, 352),
-                slabRow(tokenId, 5, 371),
-                slabRow(tokenId, 6, 390)
-        ));
-
-        output = string(
-            abi.encodePacked(
-                output,
-                slabRow(tokenId, 7, 409),
-                slabRow(tokenId, 8, 428),
-                slabRow(tokenId, 9, 447),
-                slabRow(tokenId, 10, 466),
-                slabRow(tokenId, 11, 485),
+                getSlabs(tokenId),
                 '</svg>'
         ));
+
+        // ROW 1
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         slabRow(tokenId, 1, 295),
+        //         slabRow(tokenId, 2, 314),
+        //         slabRow(tokenId, 3, 333),
+        //         slabRow(tokenId, 4, 352),
+        //         slabRow(tokenId, 5, 371),
+        //         slabRow(tokenId, 6, 390)
+        // ));
+
+        // output = string(
+        //     abi.encodePacked(
+        //         output,
+        //         slabRow(tokenId, 7, 409),
+        //         slabRow(tokenId, 8, 428),
+        //         slabRow(tokenId, 9, 447),
+        //         slabRow(tokenId, 10, 466),
+        //         slabRow(tokenId, 11, 485),
+        //         '</svg>'
+        // ));
 
         string memory attributes = string(
             abi.encodePacked(
@@ -481,6 +534,7 @@ contract Crystals is
                 )
             )
         );
+
         output = string(
             abi.encodePacked("data:application/json;base64,", json)
         );
@@ -732,28 +786,36 @@ contract Crystals is
         return uint256(keccak256(abi.encodePacked(input, "%RIFT-OPEN")));
     }
     
-    function slabRow(uint256 tokenId, uint256 row, uint256 y) internal view returns (string memory output) {
-        output = "";
-        
-        for (uint i = 1; i < 19; i++) {
-            output = string(abi.encodePacked(
-                output,
-                (getLevel(tokenId) > 1 && i + ((row - 1) * 18) < getLevel(tokenId)) ?
-                    getItemFromCSV(
+    function getSlab(uint256 tokenId, uint256 x, uint256 y) internal view returns (string memory output) {
+        output = getItemFromCSV(
                         slabs,
                         getRandom(
                             tokenId,
-                            string(abi.encodePacked("SLAB_", toString(i + ((row - 1) * 18))))
+                            string(abi.encodePacked("SLAB_", toString(x), "_", toString(y)))
                         ) % slabsLength
-                    ) : " "
-            ));
-        }
+                    );
 
-        output = string(abi.encodePacked(
-            '<text class="slab" x="285" y="', toString(y), '">',
-            output,
-            '</text>'
-        ));
+        // output = "";
+        
+        // for (uint i = 1; i < 19; i++) {
+        //     output = string(abi.encodePacked(
+        //         output,
+        //         (getLevel(tokenId) > 1 && i + ((row - 1) * 18) < getLevel(tokenId)) ?
+        //             getItemFromCSV(
+        //                 slabs,
+        //                 getRandom(
+        //                     tokenId,
+        //                     string(abi.encodePacked("SLAB_", toString(i + ((row - 1) * 18))))
+        //                 ) % slabsLength
+        //             ) : " "
+        //     ));
+        // }
+
+        // output = string(abi.encodePacked(
+        //     '<text class="slab" x="285" y="', toString(y), '">',
+        //     output,
+        //     '</text>'
+        // ));
 
         return output;
     }
@@ -814,6 +876,60 @@ contract Crystals is
                 "UNAUTH"
             );
         }
+    }
+}
+
+/// @notice Calculates the square root of x, rounding down.
+/// @dev Uses the Babylonian method https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method.
+/// @param x The uint256 number for which to calculate the square root.
+/// @return result The result as an uint256.
+function sqrt(uint256 x) pure returns (uint256 result) {
+    if (x == 0) {
+        return 0;
+    }
+
+    // Calculate the square root of the perfect square of a power of two that is the closest to x.
+    uint256 xAux = uint256(x);
+    result = 1;
+    if (xAux >= 0x100000000000000000000000000000000) {
+        xAux >>= 128;
+        result <<= 64;
+    }
+    if (xAux >= 0x10000000000000000) {
+        xAux >>= 64;
+        result <<= 32;
+    }
+    if (xAux >= 0x100000000) {
+        xAux >>= 32;
+        result <<= 16;
+    }
+    if (xAux >= 0x10000) {
+        xAux >>= 16;
+        result <<= 8;
+    }
+    if (xAux >= 0x100) {
+        xAux >>= 8;
+        result <<= 4;
+    }
+    if (xAux >= 0x10) {
+        xAux >>= 4;
+        result <<= 2;
+    }
+    if (xAux >= 0x8) {
+        result <<= 1;
+    }
+
+    // The operations can never overflow because the result is max 2^127 when it enters this block.
+    unchecked {
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1; // Seven iterations should be enough
+        uint256 roundedDownResult = x / result;
+        return result >= roundedDownResult ? roundedDownResult : result;
     }
 }
 
