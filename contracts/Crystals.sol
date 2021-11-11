@@ -49,7 +49,7 @@ contract Crystals is
     uint8 private constant specialColorsLength = 11;
     uint8 private constant slabsLength = 4;
     
-    uint32 public maxLevel = 20;
+    uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
 
