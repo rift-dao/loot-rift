@@ -133,55 +133,53 @@ contract Crystals is
     constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
     
     function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
-        uint256 crystalIndex = getCrystalIndex(tokenId);
         uint256 daysSinceClaim = diffDays(
-            crystals[crystalIndex].lastClaim,
+            crystals[tokenId].lastClaim,
             block.timestamp
         );
 
         require(daysSinceClaim >= 1, "WAIT");
 
-        uint256 manaToProduce = daysSinceClaim * getResonance(crystalIndex);
+        uint256 manaToProduce = daysSinceClaim * getResonance(tokenId);
 
         // amount generatable is capped to the crystals spin
-        if (daysSinceClaim > getLevel(crystalIndex)) {
-            manaToProduce = getLevel(crystalIndex) * getResonance(crystalIndex);
+        if (daysSinceClaim > getLevel(tokenId)) {
+            manaToProduce = getLevel(tokenId) * getResonance(tokenId);
         }
 
         // if cap is hit, limit mana to cap or level, whichever is greater
-        if ((manaToProduce + crystals[crystalIndex].manaProduced) > getSpin(crystalIndex)) {
-            if (getSpin(crystalIndex) >= crystals[crystalIndex].manaProduced) {
-                manaToProduce = getSpin(crystalIndex) - crystals[crystalIndex].manaProduced;
+        if ((manaToProduce + crystals[tokenId].manaProduced) > getSpin(tokenId)) {
+            if (getSpin(tokenId) >= crystals[tokenId].manaProduced) {
+                manaToProduce = getSpin(tokenId) - crystals[tokenId].manaProduced;
             } else {
                 manaToProduce = 0;
             }
 
-            if (manaToProduce < getLevel(crystalIndex)) {
-                manaToProduce = getLevel(crystalIndex);
+            if (manaToProduce < getLevel(tokenId)) {
+                manaToProduce = getLevel(tokenId);
             }
         }
 
-        crystals[crystalIndex].lastClaim = uint64(block.timestamp);
-        crystals[crystalIndex].manaProduced += manaToProduce;
+        crystals[tokenId].lastClaim = uint64(block.timestamp);
+        crystals[tokenId].manaProduced += manaToProduce;
         IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
     }
 
     function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
-        uint256 crystalIndex = getCrystalIndex(tokenId);
-        require(getLevel(crystalIndex) < maxLevel, "MAX");
+        require(getLevel(tokenId) < maxLevel, "MAX");
         require(
             diffDays(
-                crystals[crystalIndex].lastClaim,
+                crystals[tokenId].lastClaim,
                 block.timestamp
             ) >= getLevel(tokenId), "WAIT"
         );
 
-        IMANA(manaAddress).ccMintTo(_msgSender(), getLevel(crystalIndex));
+        IMANA(manaAddress).ccMintTo(_msgSender(), getLevel(tokenId));
 
-        crystals[crystalIndex].level = crystals[crystalIndex].level + 1;
-        crystals[crystalIndex].lastClaim = uint64(block.timestamp);
-        crystals[crystalIndex].lastLevelUp = uint64(block.timestamp);
-        crystals[crystalIndex].manaProduced = 0;
+        crystals[tokenId].level += 1;
+        crystals[tokenId].lastClaim = uint64(block.timestamp);
+        crystals[tokenId].lastLevelUp = uint64(block.timestamp);
+        crystals[tokenId].manaProduced = 0;
     }
 
     function mintCrystal(uint256 tokenId)
@@ -190,33 +188,35 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
-        uint256 oSeed = tokenId % MAX_CRYSTALS;
-        require(oSeed > 0, "TOKEN");
-        if (oSeed > 8000) {
+        require(tokenId > 0, "TOKEN");
+        if (tokenId > 8000) {
             require(msg.value == mintFee, "FEE");
         } else {
             require(msg.value == lootMintFee, "FEE");
         }
 
+        require(crystals[tokenId].level > 0, "UNREGISTERED");
+
         // can mint 1stGen immediately 
         if (bags[tokenId % MAX_CRYSTALS].generationsMinted != 0) {
-            require(crystals[getCrystalIndex(tokenId)].level >= mintLevel, "LEVEL TOO LOW");
+            require(crystals[tokenId].level >= mintLevel, "LEVEL TOO LOW");
         }
 
-        isBagHolder(oSeed);        
+        isBagHolder(tokenId % MAX_CRYSTALS);        
 
         IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
 
-        crystals[getCrystalIndex(tokenId)].minted = true;
+        crystals[tokenId].minted = true;
+
         // bag goes up a generation. owner can now register another crystal
-        bags[tokenId % MAX_CRYSTALS].generationsMinted = bags[tokenId % MAX_CRYSTALS].generationsMinted + 1;
-        mintedCrystals = mintedCrystals + 1;
+        bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
+        mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
 
     /// @notice registers a new crystal for a given bag
     /// @notice bag must not have a currently registered crystal
-    function registerCrystal(uint256 bagId) external unminted(bagId) nonReentrant {
+    function registerCrystal(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
         require(bagId <= MAX_CRYSTALS, "INVALID");
         require(crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REGISTERED");
 
@@ -224,7 +224,7 @@ contract Crystals is
 
         // set the source bag bagId
         crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
-        registeredCrystals = registeredCrystals + 1;
+        registeredCrystals += 1;
     }
 
     function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
@@ -306,14 +306,6 @@ contract Crystals is
         payable(msg.sender).transfer(balance);
     }
 
-    function getCrystalIndex(uint256 tokenId) public view returns (uint256) {
-        // if the tokenId is lesser than # of crystals then offset index by potential bag generation
-        // user could be using bag or crystal token id
-        return tokenId > MAX_CRYSTALS ? 
-            tokenId :
-            tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted);
-    }
-
     function getColor(uint256 tokenId) public pure returns (string memory) {
         if (getRoll(tokenId, "%COLOR_RARITY", 20, 1) > 18) {
             return getItemFromCSV(
@@ -326,7 +318,7 @@ contract Crystals is
     }
 
     function getLevel(uint256 tokenId) public view returns (uint256) {
-        return crystals[getCrystalIndex(tokenId)].level;
+        return crystals[tokenId].level;
     }
 
     function getLootType(uint256 tokenId) public view returns (string memory) {
@@ -359,9 +351,9 @@ contract Crystals is
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
 
         if (getLevel(tokenId) == 1) {
-            return 1 + getLevelRolls(tokenId, "%SPIN", 2, 1) * multiplier;
+            return 1 + getRandom(tokenId, "%SPIN");
         } else {
-            return 88 * (getLevel(tokenId) - 1) + getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier;
+            return (88 * (getLevel(tokenId) - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier);
         }
     }
 
