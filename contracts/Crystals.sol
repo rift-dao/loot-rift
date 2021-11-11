@@ -100,7 +100,7 @@ contract Crystals is
         "Aqua,black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
 
-    /// @dev indexed by tokenId + (MAX_CRYSTALS * bag generation)
+    /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystals;
 
     /// @dev indexed by bagId
@@ -216,13 +216,14 @@ contract Crystals is
 
     /// @notice registers a new crystal for a given bag
     /// @notice bag must not have a currently registered crystal
-    function registerCrystal(uint256 tokenId) external unminted(tokenId) nonReentrant {
-        require(crystals[tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)].level == 0, "REGISTERED");
+    function registerCrystal(uint256 bagId) external unminted(bagId) nonReentrant {
+        require(bagId <= MAX_CRYSTALS, "INVALID");
+        require(crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REGISTERED");
 
-        isBagHolder(tokenId);
+        isBagHolder(bagId);
 
-        // set the source bag tokenId
-        crystals[tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)].level = 1;
+        // set the source bag bagId
+        crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
         registeredCrystals = registeredCrystals + 1;
     }
 
