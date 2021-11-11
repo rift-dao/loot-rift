@@ -344,16 +344,16 @@ contract Crystals is
     }
 
     function getResonance(uint256 tokenId) public view returns (uint256) {
-        return getLevelRolls(tokenId, "%RESONANCE", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1);
+        return getLevelRolls(tokenId, "%RESONANCE", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
     }
 
     function getSpin(uint256 tokenId) public view returns (uint256) {
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
 
         if (getLevel(tokenId) == 1) {
-            return 1 + getRandom(tokenId, "%SPIN");
+            return (1 + getRandom(tokenId, "%SPIN")) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
         } else {
-            return (88 * (getLevel(tokenId) - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier);
+            return ((88 * (getLevel(tokenId) - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
         }
     }
 
