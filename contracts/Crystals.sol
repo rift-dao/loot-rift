@@ -357,6 +357,10 @@ contract Crystals is
         }
     }
 
+    function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
+        return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
@@ -457,6 +461,7 @@ contract Crystals is
                 attributes,
                 '{ "trait_type": "Loot Type", "value": "', getLootType(tokenId), '" }, ',
                 '{ "trait_type": "Surface", "value": "', getSurfaceType(tokenId), '" }, ',
+                '{ "trait_type": "Color", "value": ', toString(bags[tokenId % MAX_CRYSTALS].generationsMinted + 1) ,' }, ',
                 '{ "trait_type": "Color", "value": "', getColor(tokenId) ,'" } ]'
             )
         );
