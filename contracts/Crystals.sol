@@ -113,6 +113,7 @@ contract Crystals is
     modifier ownsCrystal(uint256 tokenId) {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
 
+        require(crystals[tokenId].level > 0, "UNREGISTERED");
         require(oSeed > 0, "TOKEN");
         require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INVALID");
 
@@ -143,8 +144,8 @@ contract Crystals is
         uint256 manaToProduce = daysSinceClaim * getResonance(tokenId);
 
         // amount generatable is capped to the crystals spin
-        if (daysSinceClaim > getLevel(tokenId)) {
-            manaToProduce = getLevel(tokenId) * getResonance(tokenId);
+        if (daysSinceClaim > crystals[tokenId].level) {
+            manaToProduce = crystals[tokenId].level * getResonance(tokenId);
         }
 
         // if cap is hit, limit mana to cap or level, whichever is greater
@@ -155,8 +156,8 @@ contract Crystals is
                 manaToProduce = 0;
             }
 
-            if (manaToProduce < getLevel(tokenId)) {
-                manaToProduce = getLevel(tokenId);
+            if (manaToProduce < crystals[tokenId].level) {
+                manaToProduce = crystals[tokenId].level;
             }
         }
 
@@ -166,15 +167,15 @@ contract Crystals is
     }
 
     function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
-        require(getLevel(tokenId) < maxLevel, "MAX");
+        require(crystals[tokenId].level < maxLevel, "MAX");
         require(
             diffDays(
                 crystals[tokenId].lastClaim,
                 block.timestamp
-            ) >= getLevel(tokenId), "WAIT"
+            ) >= crystals[tokenId].level, "WAIT"
         );
 
-        IMANA(manaAddress).ccMintTo(_msgSender(), getLevel(tokenId));
+        IMANA(manaAddress).ccMintTo(_msgSender(), crystals[tokenId].level);
 
         crystals[tokenId].level += 1;
         crystals[tokenId].lastClaim = uint64(block.timestamp);
@@ -317,10 +318,6 @@ contract Crystals is
         return getItemFromCSV(colors, getRandom(tokenId, "%COLOR") % colorsLength);
     }
 
-    function getLevel(uint256 tokenId) public view returns (uint256) {
-        return crystals[tokenId].level;
-    }
-
     function getLootType(uint256 tokenId) public view returns (string memory) {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
         if (oSeed > 0 && oSeed < 8001) {
@@ -350,10 +347,10 @@ contract Crystals is
     function getSpin(uint256 tokenId) public view returns (uint256) {
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
 
-        if (getLevel(tokenId) == 1) {
-            return (1 + getRandom(tokenId, "%SPIN")) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+        if (crystals[tokenId].level <= 1) {
+            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
         } else {
-            return ((88 * (getLevel(tokenId) - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+            return ((88 * (crystals[tokenId].level - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
         }
     }
 
@@ -368,6 +365,34 @@ contract Crystals is
         returns (bool)
     {
         return super.supportsInterface(interfaceId);
+    }
+
+    function getSlabs(uint256 tokenId) private view returns (string memory output) {
+        if (crystals[tokenId].level < 2) {
+            return '';
+        }
+
+        output = '';
+
+        uint256 rows = sqrt(crystals[tokenId].level - 1);
+
+        for (uint256 i = 0; i < rows; i++) {
+            output = string(
+                abi.encodePacked(
+                    output,
+                    '<text class="slab" x="285" y="',
+                    toString(295 + (19 * i)),
+                    '">'
+            ));
+
+            for (uint256 j = 0; j < rows; j++) {
+                output = string(abi.encodePacked(output, getSlab(tokenId, i, j)));
+            }
+
+            output = string(abi.encodePacked(output, '</text>'));
+        }
+
+        return output;
     }
 
     function tokenURI(uint256 tokenId)
@@ -394,11 +419,11 @@ contract Crystals is
                 '<rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
                 getName(tokenId),
                 (
-                    getLevel(tokenId) > 1
+                    crystals[tokenId].level > 1
                         ? string(
                             abi.encodePacked(
                                 " +",
-                                toString(getLevel(tokenId) - 1)
+                                toString(crystals[tokenId].level > 0 ? crystals[tokenId].level - 1 : 1)
                             )
                         )
                         : ""
@@ -424,34 +449,17 @@ contract Crystals is
                 '</text>'
             )
         );
-
-        // ROW 1
         output = string(
             abi.encodePacked(
                 output,
-                slabRow(tokenId, 1, 295),
-                slabRow(tokenId, 2, 314),
-                slabRow(tokenId, 3, 333),
-                slabRow(tokenId, 4, 352),
-                slabRow(tokenId, 5, 371),
-                slabRow(tokenId, 6, 390)
-        ));
-
-        output = string(
-            abi.encodePacked(
-                output,
-                slabRow(tokenId, 7, 409),
-                slabRow(tokenId, 8, 428),
-                slabRow(tokenId, 9, 447),
-                slabRow(tokenId, 10, 466),
-                slabRow(tokenId, 11, 485),
+                getSlabs(tokenId),
                 '</svg>'
         ));
 
         string memory attributes = string(
             abi.encodePacked(
                 '"attributes": [ ',
-                '{ "trait_type": "Level", "value": ', toString(getLevel(tokenId)), ' }, ',
+                '{ "trait_type": "Level", "value": ', toString(crystals[tokenId].level), ' }, ',
                 '{ "trait_type": "Resonance", "value": ', toString(getResonance(tokenId)), ' }, ',
                 '{ "trait_type": "Spin", "value": ', toString(getSpin(tokenId)), ' }, '
         ));
@@ -486,6 +494,7 @@ contract Crystals is
                 )
             )
         );
+
         output = string(
             abi.encodePacked("data:application/json;base64,", json)
         );
@@ -639,15 +648,6 @@ contract Crystals is
                 )
             );
         }
-        // shouldn't happen lol
-        else {
-            output = string(
-                abi.encodePacked(
-                    "Forgotten ",
-                    baseName
-                )
-            );
-        }
 
         return output;
         // return string(abi.encodePacked(toString(alignment), " - ", output));
@@ -693,7 +693,7 @@ contract Crystals is
     ) internal view returns (uint256) {
         uint256 index = 1;
         uint256 score = getRoll(tokenId, key, size, times);
-        uint256 level = getLevel(tokenId);
+        uint256 level = crystals[tokenId].level;
 
         while (index < level) {
             score += ((
@@ -727,6 +727,18 @@ contract Crystals is
     ) internal pure returns (uint256) {
         return ((getRandom(tokenId, key) % size) + 1) * times;
     }
+    
+    function getSlab(uint256 tokenId, uint256 x, uint256 y) internal pure returns (string memory output) {
+        output = getItemFromCSV(
+                        slabs,
+                        getRandom(
+                            tokenId,
+                            string(abi.encodePacked("SLAB_", toString(x), "_", toString(y)))
+                        ) % slabsLength
+                    );
+
+        return output;
+    }
 
     function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
         // treat OG Loot and GA Crystals as OG
@@ -735,32 +747,6 @@ contract Crystals is
 
     function random(string memory input) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(input, "%RIFT-OPEN")));
-    }
-    
-    function slabRow(uint256 tokenId, uint256 row, uint256 y) internal view returns (string memory output) {
-        output = "";
-        
-        for (uint i = 1; i < 19; i++) {
-            output = string(abi.encodePacked(
-                output,
-                (getLevel(tokenId) > 1 && i + ((row - 1) * 18) < getLevel(tokenId)) ?
-                    getItemFromCSV(
-                        slabs,
-                        getRandom(
-                            tokenId,
-                            string(abi.encodePacked("SLAB_", toString(i + ((row - 1) * 18))))
-                        ) % slabsLength
-                    ) : " "
-            ));
-        }
-
-        output = string(abi.encodePacked(
-            '<text class="slab" x="285" y="', toString(y), '">',
-            output,
-            '</text>'
-        ));
-
-        return output;
     }
 
     function toString(uint256 value) internal pure returns (string memory) {
@@ -819,6 +805,60 @@ contract Crystals is
                 "UNAUTH"
             );
         }
+    }
+}
+
+/// @notice Calculates the square root of x, rounding down.
+/// @dev Uses the Babylonian method https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method.
+/// @param x The uint256 number for which to calculate the square root.
+/// @return result The result as an uint256.
+function sqrt(uint256 x) pure returns (uint256 result) {
+    if (x == 0) {
+        return 0;
+    }
+
+    // Calculate the square root of the perfect square of a power of two that is the closest to x.
+    uint256 xAux = uint256(x);
+    result = 1;
+    if (xAux >= 0x100000000000000000000000000000000) {
+        xAux >>= 128;
+        result <<= 64;
+    }
+    if (xAux >= 0x10000000000000000) {
+        xAux >>= 64;
+        result <<= 32;
+    }
+    if (xAux >= 0x100000000) {
+        xAux >>= 32;
+        result <<= 16;
+    }
+    if (xAux >= 0x10000) {
+        xAux >>= 16;
+        result <<= 8;
+    }
+    if (xAux >= 0x100) {
+        xAux >>= 8;
+        result <<= 4;
+    }
+    if (xAux >= 0x10) {
+        xAux >>= 4;
+        result <<= 2;
+    }
+    if (xAux >= 0x8) {
+        result <<= 1;
+    }
+
+    // The operations can never overflow because the result is max 2^127 when it enters this block.
+    unchecked {
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1; // Seven iterations should be enough
+        uint256 roundedDownResult = x / result;
+        return result >= roundedDownResult ? roundedDownResult : result;
     }
 }
 
