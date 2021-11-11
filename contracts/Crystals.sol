@@ -76,7 +76,7 @@ contract Crystals is
 
     uint256 public mintFee = 20000000000000000; //0.03 ETH
     uint256 public lootMintFee = 0;
-    uint256 public mintLevel = 15;
+    uint256 public mintLevel = 5;
 
     address public manaAddress;
 
@@ -198,7 +198,10 @@ contract Crystals is
             require(msg.value == lootMintFee, "FEE");
         }
 
-        require(crystals[getCrystalIndex(tokenId)].level >= mintLevel, "LEVEL TOO LOW");
+        // can mint 1stGen immediately 
+        if (bags[tokenId % MAX_CRYSTALS].generationsMinted != 0) {
+            require(crystals[getCrystalIndex(tokenId)].level >= mintLevel, "LEVEL TOO LOW");
+        }
 
         isBagHolder(oSeed);        
 
