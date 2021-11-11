@@ -74,7 +74,7 @@ contract Crystals is
     uint256 public mintedCrystals;
     uint256 public registeredCrystals;
 
-    uint256 public mintFee = 20000000000000000; //0.03 ETH
+    uint256 public mintFee = 20000000000000000; //0.02 ETH
     uint256 public lootMintFee = 0;
     uint256 public mintLevel = 5;
 
