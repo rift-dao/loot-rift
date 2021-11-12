@@ -81,10 +81,7 @@ contract Crystals is
 
     address public manaAddress;
 
-    // https://etherscan.io/address/0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7
     address public lootAddress = 0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7;
-
-    // https://etherscan.io/address/0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF
     address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
 
     string private constant cursedPrefixes =
@@ -108,7 +105,7 @@ contract Crystals is
     mapping(uint256 => Bag) public bags;
 
     /// @notice 0 - 9 => collaboration nft contracts
-    /// @notice 0 => Genesis Adventurer https://etherscan.io/address/0x8dB687aCEb92c66f013e1D614137238Cc698fEdb
+    /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
 
     modifier ownsCrystal(uint256 tokenId) {
@@ -653,7 +650,6 @@ contract Crystals is
         }
 
         return output;
-        // return string(abi.encodePacked(toString(alignment), " - ", output));
     }
 
     function getSurfaceType(uint256 tokenId)
