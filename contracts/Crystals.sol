@@ -81,10 +81,7 @@ contract Crystals is
 
     address public manaAddress;
 
-    // https://etherscan.io/address/0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7
     address public lootAddress = 0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7;
-
-    // https://etherscan.io/address/0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF
     address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
 
     string private constant cursedPrefixes =
@@ -108,15 +105,15 @@ contract Crystals is
     mapping(uint256 => Bag) public bags;
 
     /// @notice 0 - 9 => collaboration nft contracts
-    /// @notice 0 => Genesis Adventurer https://etherscan.io/address/0x8dB687aCEb92c66f013e1D614137238Cc698fEdb
+    /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
 
     modifier ownsCrystal(uint256 tokenId) {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
 
-        require(crystals[tokenId].level > 0, "UNREGISTERED");
-        require(oSeed > 0, "TOKEN");
-        require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INVALID");
+        require(crystals[tokenId].level > 0, "UNREG");
+        require(oSeed > 0, "TKN");
+        require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
 
         // checking minted crystal
         if (crystals[tokenId].minted == true) {
@@ -128,7 +125,7 @@ contract Crystals is
     }
 
     modifier unminted(uint256 tokenId) {
-        require(crystals[tokenId].minted == false, "MINTED");
+        require(crystals[tokenId].minted == false, "MNTD");
         _;
     }
 
@@ -195,18 +192,18 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
-        require(tokenId > 0, "TOKEN");
+        require(tokenId > 0, "TKN");
         if (tokenId > 8000) {
             require(msg.value == mintFee, "FEE");
         } else {
             require(msg.value == lootMintFee, "FEE");
         }
 
-        require(crystals[tokenId].level > 0, "UNREGISTERED");
+        require(crystals[tokenId].level > 0, "UNREG");
 
         // can mint 1stGen immediately 
         if (bags[tokenId % MAX_CRYSTALS].generationsMinted != 0) {
-            require(crystals[tokenId].level >= mintLevel, "LEVEL TOO LOW");
+            require(crystals[tokenId].level >= mintLevel, "LVL LOW");
         }
 
         isBagHolder(tokenId % MAX_CRYSTALS);        
@@ -224,8 +221,8 @@ contract Crystals is
     /// @notice registers a new crystal for a given bag
     /// @notice bag must not have a currently registered crystal
     function registerCrystal(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
-        require(bagId <= MAX_CRYSTALS, "INVALID");
-        require(crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REGISTERED");
+        require(bagId <= MAX_CRYSTALS, "INV");
+        require(crystals[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
 
         isBagHolder(bagId);
 
@@ -236,9 +233,9 @@ contract Crystals is
     }
 
     function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
-        require(tokenId > 0 && tokenId < 10000, "TOKEN");
-        require(collabIndex >= 0 && collabIndex < 10, "COLLAB");
-        require(collabs[collabIndex].contractAddress != address(0), "COLLAB");
+        require(tokenId > 0 && tokenId < 10000, "TKN");
+        require(collabIndex >= 0 && collabIndex < 10, "CLB");
+        require(collabs[collabIndex].contractAddress != address(0), "CLB");
         uint256 collabToken = RESERVED_OFFSET + tokenId + (collabIndex * 10000);
         require(crystals[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level == 0, "REG");
 
@@ -286,8 +283,8 @@ contract Crystals is
         uint16 levelBonus,
         string calldata namePrefix
     ) external onlyOwner {
-        require(contractAddress != address(0), "ADDRESS");
-        require(collabIndex >= 0 && collabIndex < 10, "COLLAB");
+        require(contractAddress != address(0), "ADDR");
+        require(collabIndex >= 0 && collabIndex < 10, "CLB");
         require(
             collabs[collabIndex].contractAddress == contractAddress
                 || collabs[collabIndex].contractAddress == address(0),
@@ -297,7 +294,7 @@ contract Crystals is
     }
 
     function ownerUpdateMaxLevel(uint32 maxLevel_) external onlyOwner {
-        require(maxLevel_ > maxLevel, "INVALID");
+        require(maxLevel_ > maxLevel, "INV");
         maxLevel = maxLevel_;
     }
 
@@ -315,14 +312,14 @@ contract Crystals is
     }
 
     function getColor(uint256 tokenId) public view returns (string memory) {
-        if (getRoll(tokenId, "%COLOR_RARITY", 20, 1) > 18) {
+        if (getRoll(tokenId, "%CLR_RARITY", 20, 1) > 18) {
             return getItemFromCSV(
                 specialColors,
-                getRandom(tokenId, "%COLOR") % specialColorsLength
+                getRandom(tokenId, "%CLR") % specialColorsLength
             );
         }
 
-        return getItemFromCSV(colors, getRandom(tokenId, "%COLOR") % colorsLength);
+        return getItemFromCSV(colors, getRandom(tokenId, "%CLR") % colorsLength);
     }
 
     function getLootType(uint256 tokenId) public view returns (string memory) {
@@ -348,7 +345,7 @@ contract Crystals is
     }
 
     function getResonance(uint256 tokenId) public view returns (uint256) {
-        return getLevelRolls(tokenId, "%RESONANCE", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+        return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
     }
 
     function getSpin(uint256 tokenId) public view returns (uint256) {
@@ -408,6 +405,7 @@ contract Crystals is
         override(ERC721, ERC721URIStorage)
         returns (string memory)
     {
+        require(crystals[tokenId].level > 0, "INV");
         string memory output;
 
         string memory styles = string(
@@ -523,7 +521,7 @@ contract Crystals is
         view
         returns (string memory)
     {
-        uint256 rand = getRandom(tokenId, "%BASIC_NAME");
+        uint256 rand = getRandom(tokenId, "%BSC_NAME");
         uint256 alignment = getRoll(tokenId, "%ALIGNMENT", 20, 1);
 
         string memory output = "Crystal";
@@ -538,7 +536,7 @@ contract Crystals is
         
         if (
             alignment == 10
-            && getRoll(tokenId, "%COLOR_RARITY", 20, 1) == 10
+            && getRoll(tokenId, "%CLR_RARITY", 20, 1) == 10
         ) {
             output = "Average Crystal";
         } else if (alignment == 20) {
@@ -600,7 +598,7 @@ contract Crystals is
         }
 
         // average
-        if (alignment == 10 && getRoll(tokenId, "%COLOR_RARITY", 20, 1) == 10) {
+        if (alignment == 10 && getRoll(tokenId, "%CLR_RARITY", 20, 1) == 10) {
             output = string(
                 abi.encodePacked(
                     "Perfectly Average ",
@@ -657,7 +655,6 @@ contract Crystals is
         }
 
         return output;
-        // return string(abi.encodePacked(toString(alignment), " - ", output));
     }
 
     function getSurfaceType(uint256 tokenId)
@@ -804,7 +801,7 @@ contract Crystals is
                 collabTokenId = 10000;
                 collabIndex -= 1;
             }
-            require(collabIndex >= 0 && collabIndex < 10, "COLLAB");
+            require(collabIndex >= 0 && collabIndex < 10, "CLB");
             require(collabs[collabIndex].contractAddress != address(0), "NOADDR");
             require(
                 ERC721(collabs[collabIndex].contractAddress)
