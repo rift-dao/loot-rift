@@ -137,7 +137,7 @@ contract Crystals is
             block.timestamp
         );
 
-        require(daysSinceClaim >= 1, "WAIT");
+        require(daysSinceClaim >= 1, "NONE");
 
         uint256 manaToProduce = daysSinceClaim * getResonance(tokenId);
 
