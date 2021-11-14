@@ -133,8 +133,8 @@ contract Crystals is
     }
 
     constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
-    
-    function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+
+    function claimableMana(uint256 tokenId) public view returns (uint256) {
         uint256 daysSinceClaim = diffDays(
             crystals[tokenId].lastClaim,
             block.timestamp
@@ -162,6 +162,11 @@ contract Crystals is
             }
         }
 
+        return manaToProduce;
+    }
+
+    function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+        uint256 manaToProduce = claimableMana(tokenId);
         crystals[tokenId].lastClaim = uint64(block.timestamp);
         crystals[tokenId].manaProduced += manaToProduce;
         IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
