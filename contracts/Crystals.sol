@@ -21,6 +21,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "./CrystalsMetadata.sol";
 
 interface IMANA {
     function approve(address spender, uint256 amount) external returns (bool);
@@ -40,6 +41,8 @@ contract Crystals is
 {
     using strings for string;
     using strings for strings.slice;
+
+    address public metadataAddress;
 
     uint8 private constant cursedPrefixesLength = 8;
     uint8 private constant cursedSuffixesLength = 9;
@@ -107,6 +110,10 @@ contract Crystals is
     /// @notice 0 - 9 => collaboration nft contracts
     /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
+
+    function setMetadataAddress(address addr) public onlyOwner {
+        metadataAddress = addr;
+    }
 
     modifier ownsCrystal(uint256 tokenId) {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
@@ -198,7 +205,7 @@ contract Crystals is
         } else {
             require(msg.value == lootMintFee, "FEE");
         }
-
+        
         require(crystals[tokenId].level > 0, "UNREG");
 
         // can mint 1stGen immediately 
@@ -399,112 +406,18 @@ contract Crystals is
         return output;
     }
 
-    function tokenURI(uint256 tokenId)
+     function tokenURI(uint256 tokenID) 
         public
         view
         override(ERC721, ERC721URIStorage)
-        returns (string memory)
+        returns (string memory) 
     {
-        require(crystals[tokenId].level > 0, "INV");
-        string memory output;
-
-        string memory styles = string(
-            abi.encodePacked(
-                "<style>text{fill:",
-                getColor(tokenId),
-                ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);",
-                "transform-origin:bottom right;font-size:22px;}</style>"
-            )
-        );
-
-        output = string(
-            abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350">',
-                styles,
-                '<rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
-                getName(tokenId),
-                (
-                    crystals[tokenId].level > 1
-                        ? string(
-                            abi.encodePacked(
-                                " +",
-                                toString(crystals[tokenId].level > 0 ? crystals[tokenId].level - 1 : 1)
-                            )
-                        )
-                        : ""
-                )
-            )
-        );
-
-        output = string(
-            abi.encodePacked(
-                output,
-                '</text><text x="10" y="40">',
-                "Resonance: ",
-                toString(getResonance(tokenId)),
-                '</text>'
-            )
-        );
-        output = string(
-            abi.encodePacked(
-                output,
-                '<text x="10" y="60">',
-                "Spin: ",
-                toString(getSpin(tokenId)),
-                '</text>'
-            )
-        );
-        output = string(
-            abi.encodePacked(
-                output,
-                getSlabs(tokenId),
-                '</svg>'
-        ));
-
-        string memory attributes = string(
-            abi.encodePacked(
-                '"attributes": [ ',
-                '{ "trait_type": "Level", "value": ', toString(crystals[tokenId].level), ' }, ',
-                '{ "trait_type": "Resonance", "value": ', toString(getResonance(tokenId)), ' }, ',
-                '{ "trait_type": "Spin", "value": ', toString(getSpin(tokenId)), ' }, '
-        ));
-        
-        attributes = string(
-            abi.encodePacked(
-                attributes,
-                '{ "trait_type": "Loot Type", "value": "', getLootType(tokenId), '" }, ',
-                '{ "trait_type": "Surface", "value": "', getSurfaceType(tokenId), '" }, ',
-                '{ "trait_type": "Generation", "value": ', toString(bags[tokenId % MAX_CRYSTALS].generationsMinted + 1) ,' }, ',
-                '{ "trait_type": "Color", "value": "', getColor(tokenId) ,'" } ]'
-            )
-        );
-
-        string memory prefix = string(
-            abi.encodePacked(
-                '{"id": ', toString(tokenId), ', ',
-                '"name": "', getName(tokenId), '", ',
-                '"seedId": ', toString(tokenId % MAX_CRYSTALS), ', ',
-                '"description": "This crystal vibrates with energy from the Rift!", ',
-                '"background_color": "000000"'
-        ));
-
-        string memory json = Base64.encode(
-            bytes(
-                string(
-                    abi.encodePacked(
-                        prefix, ', ',
-                        attributes, ', ',
-                        '"image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'
-                    )
-                )
-            )
-        );
-
-        output = string(
-            abi.encodePacked("data:application/json;base64,", json)
-        );
-
-        return output;
+        require(metadataAddress != address(0), "no addr set");
+        require(crystals[tokenID].level > 0, "INV");
+        return ICrystalsMetadata(metadataAddress).tokenURI(tokenID, 
+                                                        crystals[tokenID].level, 
+                                                        (bags[tokenID % MAX_CRYSTALS].generationsMinted + 1), 
+                                                        tokenID % MAX_CRYSTALS);
     }
 
     function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
@@ -865,79 +778,6 @@ function sqrt(uint256 x) pure returns (uint256 result) {
         return result >= roundedDownResult ? roundedDownResult : result;
     }
 }
-
-
-/// [MIT License]
-/// @title Base64
-/// @notice Provides a function for encoding some bytes in base64
-/// @author Brecht Devos <brecht@loopring.org>
-library Base64 {
-    bytes internal constant TABLE =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-    /// @notice Encodes some bytes to the base64 representation
-    function encode(bytes memory data) internal pure returns (string memory) {
-        uint256 len = data.length;
-        if (len == 0) return "";
-
-        // multiply by 4/3 rounded up
-        uint256 encodedLen = 4 * ((len + 2) / 3);
-
-        // Add some extra buffer at the end
-        bytes memory result = new bytes(encodedLen + 32);
-
-        bytes memory table = TABLE;
-
-        assembly {
-            let tablePtr := add(table, 1)
-            let resultPtr := add(result, 32)
-
-            for {
-                let i := 0
-            } lt(i, len) {
-
-            } {
-                i := add(i, 3)
-                let input := and(mload(add(data, i)), 0xffffff)
-
-                let out := mload(add(tablePtr, and(shr(18, input), 0x3F)))
-                out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(12, input), 0x3F))), 0xFF)
-                )
-                out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(shr(6, input), 0x3F))), 0xFF)
-                )
-                out := shl(8, out)
-                out := add(
-                    out,
-                    and(mload(add(tablePtr, and(input, 0x3F))), 0xFF)
-                )
-                out := shl(224, out)
-
-                mstore(resultPtr, out)
-
-                resultPtr := add(resultPtr, 4)
-            }
-
-            switch mod(len, 3)
-            case 1 {
-                mstore(sub(resultPtr, 2), shl(240, 0x3d3d))
-            }
-            case 2 {
-                mstore(sub(resultPtr, 1), shl(248, 0x3d))
-            }
-
-            mstore(result, encodedLen)
-        }
-
-        return string(result);
-    }
-}
-
 
 library strings {
     struct slice {
