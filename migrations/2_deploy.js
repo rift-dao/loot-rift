@@ -1,10 +1,12 @@
 const Mana = artifacts.require('Mana');
 const Crystals = artifacts.require('Crystals');
+const CrystalsMetadata = artifacts.require('CrystalsMetadata');
 
 module.exports = function(deployer) {
   deployer.then(async () => {
      const mana = await deployer.deploy(Mana);
      const crystals = await deployer.deploy(Crystals);
+     const crystalsMetadata = await deployer.deploy(CrystalsMetadata);
      mana.ownerSetCContractAddress(crystals.address);
      crystals.ownerInit(
        mana.address,
