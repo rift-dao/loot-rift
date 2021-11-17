@@ -41,26 +41,19 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
 
-    string private constant cursedPrefixes =
-        "Dull,Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined";
     string private constant cursedSuffixes =
-        "of Rats,of Crypts,of Nightmares,of Sadness,of Darkness,of Death,of Doom,of Gloom,of Madness";
-    string private constant prefixes =
-        "Gleaming,Glowing,Shiny,Smooth,Faceted,Glassy,Polished,Sheeny,Luminous";
+        "of Crypts,of Nightmares,of Sadness,of Darkness,of Death,of Doom,of Gloom,of Madness";
     string private constant suffixes =
         "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins,of Relevance,of the Rift";
     string private constant colors =
-        "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,White,Brown,Purple";
+        "Beige,Blue,Green,Red,Cyan,Yellow,Orange,Pink,Gray,White,Purple";
     string private constant specialColors =
         "Aqua,black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
 
-    uint8 private constant cursedPrefixesLength = 8;
-    uint8 private constant cursedSuffixesLength = 9;
-    uint8 private constant prefixesLength = 9;
+    uint8 private constant presuffLength = 8;
     uint8 private constant suffixesLength = 18;
-    uint8 private constant colorsLength = 12;
-    uint8 private constant specialColorsLength = 11;
+    uint8 private constant colorsLength = 11;
     uint8 private constant slabsLength = 4;
 
     constructor() Ownable() {
@@ -83,105 +76,86 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         require(level > 0, "INV");
         ICrystals crystals = ICrystals(crystalsAddress);
 
+        uint256 rows = tokenId / MAX_CRYSTALS + 1;
+
+        if (rows > 10) {
+          rows = rows % 10;
+
+          if (rows == 0) {
+            rows = 10;
+          }
+        }
+
+        string memory res = toString(crystals.getResonance(tokenId));
+        string memory spin = toString(crystals.getSpin(tokenId));
+        string memory gen = toString(generation);
+        string memory id = toString(tokenId);
+
         string memory output;
 
-        string memory styles = string(
+        output = string(
             abi.encodePacked(
-                "<style>text{fill:",
+                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>text{fill:',
                 getColor(tokenId),
-                ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);",
-                "transform-origin:bottom right;font-size:22px;}</style>"
-            )
-        );
-
-        output = string(
-            abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350">',
-                styles,
-                '<rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
-                getName(tokenId),
-                (
-                    level > 1
-                        ? string(
-                            abi.encodePacked(
-                                " +",
-                                toString(level > 0 ? level - 1 : 1)
-                            )
-                        )
-                        : ""
-                )
+                ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);transform-origin:bottom right;font-size:",
+                toString(160 / rows),
+                'px;}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
+                getName(tokenId)
             )
         );
 
         output = string(
             abi.encodePacked(
                 output,
-                '</text><text x="10" y="40">',
-                "Resonance: ",
-                toString(crystals.getResonance(tokenId)),
-                '</text>'
-            )
-        );
-        output = string(
-            abi.encodePacked(
-                output,
-                '<text x="10" y="60">',
-                "Spin: ",
-                toString(crystals.getSpin(tokenId)),
-                '</text>'
-            )
-        );
-        output = string(
-            abi.encodePacked(
-                output,
-                getSlabs(tokenId),
+                '</text><text x="10" y="40">Resonance: ',
+                res,
+                '</text><text x="10" y="60">Spin: ',
+                spin,
+                '</text><text x="10" y="338" style="font-size: 12px;">gen.',
+                gen,
+                '</text>',
+                getSlabs(tokenId, rows),
                 '</svg>'
-        ));
-
-        string memory attributes = string(
-            abi.encodePacked(
-                '"attributes": [ ',
-                '{ "trait_type": "Level", "value": ', toString(level), ' }, ',
-                '{ "trait_type": "Resonance", "value": ', toString(crystals.getResonance(tokenId)), ' }, ',
-                '{ "trait_type": "Spin", "value": ', toString(crystals.getSpin(tokenId)), ' }, '
-        ));
-        
-        attributes = string(
-            abi.encodePacked(
-                attributes,
-                '{ "trait_type": "Loot Type", "value": "', getLootType(tokenId), '" }, ',
-                '{ "trait_type": "Surface", "value": "', getSurfaceType(tokenId), '" }, ',
-                '{ "trait_type": "Generation", "value": ', toString(generation) ,' }, ',
-                '{ "trait_type": "Color", "value": "', getColor(tokenId) ,'" } ]'
             )
         );
 
         string memory prefix = string(
             abi.encodePacked(
-                '{"id": ', toString(tokenId), ', ',
-                '"name": "', getName(tokenId), '", ',
-                '"seedId": ', toString(seedId), ', ',
-                '"description": "This crystal vibrates with energy from the Rift!", ',
-                '"background_color": "000000"'
+                '{"id": ',
+                id,
+                ', "name": "#',
+                id,
+                '", "bagId": ',
+                toString(tokenId % MAX_CRYSTALS),
+                ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Level", "value":',
+                toString(level),
+                ' }, { "trait_type": "Resonance", "value": ',
+                res,
+                ' }, { "trait_type": "Spin", "value": '
         ));
 
-        string memory json = Base64.encode(
-            bytes(
-                string(
-                    abi.encodePacked(
-                        prefix, ', ',
-                        attributes, ', ',
-                        '"image": "data:image/svg+xml;base64,', Base64.encode(bytes(output)), '"}'
-                    )
+        string memory attributes = string(
+            abi.encodePacked(
+                spin,
+                ' }, { "trait_type": "Loot Type", "value": "',
+                getLootType(tokenId),
+                '" }, { "trait_type": "Surface", "value": "',
+                getSurfaceType(tokenId),
+                '" }, { "trait_type": "Generation", "value": ',
+                gen,
+                ' }, { "trait_type": "Color", "value": "',
+                getColor(tokenId)
+        ));
+
+        return string(
+            abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(string(
+                abi.encodePacked(
+                    prefix,
+                    attributes,
+                    '" }], "image": "data:image/svg+xml;base64,',
+                    Base64.encode(bytes(output)), '"}'
                 )
-            )
-        );
-
-        output = string(
-            abi.encodePacked("data:application/json;base64,", json)
-        );
-
-        return output;
+        )))));
     }
 
     function getLevelRolls(
@@ -233,20 +207,27 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         if (getRoll(tokenId, "%CLR_RARITY", 20, 1) > 18) {
             return getItemFromCSV(
                 specialColors,
-                getRandom(tokenId, "%CLR") % specialColorsLength
+                getRandom(tokenId, "%CLR") % colorsLength
             );
         }
 
         return getItemFromCSV(colors, getRandom(tokenId, "%CLR") % colorsLength);
     }
 
-    function getName(uint256 tokenId) public view returns (string memory) {
+    function getName(uint256 tokenId) public view returns (string memory output) {
         // check original seed to determine name type
         if ((tokenId % MAX_CRYSTALS) > 8000 && (tokenId % MAX_CRYSTALS) <= RESERVED_OFFSET) {
-            return getBasicName(tokenId);
+            output = getBasicName(tokenId);
+        } else {
+            output = getLootName(tokenId);
         }
 
-        return getLootName(tokenId);
+        return ICrystals(crystalsAddress).crystalsMap(tokenId).level > 1 ?
+            string(abi.encodePacked(
+                output,
+                " +",
+                toString(ICrystals(crystalsAddress).crystalsMap(tokenId).level - 1)
+            )) : output;
     }
 
     function getBasicName(uint256 tokenId)
@@ -254,51 +235,27 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         view
         returns (string memory)
     {
-        uint256 rand = getRandom(tokenId, "%BSC_NAME");
-        uint256 alignment = getRoll(tokenId, "%ALIGNMENT", 20, 1);
+        uint256 rand = getRandom(tokenId, "%NAME");
+        uint256 alignment = getRoll(tokenId, "%ALIGN", 20, 1);
 
-        string memory output = "Crystal";
-        // set our surface type
-        output = string(
-            abi.encodePacked(
-                getSurfaceType(tokenId),
-                " ",
-                output
-            )
-        );
+        string memory surface = getSurfaceType(tokenId);
+        string memory suffix = "";
+        string memory prefix = "";
         
         if (
             alignment == 10
             && getRoll(tokenId, "%CLR_RARITY", 20, 1) == 10
         ) {
-            output = "Average Crystal";
-        } else if (alignment == 20) {
-            output = string(
-                abi.encodePacked(
-                    output,
-                    " ",
-                    getItemFromCSV(suffixes, rand % suffixesLength)
-                )
-            );
-        } else if (alignment < 5) {
-            output = string(
-                abi.encodePacked(
-                    output,
-                    " ",
-                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
-                )
-            );
+            prefix = "Average";
+        }
+        
+        if (alignment < 5) {
+          suffix = getItemFromCSV(cursedSuffixes, rand % presuffLength);
         } else if (alignment > 15) {
-            output = string(
-                abi.encodePacked(
-                    output,
-                    " ",
-                    getItemFromCSV(suffixes, rand % suffixesLength)
-                )
-            );
-        } 
+          suffix = getItemFromCSV(suffixes, rand % suffixesLength);
+        }
 
-        return output;
+        return string(abi.encodePacked(prefix, " ", surface, " Crystal ", suffix));
     }
 
     function getLootName(uint256 tokenId)
@@ -306,88 +263,40 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         view
         returns (string memory)
     {
-        uint256 rand = getRandom(tokenId, "%LOOT_NAME");
-        uint256 alignment = getRoll(tokenId, "%ALIGNMENT", 20, 1);
+        uint256 rand = getRandom(tokenId, "%NAME");
+        uint256 alignment = getRoll(tokenId, "%ALIGN", 20, 1);
 
-        string memory output = "";
+        string memory surface = getSurfaceType(tokenId);
+        string memory suffix = "";
+        string memory prefix = "";
         string memory baseName = "Crystal";
 
         if (tokenId % MAX_CRYSTALS > RESERVED_OFFSET) {
             baseName = string(abi.encodePacked(
                 ICrystals(crystalsAddress).collabMap(uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)).namePrefix,
+                ' ',
                 baseName
             ));
         }
-
-        // set our surface type
-        if (alignment < 9 || alignment > 11) {
-            baseName = string(
-                abi.encodePacked(
-                    getSurfaceType(tokenId),
-                    " ",
-                    baseName
-                )
-            );
+        
+        if (
+            alignment == 10
+            && getRoll(tokenId, "%CLR_RARITY", 20, 1) == 10
+        ) {
+            prefix = "Perfectly Average";
+        } else if (alignment == 20) {
+            prefix = "Divine";
+        } else if (alignment == 1) {
+            prefix = "Demonic";
+        }
+        
+        if (alignment < 5) {
+          suffix = getItemFromCSV(cursedSuffixes, rand % presuffLength);
+        } else if (alignment > 15) {
+          suffix = getItemFromCSV(suffixes, rand % suffixesLength);
         }
 
-        // average
-        if (alignment == 10 && getRoll(tokenId, "%CLR_RARITY", 20, 1) == 10) {
-            output = string(
-                abi.encodePacked(
-                    "Perfectly Average ",
-                    baseName
-                )
-            );
-        }
-        // cursed
-        else if (alignment < 5) {
-            if (alignment == 1) {
-                baseName = string(
-                    abi.encodePacked(
-                        "Demonic ",
-                        baseName
-                    )
-                );
-            }
-            output = string(
-                abi.encodePacked(
-                    baseName,
-                    " ",
-                    getItemFromCSV(cursedSuffixes, rand % cursedSuffixesLength)
-                )
-            );
-        }
-        // standard
-        else if (alignment < 16) {
-            output = string(
-                abi.encodePacked(
-                    baseName
-                )
-            );
-        }
-        // good
-        else if (alignment > 15 && alignment < 20) {
-            output = string(
-                abi.encodePacked(
-                    baseName,
-                    " ",
-                    getItemFromCSV(suffixes, rand % suffixesLength)
-                )
-            );
-        }
-        // great
-        else if (alignment == 20) {
-            output = string(
-                abi.encodePacked(
-                    "Divine ",
-                    baseName,
-                    " ",
-                    getItemFromCSV(suffixes, rand % suffixesLength)
-                )
-            );
-        }
-
-        return output;
+        return string(abi.encodePacked(prefix, " ", surface, " Crystal ", suffix));
     }
 
     function getSurfaceType(uint256 tokenId)
@@ -395,33 +304,27 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         view
         returns (string memory) 
     {
-        uint256 rand = getRandom(tokenId, "%SURFACE_TYPE");
-        uint256 alignment = getRoll(tokenId, "%ALIGNMENT", 20, 1);
+        uint256 rand = getRandom(tokenId, "%SURFACE");
+        uint256 alignment = getRoll(tokenId, "%ALIGN", 20, 1);
 
-        if (alignment < 9) {
-            return getItemFromCSV(cursedPrefixes, rand % cursedPrefixesLength);
-        } else if (alignment > 11) {
-            return getItemFromCSV(prefixes, rand % prefixesLength);
+        if (alignment < 6) {
+            return getItemFromCSV("Broken,Twisted,Cracked,Fragmented,Splintered,Beaten,Ruined", rand % 7);
+        } else if (alignment > 15) {
+            return getItemFromCSV("Gleaming,Glowing,Shiny,Luminous,Radiant,Brilliant", rand % 6);
         } else {
-            return "Plain";
+            return getItemFromCSV("Dull,Smooth,Faceted,Glassy,Polished,", rand % 5);
         }
     }
 
-    function getSlabs(uint256 tokenId) public view returns (string memory output) {
-        if (ICrystals(crystalsAddress).crystalsMap(tokenId).level < 2) {
-            return '';
-        }
-
+    function getSlabs(uint256 tokenId, uint256 rows) private view returns (string memory output) {
         output = '';
-
-        uint256 rows = sqrt(ICrystals(crystalsAddress).crystalsMap(tokenId).level - 1);
 
         for (uint256 i = 0; i < rows; i++) {
             output = string(
                 abi.encodePacked(
                     output,
                     '<text class="slab" x="285" y="',
-                    toString(295 + (19 * i)),
+                    toString((415 + (rows * 4)) - (160 / rows * i)),
                     '">'
             ));
 
@@ -458,6 +361,28 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         }
 
         return 'mLoot';
+    }
+
+    function getAttributes(uint256 tokenId) internal view returns (string memory output) {
+        ICrystals crystals = ICrystals(crystalsAddress);
+
+        output = string(
+            abi.encodePacked(
+                '"attributes": [ ',
+                '{ "trait_type": "Level", "value": ', toString(crystals.crystalsMap(tokenId).level), ' }, ',
+                '{ "trait_type": "Resonance", "value": ', toString(crystals.getResonance(tokenId)), ' }, ',
+                '{ "trait_type": "Spin", "value": ', toString(crystals.getSpin(tokenId)), ' }, ',
+                '{ "trait_type": "Loot Type", "value": "', getLootType(tokenId), '" }, '
+        ));
+        
+        return string(
+            abi.encodePacked(
+                output,
+                '{ "trait_type": "Surface", "value": "', getSurfaceType(tokenId), '" }, ',
+                '{ "trait_type": "Generation", "value": ', toString(tokenId / MAX_CRYSTALS + 1) ,' }, ',
+                '{ "trait_type": "Color", "value": "', getColor(tokenId) ,'" } ]'
+            )
+        );
     }
 
     function getItemFromCSV(string memory str, uint256 index)
