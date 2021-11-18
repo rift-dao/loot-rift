@@ -5,7 +5,7 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface ICrystalsMetadata {
-    function tokenURI(uint256 tokenId, uint256 level, uint256 generation, uint256 seedId) external view returns (string memory);
+    function tokenURI(uint256 tokenId, uint256 level, uint256 generation) external view returns (string memory);
 }
 
 struct Collab {
@@ -71,8 +71,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     function tokenURI(
         uint256 tokenId, 
         uint256 level, 
-        uint256 generation, 
-        uint256 seedId) override external view returns (string memory) {
+        uint256 generation) override external view returns (string memory) {
         require(level > 0, "INV");
         ICrystals crystals = ICrystals(crystalsAddress);
 
@@ -85,11 +84,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
             rows = 10;
           }
         }
-
-        string memory res = toString(crystals.getResonance(tokenId));
-        string memory spin = toString(crystals.getSpin(tokenId));
-        string memory gen = toString(generation);
-        string memory id = toString(tokenId);
 
         string memory output;
 
@@ -108,11 +102,11 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
             abi.encodePacked(
                 output,
                 '</text><text x="10" y="40">Resonance: ',
-                res,
+                toString(crystals.getResonance(tokenId)),
                 '</text><text x="10" y="60">Spin: ',
-                spin,
+                toString(crystals.getSpin(tokenId)),
                 '</text><text x="10" y="338" style="font-size: 12px;">gen.',
-                gen,
+                toString(generation),
                 '</text>',
                 getSlabs(tokenId, rows),
                 '</svg>'
@@ -122,27 +116,27 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         string memory prefix = string(
             abi.encodePacked(
                 '{"id": ',
-                id,
+                toString(tokenId),
                 ', "name": "#',
-                id,
+                toString(tokenId),
                 '", "bagId": ',
                 toString(tokenId % MAX_CRYSTALS),
                 ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Level", "value":',
                 toString(level),
                 ' }, { "trait_type": "Resonance", "value": ',
-                res,
+                toString(crystals.getResonance(tokenId)),
                 ' }, { "trait_type": "Spin", "value": '
         ));
 
         string memory attributes = string(
             abi.encodePacked(
-                spin,
+                toString(crystals.getSpin(tokenId)),
                 ' }, { "trait_type": "Loot Type", "value": "',
                 getLootType(tokenId),
                 '" }, { "trait_type": "Surface", "value": "',
                 getSurfaceType(tokenId),
                 '" }, { "trait_type": "Generation", "value": ',
-                gen,
+                toString(generation),
                 ' }, { "trait_type": "Color", "value": "',
                 getColor(tokenId)
         ));
