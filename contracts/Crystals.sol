@@ -327,8 +327,7 @@ contract Crystals is
         require(metadataAddress != address(0), "no addr set");
         require(crystalsMap[tokenID].level > 0, "INV");
         return ICrystalsMetadata(metadataAddress).tokenURI(tokenID, 
-                                                        crystalsMap[tokenID].level, 
-                                                        (bags[tokenID % MAX_CRYSTALS].generationsMinted + 1));
+                                                        crystalsMap[tokenID].level);
     }
 
     function diffDays(uint256 fromTimestamp, uint256 toTimestamp)

@@ -5,7 +5,7 @@ pragma solidity ^0.8.9;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 interface ICrystalsMetadata {
-    function tokenURI(uint256 tokenId, uint256 level, uint256 generation) external view returns (string memory);
+    function tokenURI(uint256 tokenId, uint256 level) external view returns (string memory);
 }
 
 struct Collab {
@@ -70,8 +70,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
 
     function tokenURI(
         uint256 tokenId, 
-        uint256 level, 
-        uint256 generation) override external view returns (string memory) {
+        uint256 level) override external view returns (string memory) {
         require(level > 0, "INV");
         ICrystals crystals = ICrystals(crystalsAddress);
 
@@ -106,7 +105,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 '</text><text x="10" y="60">Spin: ',
                 toString(crystals.getSpin(tokenId)),
                 '</text><text x="10" y="338" style="font-size: 12px;">gen.',
-                toString(generation),
+                toString(tokenId / MAX_CRYSTALS + 1),
                 '</text>',
                 getSlabs(tokenId, rows),
                 '</svg>'
@@ -136,7 +135,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 '" }, { "trait_type": "Surface", "value": "',
                 getSurfaceType(tokenId),
                 '" }, { "trait_type": "Generation", "value": ',
-                toString(generation),
+                toString(tokenId / MAX_CRYSTALS + 1),
                 ' }, { "trait_type": "Color", "value": "',
                 getColor(tokenId)
         ));
