@@ -60,9 +60,15 @@ contract Crystals is
     uint256 public mintedCrystals;
     uint256 public registeredCrystals;
 
-    uint256 public mintFee = 20000000000000000; //0.02 ETH
-    uint256 public lootMintFee = 0;
-    uint256 public mintLevel = 5;
+    // uint256 public mintFee = 20000000000000000; //0.02 ETH
+    // uint256 public lootMintFee = 0;
+    // uint256 public mintLevel = 5;
+
+    struct GenerationMintRequirement {
+        uint256 lootFee;
+        uint256 fee;
+        uint256 level;
+    }
 
     address public manaAddress;
 
@@ -79,7 +85,9 @@ contract Crystals is
     /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
 
-    function setMetadataAddress(address addr) public onlyOwner {
+    mapping(uint256 => GenerationMintRequirement) public genMintReq;
+
+    function ownerSetMetadataAddress(address addr) public onlyOwner {
         metadataAddress = addr;
     }
 
@@ -186,20 +194,18 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
+        uint64 gensMinted = bags[tokenId % MAX_CRYSTALS].generationsMinted;
         require(tokenId > 0, "TKN");
         if (tokenId > 8000) {
-            require(msg.value == mintFee, "FEE");
+            require(msg.value == genMintReq[gensMinted + 1].fee, "FEE");
         } else {
-            require(msg.value == lootMintFee, "FEE");
+            require(msg.value == genMintReq[gensMinted + 1].lootFee, "FEE");
         }
         
         require(crystalsMap[tokenId].level > 0, "UNREG");
 
-        // can mint 1stGen immediately 
-        if (bags[tokenId % MAX_CRYSTALS].generationsMinted != 0) {
-            require(crystalsMap[tokenId].level >= mintLevel, "LVL LOW");
-        }
-
+        require(crystalsMap[tokenId].level >= genMintReq[gensMinted + 1].level, "LVL LOW");
+        
         isBagHolder(tokenId % MAX_CRYSTALS);        
 
         IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
@@ -292,12 +298,10 @@ contract Crystals is
         maxLevel = maxLevel_;
     }
 
-    function ownerSetMintFee(uint256 mintFee_) external onlyOwner {
-        mintFee = mintFee_;
-    }
-
-    function ownerSetLootMintFee(uint256 lootMintFee_) external onlyOwner {
-        lootMintFee = lootMintFee_;
+    function ownerSetGenMintRequirement(uint256 generation, uint256 mintFee_, uint256 lootMintFee_, uint256 level_) external onlyOwner {
+        genMintReq[generation].fee = mintFee_;
+        genMintReq[generation].lootFee = lootMintFee_;
+        genMintReq[generation].level = level_;
     }
 
     function ownerWithdraw() external onlyOwner {
