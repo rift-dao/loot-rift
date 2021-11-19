@@ -387,28 +387,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         return 'mLoot';
     }
 
-    function getAttributes(uint256 tokenId) internal view returns (string memory output) {
-        ICrystals crystals = ICrystals(crystalsAddress);
-
-        output = string(
-            abi.encodePacked(
-                '"attributes": [ ',
-                '{ "trait_type": "Level", "value": ', toString(crystals.crystalsMap(tokenId).level), ' }, ',
-                '{ "trait_type": "Resonance", "value": ', toString(crystals.getResonance(tokenId)), ' }, ',
-                '{ "trait_type": "Spin", "value": ', toString(crystals.getSpin(tokenId)), ' }, ',
-                '{ "trait_type": "Loot Type", "value": "', getLootType(tokenId), '" }, '
-        ));
-        
-        return string(
-            abi.encodePacked(
-                output,
-                '{ "trait_type": "Surface", "value": "', getSurfaceType(tokenId), '" }, ',
-                '{ "trait_type": "Generation", "value": ', toString(tokenId / MAX_CRYSTALS + 1) ,' }, ',
-                '{ "trait_type": "Color", "value": "', getColor(tokenId) ,'" } ]'
-            )
-        );
-    }
-
     function getItemFromCSV(string memory str, uint256 index)
         internal
         pure

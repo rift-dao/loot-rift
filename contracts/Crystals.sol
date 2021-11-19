@@ -40,14 +40,6 @@ contract Crystals is
     Ownable
 {
     address public metadataAddress;
-
-    uint8 private constant cursedPrefixesLength = 8;
-    uint8 private constant cursedSuffixesLength = 9;
-    uint8 private constant prefixesLength = 9;
-    uint8 private constant suffixesLength = 18;
-    uint8 private constant colorsLength = 12;
-    uint8 private constant specialColorsLength = 11;
-    uint8 private constant slabsLength = 4;
     
     uint32 public minClaimMultiplier = 50;
     uint32 public maxClaimMultiplier = 200;
