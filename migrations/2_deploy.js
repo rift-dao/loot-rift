@@ -7,6 +7,7 @@ module.exports = function(deployer) {
      const mana = await deployer.deploy(Mana);
      const crystals = await deployer.deploy(Crystals);
      const crystalsMetadata = await deployer.deploy(CrystalsMetadata);
+     crystalsMetadata.setCrystalsAddress(crystals.address);
      mana.ownerSetCContractAddress(crystals.address);
      crystals.ownerInit(
        mana.address,
