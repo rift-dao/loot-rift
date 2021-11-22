@@ -24,9 +24,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./CrystalsMetadata.sol";
 
 interface IMANA {
-    function approve(address spender, uint256 amount) external returns (bool);
-    function balanceOf(address owner) external returns (uint256);
-    function burn(uint256 amount) external;
     function ccMintTo(address recipient, uint256 amount) external;
 }
 
@@ -40,6 +37,7 @@ contract Crystals is
     Ownable
 {
     address public metadataAddress;
+    address public manaCalculationAddress;
     
     uint32 public minClaimMultiplier = 50;
     uint32 public maxClaimMultiplier = 200;
