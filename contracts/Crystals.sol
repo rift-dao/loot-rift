@@ -22,6 +22,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "./CrystalsMetadata.sol";
+import "./CrystalManaCalculator.sol";
+import "./ICrystals.sol";
 
 interface IMANA {
     function ccMintTo(address recipient, uint256 amount) external;
@@ -39,8 +41,6 @@ contract Crystals is
     address public metadataAddress;
     address public manaCalculationAddress;
     
-    uint32 public minClaimMultiplier = 50;
-    uint32 public maxClaimMultiplier = 200;
     uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
@@ -125,57 +125,8 @@ contract Crystals is
         return tokenId % MAX_CRYSTALS < 8001 || tokenId % MAX_CRYSTALS > RESERVED_OFFSET;
     }
 
-    function getMultiplier(uint256 tokenId) public view returns (uint256) {
-        if (crystalsMap[tokenId].numOfTransfers == 0) {
-            return maxClaimMultiplier;
-        }
-
-        uint256 daysSinceTransfer = diffDays(
-            crystalsMap[tokenId].lastTransfer,
-            block.timestamp
-        );
-
-        uint256 multiplier = daysSinceTransfer * 10 + minClaimMultiplier;
-
-        return multiplier > maxClaimMultiplier ? maxClaimMultiplier : multiplier;
-    }
-
-    function claimableMana(uint256 tokenId) public view returns (uint256) {
-        uint256 daysSinceClaim = diffDays(
-            crystalsMap[tokenId].lastClaim,
-            block.timestamp
-        );
-
-        require(daysSinceClaim >= 1, "NONE");
-
-        uint256 manaToProduce = daysSinceClaim * getResonance(tokenId);
-
-        // amount generatable is capped to the crystals spin
-        if (daysSinceClaim > crystalsMap[tokenId].level) {
-            manaToProduce = crystalsMap[tokenId].level * getResonance(tokenId);
-        }
-
-        // bonus for crystals staying with the wallet
-        manaToProduce = (getMultiplier(tokenId) * manaToProduce) / 100;
-
-        // if cap is hit, limit mana to cap or level, whichever is greater
-        if ((manaToProduce + crystalsMap[tokenId].manaProduced) > getSpin(tokenId)) {
-            if (getSpin(tokenId) >= crystalsMap[tokenId].manaProduced) {
-                manaToProduce = getSpin(tokenId) - crystalsMap[tokenId].manaProduced;
-            } else {
-                manaToProduce = 0;
-            }
-
-            if (manaToProduce < crystalsMap[tokenId].level && getMultiplier(tokenId) >= 100) {
-                manaToProduce = crystalsMap[tokenId].level;
-            }
-        }
-
-        return manaToProduce;
-    }
-
     function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
-        uint256 manaToProduce = claimableMana(tokenId);
+        uint256 manaToProduce = ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].manaProduced += manaToProduce;
         IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);

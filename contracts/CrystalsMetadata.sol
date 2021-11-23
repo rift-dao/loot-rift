@@ -3,35 +3,10 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./ICrystals.sol";
 
 interface ICrystalsMetadata {
     function tokenURI(uint256 tokenId) external view returns (string memory);
-}
-
-struct Collab {
-        address contractAddress;
-        string namePrefix;
-        uint256 levelBonus;
-    }
-
-struct Crystal {
-    bool minted;
-    uint64 lastClaim;
-    uint64 lastLevelUp;
-    uint64 lastTransfer;
-    uint64 numOfTransfers;
-    uint256 manaProduced;
-    uint256 level;
-    uint256 regNum;
-}
-
-interface ICrystals {
-    function claimableMana(uint256 tokenID) external view returns (uint256);
-    function crystalsMap(uint256 tokenID) external view returns (Crystal memory);
-    function collabMap(uint256 tokenID) external view returns (Collab memory);
-    function getMultiplier(uint256 tokenId) external view returns (uint256);
-    function getResonance(uint256 tokenId) external view returns (uint256);
-    function getSpin(uint256 tokenId) external view returns (uint256);
 }
 
 contract CrystalsMetadata is Ownable, ICrystalsMetadata {
