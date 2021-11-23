@@ -21,6 +21,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 import "./CrystalsMetadata.sol";
 import "./CrystalManaCalculator.sol";
 import "./ICrystals.sol";
@@ -37,7 +38,8 @@ contract Crystals is
     ERC721URIStorage,
     ERC721Burnable,
     ReentrancyGuard,
-    Ownable
+    Ownable,
+    Pausable
 {
     address public metadataAddress;
     address public manaCalculationAddress;
@@ -117,6 +119,7 @@ contract Crystals is
     function mintCrystal(uint256 tokenId)
         external
         payable
+        whenNotPaused
         unminted(tokenId)
         nonReentrant
     {
@@ -156,7 +159,7 @@ contract Crystals is
 
     /// @notice registers a new crystal for a given bag
     /// @notice bag must not have a currently registered crystal
-    function registerCrystal(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
+    function registerCrystal(uint256 bagId) external whenNotPaused unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
         require(bagId <= MAX_CRYSTALS, "INV");
         require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
 
@@ -196,14 +199,14 @@ contract Crystals is
         }
     }
 
-    function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+    function claimCrystalMana(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
         uint256 manaToProduce = ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].manaProduced += manaToProduce;
         IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
     }
 
-    function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+    function levelUpCrystal(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
         require(crystalsMap[tokenId].level < maxLevel, "MAX");
         require(
             diffDays(
@@ -337,6 +340,11 @@ contract Crystals is
 
     function ownerSetCalculatorAddress(address _calculatorAddress) external onlyOwner {
         manaCalculationAddress = _calculatorAddress;
+    }
+
+    function setPaused(bool _paused) external onlyOwner {
+        if (_paused) _pause();
+        else _unpause();
     }
 
     // HELPER
