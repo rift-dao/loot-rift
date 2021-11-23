@@ -13,6 +13,10 @@ interface ICrystalManaCalculator {
 contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
     address public crystalsAddress;
 
+    constructor(address _crystals) Ownable() { 
+        crystalsAddress = _crystals;
+    }
+
     function claimableMana(uint256 tokenId) override public view returns (uint256) {
         ICrystals crystals = ICrystals(crystalsAddress);
 

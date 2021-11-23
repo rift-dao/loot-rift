@@ -35,7 +35,8 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     uint8 private constant colorsLength = 11;
     uint8 private constant slabsLength = 4;
 
-    constructor() Ownable() {
+    constructor(address _crystals) Ownable() { 
+        crystalsAddress = _crystals;
         description = "Unknown";
     }
 
@@ -71,13 +72,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         }
 
         string memory output;
-        uint256 numOfTransfers = crystals.crystalsMap(tokenId).numOfTransfers;
-        uint256 lastTransfer = diffDays(crystals.crystalsMap(tokenId).lastTransfer, block.timestamp);
-        string memory opacity = '1';
-
-        if (numOfTransfers > 0 && lastTransfer < 9) {
-            opacity = string(abi.encodePacked('0.', toString(lastTransfer + 1)));
-        }
 
         output = string(
             abi.encodePacked(
@@ -85,8 +79,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 getColor(tokenId),
                 ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);transform-origin:bottom right;font-size:",
                 toString(160 / rows),
-                'px;opacity:',
-                opacity,
                 ';}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
                 getName(tokenId)
             )
@@ -135,15 +127,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 toString(tokenId / MAX_CRYSTALS + 1),
                 ' }, { "trait_type": "Color", "value": "',
                 getColor(tokenId)
-        ));
-
-        attributes = string(
-            abi.encodePacked(
-                attributes,
-                '" }, { "trait_type": "Multiplier", "value": ',
-                toString(crystals.getMultiplier(tokenId)),
-                ' }, { "trait_type": "Transfers", "value": ',
-                toString(crystals.crystalsMap(tokenId).numOfTransfers)
         ));
 
         return string(

@@ -22,7 +22,6 @@ struct Collab {
 interface ICrystals {
     function crystalsMap(uint256 tokenID) external view returns (Crystal memory);
     function collabMap(uint256 tokenID) external view returns (Collab memory);
-    function getMultiplier(uint256 tokenId) external view returns (uint256);
     function getResonance(uint256 tokenId) external view returns (uint256);
     function getSpin(uint256 tokenId) external view returns (uint256);
     function claimableMana(uint256 tokenID) external view returns (uint256);

@@ -27,6 +27,7 @@ import "./ICrystals.sol";
 
 interface IMANA {
     function ccMintTo(address recipient, uint256 amount) external;
+    function burn(address from, uint256 amount) external;
 }
 
 /// @title Loot Crystals from the Rift
@@ -44,6 +45,7 @@ contract Crystals is
     uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
+    uint32 public registrationThreshold;
 
     struct Bag {
         uint64 generationsMinted;
@@ -79,75 +81,16 @@ contract Crystals is
 
     mapping(uint256 => GenerationMintRequirement) public genMintReq;
 
-    function ownerSetMetadataAddress(address addr) public onlyOwner {
-        metadataAddress = addr;
-    }
-
-    modifier ownsCrystal(uint256 tokenId) {
-        uint256 oSeed = tokenId % MAX_CRYSTALS;
-
-        require(crystalsMap[tokenId].level > 0, "UNREG");
-        require(oSeed > 0, "TKN");
-        require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
-
-        // checking minted crystal
-        if (crystalsMap[tokenId].minted == true) {
-            require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
-        } else {
-            isBagHolder(tokenId);
-        }
-        _;
-    }
-
     modifier unminted(uint256 tokenId) {
         require(crystalsMap[tokenId].minted == false, "MNTD");
         _;
     }
 
-    constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
-
-    function getResonance(uint256 tokenId) public view returns (uint256) {
-        return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+    constructor(uint32 _threshold) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
+        registrationThreshold = _threshold;
     }
 
-    function getSpin(uint256 tokenId) public view returns (uint256) {
-        uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
-
-        if (crystalsMap[tokenId].level <= 1) {
-            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
-        } else {
-            return ((88 * (crystalsMap[tokenId].level - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
-        }
-    }
-
-    function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
-        // treat OG Loot and GA Crystals as OG
-        return tokenId % MAX_CRYSTALS < 8001 || tokenId % MAX_CRYSTALS > RESERVED_OFFSET;
-    }
-
-    function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
-        uint256 manaToProduce = ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
-        crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
-        crystalsMap[tokenId].manaProduced += manaToProduce;
-        IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
-    }
-
-    function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
-        require(crystalsMap[tokenId].level < maxLevel, "MAX");
-        require(
-            diffDays(
-                crystalsMap[tokenId].lastClaim,
-                block.timestamp
-            ) >= crystalsMap[tokenId].level, "WAIT"
-        );
-
-        IMANA(manaAddress).ccMintTo(_msgSender(), crystalsMap[tokenId].level);
-
-        crystalsMap[tokenId].level += 1;
-        crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
-        crystalsMap[tokenId].lastLevelUp = uint64(block.timestamp);
-        crystalsMap[tokenId].manaProduced = 0;
-    }
+    //WRITE
 
     function testMint(uint256 tokenId)
         external
@@ -177,7 +120,7 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
-        uint64 gensMinted = bags[tokenId % MAX_CRYSTALS].generationsMinted;
+        uint256 gensMinted = generationsMinted(tokenId);
         require(tokenId > 0, "TKN");
         if (tokenId > 8000) {
             require(msg.value == genMintReq[gensMinted + 1].fee, "FEE");
@@ -219,6 +162,14 @@ contract Crystals is
 
         isBagHolder(bagId);
 
+        uint256 cost = 0;
+        if (bags[bagId].generationsMinted > 0) {
+            cost = registrationCost(mintedCrystals);
+            if (isOGCrystal(bagId)) cost = cost * 10;
+        }
+
+        IMANA(manaAddress).burn(_msgSender(), cost);
+        
         // set the source bag bagId
         crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
         registeredCrystals += 1;
@@ -245,6 +196,50 @@ contract Crystals is
         }
     }
 
+    function claimCrystalMana(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+        uint256 manaToProduce = ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
+        crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
+        crystalsMap[tokenId].manaProduced += manaToProduce;
+        IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
+    }
+
+    function levelUpCrystal(uint256 tokenId) external ownsCrystal(tokenId) nonReentrant {
+        require(crystalsMap[tokenId].level < maxLevel, "MAX");
+        require(
+            diffDays(
+                crystalsMap[tokenId].lastClaim,
+                block.timestamp
+            ) >= crystalsMap[tokenId].level, "WAIT"
+        );
+
+        IMANA(manaAddress).ccMintTo(_msgSender(), crystalsMap[tokenId].level);
+
+        crystalsMap[tokenId].level += 1;
+        crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
+        crystalsMap[tokenId].lastLevelUp = uint64(block.timestamp);
+        crystalsMap[tokenId].manaProduced = 0;
+    }
+
+    // READ 
+
+    function getResonance(uint256 tokenId) public view returns (uint256) {
+        return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+    }
+
+    function getSpin(uint256 tokenId) public view returns (uint256) {
+        uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
+
+        if (crystalsMap[tokenId].level <= 1) {
+            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+        } else {
+            return ((88 * (crystalsMap[tokenId].level - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+        }
+    }
+
+    function claimableMana(uint256 tokenId) public view returns (uint256) {
+        return ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
+    }
+
     /**
      * @dev Return the token URI through the Loot Expansion interface
      * @param lootId The Loot Character URI
@@ -252,6 +247,36 @@ contract Crystals is
     function lootExpansionTokenUri(uint256 lootId) external view returns (string memory) {
         return tokenURI(lootId);
     }
+
+    function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
+        return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
+    }
+
+    function generationsMinted(uint256 tokenId) public view returns (uint256) {
+        return bags[tokenId % MAX_CRYSTALS].generationsMinted;
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
+
+     function tokenURI(uint256 tokenID) 
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory) 
+    {
+        require(metadataAddress != address(0), "no addr set");
+        require(crystalsMap[tokenID].level > 0, "INV");
+        return ICrystalsMetadata(metadataAddress).tokenURI(tokenID);
+    }
+
+    // OWNER 
 
     function ownerInit(
         address manaAddress_,
@@ -297,33 +322,52 @@ contract Crystals is
         genMintReq[generation].level = level_;
     }
 
+    function ownerUpdateRegistrationThreshold(uint32 threshold_) external onlyOwner {
+        registrationThreshold = threshold_;
+    }
+
     function ownerWithdraw() external onlyOwner {
         uint256 balance = address(this).balance;
         payable(msg.sender).transfer(balance);
     }
 
-    function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
-        return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
+    function ownerSetMetadataAddress(address addr) external onlyOwner {
+        metadataAddress = addr;
     }
 
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
+    function ownerSetCalculatorAddress(address _calculatorAddress) external onlyOwner {
+        manaCalculationAddress = _calculatorAddress;
     }
 
-     function tokenURI(uint256 tokenID) 
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory) 
-    {
-        require(metadataAddress != address(0), "no addr set");
-        require(crystalsMap[tokenID].level > 0, "INV");
-        return ICrystalsMetadata(metadataAddress).tokenURI(tokenID);
+    // HELPER
+
+    function registrationCost(uint256 num) internal view returns (uint256) {
+        if (num < registrationThreshold) {
+            return 10;
+        } else {
+            return 2 * registrationCost(num - registrationThreshold);
+        }
+    }
+
+    modifier ownsCrystal(uint256 tokenId) {
+        uint256 oSeed = tokenId % MAX_CRYSTALS;
+
+        require(crystalsMap[tokenId].level > 0, "UNREG");
+        require(oSeed > 0, "TKN");
+        require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
+
+        // checking minted crystal
+        if (crystalsMap[tokenId].minted == true) {
+            require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
+        } else {
+            isBagHolder(tokenId);
+        }
+        _;
+    }
+
+    function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
+        // treat OG Loot and GA Crystals as OG
+        return tokenId % MAX_CRYSTALS < 8001 || tokenId % MAX_CRYSTALS > RESERVED_OFFSET;
     }
 
     function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
@@ -417,7 +461,6 @@ contract Crystals is
         super._burn(tokenId);
     }
 
-    
     function _transfer(
         address from,
         address to,
