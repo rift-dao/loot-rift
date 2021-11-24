@@ -7,7 +7,7 @@ module.exports = function(deployer) {
   deployer.then(async () => {
     const mana = await deployer.deploy(Mana);
 
-    const crystals = await deployer.deploy(Crystals, 2);
+    const crystals = await deployer.deploy(Crystals);
 
     await deployer.deploy(CrystalsMetadata, crystals.address);
 

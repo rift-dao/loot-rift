@@ -47,7 +47,6 @@ contract Crystals is
     uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
-    uint32 public registrationThreshold;
 
     struct Bag {
         uint64 generationsMinted;
@@ -90,9 +89,7 @@ contract Crystals is
         _;
     }
 
-    constructor(uint32 _threshold) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
-        registrationThreshold = _threshold;
-    }
+    constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
 
     //WRITE
 
@@ -135,7 +132,8 @@ contract Crystals is
 
         uint256 cost = 0;
         if (bags[bagId].generationsMinted > 0) {
-            cost = getRegistrationCost(bags[bagId].generationsMinted);
+            require(genMintReq[bags[bagId].generationsMinted].manaCost > 0, "GEN NOT AVL"); 
+            cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
             if (!isOGCrystal(bagId)) cost = cost / 10;
         }
 
@@ -163,7 +161,8 @@ contract Crystals is
 
         uint256 cost = 0;
         if (bags[collabToken].generationsMinted > 0) {
-            cost = getRegistrationCost(bags[collabToken].generationsMinted);
+            require(genMintReq[bags[collabToken].generationsMinted].manaCost > 0, "GEN NOT AVL"); 
+            cost = getRegistrationCost(bags[collabToken].generationsMinted + 1);
             if (!isOGCrystal(collabToken)) cost = cost / 10;
         }
 
@@ -173,7 +172,7 @@ contract Crystals is
 
         // only give bonus in first generation
         if (bags[collabToken].generationsMinted == 0) {
-            crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = collabs[collabIndex].levelBonus;
+            crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = uint64(collabs[collabIndex].levelBonus);
         } else {
             crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = 1;
         }
@@ -205,17 +204,26 @@ contract Crystals is
 
     // READ 
     function getResonance(uint256 tokenId) public view returns (uint256) {
-        // 1 or 2 per level                             loot vs mloot multiplier                 generation bonus
-        return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+        // 1 or 2 per level                             loot vs mloot multiplier               generation bonus
+        return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * generationBonus(tokenId / MAX_CRYSTALS);
+    }
+
+    // 10% increase per generation
+    function generationBonus(uint256 genNum) internal pure returns (uint256) {
+        if (genNum == 1) {
+            return 1;
+        } else {
+            return (generationBonus(genNum - 1) * 110) / 100;
+        }
     }
 
     function getSpin(uint256 tokenId) public view returns (uint256) {
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
 
         if (crystalsMap[tokenId].level <= 1) {
-            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * generationBonus(tokenId / MAX_CRYSTALS);
         } else {
-            return ((88 * (crystalsMap[tokenId].level - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
+            return ((88 * (crystalsMap[tokenId].level - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * generationBonus(tokenId / MAX_CRYSTALS);
         }
     }
 
@@ -307,10 +315,6 @@ contract Crystals is
         genMintReq[generation].fee = mintFee_;
         genMintReq[generation].lootFee = lootMintFee_;
         genMintReq[generation].manaCost = manaCost_;
-    }
-
-    function ownerUpdateRegistrationThreshold(uint32 threshold_) external onlyOwner {
-        registrationThreshold = threshold_;
     }
 
     function ownerWithdraw() external onlyOwner {
