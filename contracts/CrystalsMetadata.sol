@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ICrystals.sol";
 
 interface ICrystalsMetadata {
-    function tokenURI(uint256 tokenId) external view returns (string memory);
+    function tokenURI(uint256 tokenId, uint256 level) external view returns (string memory);
 }
 
 contract CrystalsMetadata is Ownable, ICrystalsMetadata {
@@ -48,17 +48,10 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         description = desc;
     }
 
-    function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
-        internal
-        pure
-        returns (uint256)
-    {
-        require(fromTimestamp <= toTimestamp);
-        return (toTimestamp - fromTimestamp) / (24 * 60 * 60);
-    }
-
-
-    function tokenURI(uint256 tokenId) override external view returns (string memory) {
+    function tokenURI(
+        uint256 tokenId, 
+        uint256 level) override external view returns (string memory) {
+        require(level > 0, "INV");
         ICrystals crystals = ICrystals(crystalsAddress);
 
         uint256 rows = tokenId / MAX_CRYSTALS + 1;
@@ -91,8 +84,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 toString(crystals.getResonance(tokenId)),
                 '</text><text x="10" y="60">Spin: ',
                 toString(crystals.getSpin(tokenId)),
-                '</text><text x="10" y="80">Claimable: ',
-                toString(crystals.claimableMana(tokenId)),
                 '</text><text x="10" y="338" style="font-size: 12px;">gen.',
                 toString(tokenId / MAX_CRYSTALS + 1),
                 '</text>',
@@ -110,7 +101,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 '", "bagId": ',
                 toString(tokenId % MAX_CRYSTALS),
                 ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Level", "value":',
-                toString(crystals.crystalsMap(tokenId).level),
+                toString(level),
                 ' }, { "trait_type": "Resonance", "value": ',
                 toString(crystals.getResonance(tokenId)),
                 ' }, { "trait_type": "Spin", "value": '
@@ -134,7 +125,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 abi.encodePacked(
                     prefix,
                     attributes,
-                    ' }], "image": "data:image/svg+xml;base64,',
+                    '" }], "image": "data:image/svg+xml;base64,',
                     Base64.encode(bytes(output)), '"}'
                 )
         )))));
