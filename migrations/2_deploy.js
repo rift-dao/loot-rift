@@ -5,7 +5,6 @@ const ManaCalculator = artifacts.require('CrystalManaCalculator');
 
 module.exports = function(deployer) {
   deployer.then(async () => {
-
     const mana = await deployer.deploy(Mana);
 
     const crystals = await deployer.deploy(Crystals, 2);

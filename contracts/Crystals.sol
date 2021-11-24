@@ -96,25 +96,6 @@ contract Crystals is
 
     //WRITE
 
-    function testMint(uint256 tokenId)
-        external
-        unminted(tokenId)
-        nonReentrant
-    {
-        require(tokenId > 0, "TKN");
-        
-        require(crystalsMap[tokenId].level > 0, "UNREG");
-
-        IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
-
-        crystalsMap[tokenId].minted = true;
-
-        // bag goes up a generation. owner can now register another crystal
-        bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
-        mintedCrystals += 1;
-        _safeMint(_msgSender(), tokenId);
-    }
-
     function mintCrystal(uint256 tokenId)
         external
         payable
@@ -142,16 +123,6 @@ contract Crystals is
         bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
-    }
-
-    function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
-        require(bagId <= MAX_CRYSTALS, "INV");
-        require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
-
-        // set the source bag bagId
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
-        registeredCrystals += 1;
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
     }
 
     /// @notice registers a new crystal for a given bag
@@ -474,16 +445,6 @@ contract Crystals is
 
     function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
         super._burn(tokenId);
-    }
-
-    function _transfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal override {
-        super._transfer(from, to, tokenId);
-        crystalsMap[tokenId].lastTransfer = uint64(block.timestamp);
-        crystalsMap[tokenId].numOfTransfers += 1;
     }
 
     function isBagHolder(uint256 tokenId) private view {
