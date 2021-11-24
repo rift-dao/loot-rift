@@ -71,7 +71,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 getColor(tokenId),
                 ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);transform-origin:bottom right;font-size:",
                 toString(160 / rows),
-                ';}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
+                'px;}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
                 getName(tokenId)
             )
         );
