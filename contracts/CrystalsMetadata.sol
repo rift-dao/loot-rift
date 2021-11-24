@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ICrystals.sol";
 
 interface ICrystalsMetadata {
-    function tokenURI(uint256 tokenId, uint256 level) external view returns (string memory);
+    function tokenURI(uint256 tokenId) external view returns (string memory);
 }
 
 contract CrystalsMetadata is Ownable, ICrystalsMetadata {
@@ -48,11 +48,10 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         description = desc;
     }
 
-    function tokenURI(
-        uint256 tokenId, 
-        uint256 level) override external view returns (string memory) {
-        require(level > 0, "INV");
+    function tokenURI(uint256 tokenId) override external view returns (string memory) {
         ICrystals crystals = ICrystals(crystalsAddress);
+
+        require(crystals.crystalsMap(tokenId).level > 0, "INV");
 
         uint256 rows = tokenId / MAX_CRYSTALS + 1;
 
@@ -101,7 +100,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 '", "bagId": ',
                 toString(tokenId % MAX_CRYSTALS),
                 ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Level", "value":',
-                toString(level),
+                toString(crystals.crystalsMap(tokenId).level),
                 ' }, { "trait_type": "Resonance", "value": ',
                 toString(crystals.getResonance(tokenId)),
                 ' }, { "trait_type": "Spin", "value": '
