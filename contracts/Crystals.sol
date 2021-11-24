@@ -110,7 +110,7 @@ contract Crystals is
         } else {
             require(msg.value == genMintReq[gensMinted + 1].lootFee, "FEE");
         }
-        
+
         require(crystalsMap[tokenId].level > 0, "UNREG");
         
         isBagHolder(tokenId % MAX_CRYSTALS);        
@@ -204,7 +204,6 @@ contract Crystals is
     }
 
     // READ 
-
     function getResonance(uint256 tokenId) public view returns (uint256) {
         // 1 or 2 per level                             loot vs mloot multiplier                 generation bonus
         return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
@@ -254,15 +253,14 @@ contract Crystals is
         return super.supportsInterface(interfaceId);
     }
 
-     function tokenURI(uint256 tokenID) 
+     function tokenURI(uint256 tokenId) 
         public
         view
         override(ERC721, ERC721URIStorage)
         returns (string memory) 
     {
         require(metadataAddress != address(0), "no addr set");
-        require(crystalsMap[tokenID].level > 0, "INV");
-        return ICrystalsMetadata(metadataAddress).tokenURI(tokenID);
+        return ICrystalsMetadata(metadataAddress).tokenURI(tokenId);
     }
 
     // OWNER 

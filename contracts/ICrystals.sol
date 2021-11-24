@@ -8,8 +8,8 @@ struct Crystal {
     uint64 lastLevelUp;
     uint64 lastTransfer;
     uint64 numOfTransfers;
+    uint64 level;
     uint256 manaProduced;
-    uint256 level;
     uint256 regNum;
 }
 
