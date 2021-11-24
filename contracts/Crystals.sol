@@ -63,7 +63,7 @@ contract Crystals is
     struct GenerationMintRequirement {
         uint256 lootFee;
         uint256 fee;
-        uint256 level;
+        uint256 manaCost;
     }
 
     address public manaAddress;
@@ -83,6 +83,8 @@ contract Crystals is
 
     mapping(uint256 => GenerationMintRequirement) public genMintReq;
 
+    mapping(uint64 => uint256) public generationRegistry;
+
     modifier unminted(uint256 tokenId) {
         require(crystalsMap[tokenId].minted == false, "MNTD");
         _;
@@ -99,12 +101,9 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
-        uint64 gensMinted = bags[tokenId % MAX_CRYSTALS].generationsMinted;
         require(tokenId > 0, "TKN");
         
         require(crystalsMap[tokenId].level > 0, "UNREG");
-
-        require(crystalsMap[tokenId].level >= genMintReq[gensMinted + 1].level, "LVL LOW");   
 
         IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
 
@@ -132,8 +131,6 @@ contract Crystals is
         }
         
         require(crystalsMap[tokenId].level > 0, "UNREG");
-
-        require(crystalsMap[tokenId].level >= genMintReq[gensMinted + 1].level, "LVL LOW");
         
         isBagHolder(tokenId % MAX_CRYSTALS);        
 
@@ -167,11 +164,13 @@ contract Crystals is
 
         uint256 cost = 0;
         if (bags[bagId].generationsMinted > 0) {
-            cost = registrationCost(mintedCrystals);
-            if (isOGCrystal(bagId)) cost = cost * 10;
+            cost = getRegistrationCost(bags[bagId].generationsMinted);
+            if (!isOGCrystal(bagId)) cost = cost / 10;
         }
 
         IMANA(manaAddress).burn(_msgSender(), cost);
+
+        generationRegistry[bags[bagId].generationsMinted + 1] += 1;
         
         // set the source bag bagId
         crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
@@ -190,6 +189,16 @@ contract Crystals is
             ERC721(collabs[collabIndex].contractAddress).ownerOf(tokenId) == _msgSender(),
             "UNAUTH"
         );
+
+        uint256 cost = 0;
+        if (bags[collabToken].generationsMinted > 0) {
+            cost = getRegistrationCost(bags[collabToken].generationsMinted);
+            if (!isOGCrystal(collabToken)) cost = cost / 10;
+        }
+
+        IMANA(manaAddress).burn(_msgSender(), cost);
+
+        generationRegistry[bags[collabToken].generationsMinted + 1] += 1;
 
         // only give bonus in first generation
         if (bags[collabToken].generationsMinted == 0) {
@@ -226,6 +235,7 @@ contract Crystals is
     // READ 
 
     function getResonance(uint256 tokenId) public view returns (uint256) {
+        // 1 or 2 per level                             loot vs mloot multiplier                 generation bonus
         return getLevelRolls(tokenId, "%RES", 2, 1) * (isOGCrystal(tokenId) ? 10 : 1) * (100 + (tokenId / MAX_CRYSTALS * 10)) / 100;
     }
 
@@ -239,6 +249,11 @@ contract Crystals is
         }
     }
 
+    function getRegistrationCost(uint64 genNum) public view returns (uint256) {
+        uint256 cost = genMintReq[genNum].manaCost - generationRegistry[genNum];
+        return cost < (genMintReq[genNum].manaCost / 10) ? (genMintReq[genNum].manaCost / 10) : cost;
+    }
+
     function claimableMana(uint256 tokenId) public view returns (uint256) {
         return ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
     }
@@ -247,7 +262,7 @@ contract Crystals is
      * @dev Return the token URI through the Loot Expansion interface
      * @param lootId The Loot Character URI
      */
-    function lootExpansionTokenUri(uint256 lootId) external view returns (string memory) {
+    function getLootExpansionTokenUri(uint256 lootId) external view returns (string memory) {
         return tokenURI(lootId);
     }
 
@@ -319,10 +334,10 @@ contract Crystals is
         maxLevel = maxLevel_;
     }
 
-    function ownerSetGenMintRequirement(uint256 generation, uint256 mintFee_, uint256 lootMintFee_, uint256 level_) external onlyOwner {
+    function ownerSetGenMintRequirement(uint256 generation, uint256 mintFee_, uint256 lootMintFee_, uint256 manaCost_) external onlyOwner {
         genMintReq[generation].fee = mintFee_;
         genMintReq[generation].lootFee = lootMintFee_;
-        genMintReq[generation].level = level_;
+        genMintReq[generation].manaCost = manaCost_;
     }
 
     function ownerUpdateRegistrationThreshold(uint32 threshold_) external onlyOwner {
@@ -348,14 +363,6 @@ contract Crystals is
     }
 
     // HELPER
-
-    function registrationCost(uint256 num) internal view returns (uint256) {
-        if (num < registrationThreshold) {
-            return 10;
-        } else {
-            return 2 * registrationCost(num - registrationThreshold);
-        }
-    }
 
     modifier ownsCrystal(uint256 tokenId) {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
