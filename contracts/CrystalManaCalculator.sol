@@ -29,11 +29,6 @@ contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
 
         uint256 manaToProduce = daysSinceClaim * crystals.getResonance(tokenId);
 
-        // amount generatable is capped to the crystals spin
-        if (daysSinceClaim > crystals.crystalsMap(tokenId).level) {
-            manaToProduce = crystals.crystalsMap(tokenId).level * crystals.getResonance(tokenId);
-        }
-
         // if cap is hit, limit mana to cap or level, whichever is greater
         if ((manaToProduce + crystals.crystalsMap(tokenId).manaProduced) > crystals.getSpin(tokenId)) {
             if (crystals.getSpin(tokenId) >= crystals.crystalsMap(tokenId).manaProduced) {

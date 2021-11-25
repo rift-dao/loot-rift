@@ -80,7 +80,7 @@ contract Crystals is
     /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
 
-    mapping(uint256 => GenerationMintRequirement) public genMintReq;
+    mapping(uint256 => GenerationMintRequirement) public genReq;
 
     mapping(uint64 => uint256) public generationRegistry;
 
@@ -103,9 +103,9 @@ contract Crystals is
         uint256 gensMinted = generationsMinted(tokenId);
         require(tokenId > 0, "TKN");
         if (tokenId > 8000) {
-            require(msg.value == genMintReq[gensMinted + 1].fee, "FEE");
+            require(msg.value == genReq[gensMinted + 1].fee, "FEE");
         } else {
-            require(msg.value == genMintReq[gensMinted + 1].lootFee, "FEE");
+            require(msg.value == genReq[gensMinted + 1].lootFee, "FEE");
         }
 
         require(crystalsMap[tokenId].level > 0, "UNREG");
@@ -132,7 +132,7 @@ contract Crystals is
 
         uint256 cost = 0;
         if (bags[bagId].generationsMinted > 0) {
-            require(genMintReq[bags[bagId].generationsMinted].manaCost > 0, "GEN NOT AVL"); 
+            require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
             cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
             if (!isOGCrystal(bagId)) cost = cost / 10;
         }
@@ -161,7 +161,7 @@ contract Crystals is
 
         uint256 cost = 0;
         if (bags[collabToken].generationsMinted > 0) {
-            require(genMintReq[bags[collabToken].generationsMinted].manaCost > 0, "GEN NOT AVL"); 
+            require(genReq[bags[collabToken].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
             cost = getRegistrationCost(bags[collabToken].generationsMinted + 1);
             if (!isOGCrystal(collabToken)) cost = cost / 10;
         }
@@ -219,17 +219,12 @@ contract Crystals is
 
     function getSpin(uint256 tokenId) public view returns (uint256) {
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
-
-        if (crystalsMap[tokenId].level <= 1) {
-            return (1 + getRoll(tokenId, "%SPIN", 20, 1)) * generationBonus(tokenId / MAX_CRYSTALS);
-        } else {
-            return ((88 * (crystalsMap[tokenId].level - 1)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * generationBonus(tokenId / MAX_CRYSTALS);
-        }
+        return ((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * generationBonus(tokenId / MAX_CRYSTALS);
     }
 
     function getRegistrationCost(uint64 genNum) public view returns (uint256) {
-        uint256 cost = genMintReq[genNum].manaCost - generationRegistry[genNum];
-        return cost < (genMintReq[genNum].manaCost / 10) ? (genMintReq[genNum].manaCost / 10) : cost;
+        uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
+        return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
     }
 
     function claimableMana(uint256 tokenId) public view returns (uint256) {
@@ -312,9 +307,9 @@ contract Crystals is
     }
 
     function ownerSetGenMintRequirement(uint256 generation, uint256 mintFee_, uint256 lootMintFee_, uint256 manaCost_) external onlyOwner {
-        genMintReq[generation].fee = mintFee_;
-        genMintReq[generation].lootFee = lootMintFee_;
-        genMintReq[generation].manaCost = manaCost_;
+        genReq[generation].fee = mintFee_;
+        genReq[generation].lootFee = lootMintFee_;
+        genReq[generation].manaCost = manaCost_;
     }
 
     function ownerWithdraw() external onlyOwner {
