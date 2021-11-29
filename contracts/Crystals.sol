@@ -47,7 +47,7 @@ contract Crystals is
     uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
-    uint32 private constant registrationThreshold = 10000;
+    uint32 private mintedThreshold = 8000;
 
     struct Bag {
         uint64 generationsMinted;
@@ -105,7 +105,7 @@ contract Crystals is
         require(crystalsMap[tokenId].level > 0, "UNREG");
 
         // mint fee is 100% MANA after registration threshold is reached
-        if (registeredCrystals < registrationThreshold) {
+        if (mintedCrystals < mintedThreshold) {
             if (tokenId % MAX_CRYSTALS > 8000) {
                 require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mMintFee, "FEE");
             } else {
@@ -328,6 +328,10 @@ contract Crystals is
 
     function ownerSetMetadataAddress(address addr) external onlyOwner {
         metadataAddress = addr;
+    }
+
+    function ownerSetMintedThreshold(uint32 threshold_) external onlyOwner {
+        mintedThreshold = threshold_;
     }
 
     function ownerSetCalculatorAddress(address _calculatorAddress) external onlyOwner {
