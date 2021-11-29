@@ -188,6 +188,7 @@ contract Crystals is
 
     function claimCrystalMana(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
         uint256 manaToProduce = ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
+        require(manaToProduce > 0, "NONE");
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].manaProduced += manaToProduce;
         IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);

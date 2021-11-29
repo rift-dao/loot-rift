@@ -9,9 +9,13 @@ module.exports = function(deployer) {
 
     const crystals = await deployer.deploy(Crystals);
 
-    await deployer.deploy(CrystalsMetadata, crystals.address);
+    const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
 
     await deployer.deploy(ManaCalculator, crystals.address);
+
+    mana.addController(crystals.address);
+
+    crystals.ownerSetMetadataAddress(crystalsMeta);
 
     mana.addController(crystals.address);
 

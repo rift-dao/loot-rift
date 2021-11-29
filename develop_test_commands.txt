@@ -48,3 +48,28 @@ JSON.parse(atob('token'));
 
 // set mana.ccAddress
 mana.ownerSetCContractAddress(crystals.address);
+
+
+
+
+// test register
+function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
+    require(bagId <= MAX_CRYSTALS, "INV");
+    require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
+
+    uint256 cost = 0;
+    if (bags[bagId].generationsMinted > 0) {
+        require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
+        cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
+        if (!isOGCrystal(bagId)) cost = cost / 10;
+    }
+
+    IMANA(manaAddress).burn(_msgSender(), cost);
+
+    generationRegistry[bags[bagId].generationsMinted + 1] += 1;
+    
+    // set the source bag bagId
+    crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
+    registeredCrystals += 1;
+    crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
+}

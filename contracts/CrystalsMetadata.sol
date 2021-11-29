@@ -288,6 +288,29 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         }
     }
 
+    function getSlabs(uint256 tokenId) external view returns (string memory output) {
+        uint256 rows = tokenId / MAX_CRYSTALS + 1;
+
+        if (rows > 10) {
+          rows = rows % 10;
+
+          if (rows == 0) {
+            rows = 10;
+          }
+        }
+
+        output = '';
+
+        for (uint256 i = 0; i < rows; i++) {
+            for (uint256 j = 0; j < rows; j++) {
+                output = string(abi.encodePacked(output, getSlab(tokenId, i, j)));
+            }
+            output = string(abi.encodePacked(output, '\n'));
+        }
+
+        return output;
+    }
+
     function getSlabs(uint256 tokenId, uint256 rows) private view returns (string memory output) {
         output = '';
 

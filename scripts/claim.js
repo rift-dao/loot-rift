@@ -1,30 +1,20 @@
 const open = require('open');
-const { contract } = require('@openzeppelin/test-environment');
 
-const { getArgs, decodeToken, hasFlag } = require('./helpers');
-
-const Crystals = contract.fromArtifact('Crystals');
-const Mana = contract.fromArtifact('Mana');
+const { getArgs, decodeToken, hasFlag, setup } = require('./helpers');
 
 const args = getArgs();
 
 (async () => {
   console.log('\n🔮 generating stats for #' + args.seeds.join(', #'), '\n\n');
 
-  const manaInstance = await Mana.new();
-  const crystalInstance = await Crystals.new();
-
-  crystalInstance.ownerInit(
-    manaInstance.address,
-    '0x0000000000000000000000000000000000000000',
-    '0x0000000000000000000000000000000000000000'
-  );
-
   const tokens = [...args.seeds];
   const tokenImages = [];
+
+  const { crystals } = await setup();
   
   for (let i = 0; i < tokens.length; i++) {
-    const encodedToken = await crystalInstance.tokenURI(tokens[i]);
+    await crystals.testRegister(tokens[i]);
+    const encodedToken = await crystals.tokenURI(tokens[i]);
     tokens[i] = decodeToken(encodedToken);
     tokenImages.push(tokens[i].image);
   }
