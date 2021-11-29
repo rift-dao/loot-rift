@@ -47,6 +47,7 @@ contract Crystals is
     uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
+    uint32 private constant registrationThreshold = 10000;
 
     struct Bag {
         uint64 generationsMinted;
@@ -55,13 +56,13 @@ contract Crystals is
     uint256 public mintedCrystals;
     uint256 public registeredCrystals;
 
-    // uint256 public mintFee = 20000000000000000; //0.02 ETH
+    uint256 public mintFee = 0.02 ether;
+    uint256 public mMintFee = 0.01 ether;
+
     // uint256 public lootMintFee = 0;
     // uint256 public mintLevel = 5;
 
     struct GenerationMintRequirement {
-        uint256 lootFee;
-        uint256 fee;
         uint256 manaCost;
     }
 
@@ -100,19 +101,26 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
-        uint256 gensMinted = generationsMinted(tokenId);
         require(tokenId > 0, "TKN");
-        if (tokenId > 8000) {
-            require(msg.value == genReq[gensMinted + 1].fee, "FEE");
-        } else {
-            require(msg.value == genReq[gensMinted + 1].lootFee, "FEE");
-        }
-
         require(crystalsMap[tokenId].level > 0, "UNREG");
+
+        // mint fee is 100% MANA after registration threshold is reached
+        if (registeredCrystals < registrationThreshold) {
+            if (tokenId % MAX_CRYSTALS > 8000) {
+                require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mMintFee, "FEE");
+            } else {
+                require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mintFee, "FEE");
+            }   
+        } else {
+            require(msg.value == 0, "only mana");
+            if (tokenId % MAX_CRYSTALS > 8000) {
+                IMANA(manaAddress).burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 10);
+            } else {
+                IMANA(manaAddress).burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 100);
+            }   
+        }
         
         isBagHolder(tokenId % MAX_CRYSTALS);        
-
-        IMANA(manaAddress).ccMintTo(_msgSender(), isOGCrystal(tokenId) ? 100 : 10);
 
         crystalsMap[tokenId].minted = true;
 
@@ -194,7 +202,9 @@ contract Crystals is
             ) >= crystalsMap[tokenId].level, "WAIT"
         );
 
-        IMANA(manaAddress).ccMintTo(_msgSender(), crystalsMap[tokenId].level);
+        if (ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId) > (crystalsMap[tokenId].level * getResonance(tokenId))) {
+            IMANA(manaAddress).ccMintTo(_msgSender(), ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId) - (crystalsMap[tokenId].level * getResonance(tokenId)));
+        } 
 
         crystalsMap[tokenId].level += 1;
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
@@ -210,7 +220,8 @@ contract Crystals is
 
     // 10% increase per generation
     function generationBonus(uint256 genNum) internal pure returns (uint256) {
-        if (genNum == 1) {
+        // first gen
+        if (genNum == 0) {
             return 1;
         } else {
             return (generationBonus(genNum - 1) * 110) / 100;
@@ -306,9 +317,7 @@ contract Crystals is
         maxLevel = maxLevel_;
     }
 
-    function ownerSetGenMintRequirement(uint256 generation, uint256 mintFee_, uint256 lootMintFee_, uint256 manaCost_) external onlyOwner {
-        genReq[generation].fee = mintFee_;
-        genReq[generation].lootFee = lootMintFee_;
+    function ownerSetGenMintRequirement(uint256 generation, uint256 manaCost_) external onlyOwner {
         genReq[generation].manaCost = manaCost_;
     }
 

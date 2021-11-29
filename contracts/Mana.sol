@@ -15,7 +15,7 @@ contract Mana is Context, Ownable, ERC20 {
     IERC721Enumerable public crystalsContract;
 
     constructor() Ownable() ERC20("Adventure Mana", "AMNA") {
-        _mint(_msgSender(), 200000);
+        _mint(_msgSender(), 1000000);
     }
 
     // function testMint(uint256 amount) external {

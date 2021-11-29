@@ -21,7 +21,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
 
     string private constant cursedSuffixes =
-        "of Crypts,of Nightmares,of Sadness,of Darkness,of Death,of Doom,of Gloom,of Madness";
+        "of Nightmares,of Darkness,of Death,of Doom,of Madness,of Temptation,of the Underworld,of Corruption,of Revelation";
     string private constant suffixes =
         "of Power,of Giants,of Titans,of Skill,of Perfection,of Brilliance,of Enlightenment,of Protection,of Anger,of Rage,of Fury,of Vitriol,of the Fox,of Detection,of Reflection,of the Twins,of Relevance,of the Rift";
     string private constant colors =
@@ -30,7 +30,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         "Aqua,black,Crimson,Ghostwhite,Indigo,Turquoise,Maroon,Magenta,Fuchsia,Firebrick,Hotpink";
     string private constant slabs = "&#9698;,&#9699;,&#9700;,&#9701;";
 
-    uint8 private constant presuffLength = 8;
+    uint8 private constant presuffLength = 9;
     uint8 private constant suffixesLength = 18;
     uint8 private constant colorsLength = 11;
     uint8 private constant slabsLength = 4;
