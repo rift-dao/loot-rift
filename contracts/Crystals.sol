@@ -25,11 +25,7 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 import "./CrystalsMetadata.sol";
 import "./CrystalManaCalculator.sol";
 import "./ICrystals.sol";
-
-interface IMANA {
-    function ccMintTo(address recipient, uint256 amount) external;
-    function burn(address from, uint256 amount) external;
-}
+import "./Rift.sol";
 
 /// @title Loot Crystals from the Rift
 contract Crystals is
@@ -49,10 +45,6 @@ contract Crystals is
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
     uint32 private mintedThreshold = 8000;
 
-    struct Bag {
-        uint64 generationsMinted;
-    }
-
     uint256 public mintedCrystals;
     uint256 public registeredCrystals;
 
@@ -67,6 +59,7 @@ contract Crystals is
     }
 
     address public manaAddress;
+    address public riftAddress;
 
     address public lootAddress = 0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7;
     address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
@@ -74,16 +67,9 @@ contract Crystals is
     /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
 
-    /// @dev indexed by bagId
-    mapping(uint256 => Bag) public bags;
-
     /// @notice 0 - 9 => collaboration nft contracts
     /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
-
-    mapping(uint256 => GenerationMintRequirement) public genReq;
-
-    mapping(uint64 => uint256) public generationRegistry;
 
     modifier unminted(uint256 tokenId) {
         require(crystalsMap[tokenId].minted == false, "MNTD");
@@ -94,96 +80,73 @@ contract Crystals is
 
     //WRITE
 
-    function mintCrystal(uint256 tokenId)
+    function mintCrystal(uint256 bagId)
         external
         payable
         whenNotPaused
-        unminted(tokenId)
         nonReentrant
     {
-        require(tokenId > 0, "TKN");
-        require(crystalsMap[tokenId].level > 0, "UNREG");
+        require(bagId <= MAX_CRYSTALS, "INV");
+        Bag memory bag = IRift(riftAddress).bagsMap(bagId);
+        require(bag.isCharged, "Charge at Rift first");
+        isBagHolder(bagId);
 
-        // mint fee is 100% MANA after registration threshold is reached
+        // consume bag charge from the rift
+        IRift(riftAddress).useCharge(bagId, _msgSender());
+
+        uint256 tokenId = bagId + (MAX_CRYSTALS * (bag.generation - 1));
+
+        // register crystal data
+        crystalsMap[tokenId].level = 1;
+        registeredCrystals += 1;
+        crystalsMap[tokenId].regNum = registeredCrystals;
+
+        // mint fee is 100% MANA after minted threshold is reached
         if (mintedCrystals < mintedThreshold) {
-            if (tokenId % MAX_CRYSTALS > 8000) {
-                require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mMintFee, "FEE");
+            if (bagId < 8001) {
+                require(msg.value == bag.generation * mintFee, "FEE");
             } else {
-                require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mintFee, "FEE");
+                require(msg.value == bag.generation * mMintFee, "FEE");
             }   
         } else {
             require(msg.value == 0, "only mana");
-            if (tokenId % MAX_CRYSTALS > 8000) {
-                IMANA(manaAddress).burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 10);
+            if (bagId < 8001) {
+                IMANA(manaAddress).burn(_msgSender(), bag.generation * 100);
             } else {
-                IMANA(manaAddress).burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 100);
+                IMANA(manaAddress).burn(_msgSender(), bag.generation * 10);
             }   
         }
         
-        isBagHolder(tokenId % MAX_CRYSTALS);        
-
         crystalsMap[tokenId].minted = true;
 
-        // bag goes up a generation. owner can now register another crystal
-        bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
 
-    /// @notice registers a new crystal for a given bag
-    /// @notice bag must not have a currently registered crystal
-    function registerCrystal(uint256 bagId) external whenNotPaused unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
-        require(bagId <= MAX_CRYSTALS, "INV");
-        require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
-
-        isBagHolder(bagId);
-
-        uint256 cost = 0;
-        if (bags[bagId].generationsMinted > 0) {
-            require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
-            cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
-            if (!isOGCrystal(bagId)) cost = cost / 10;
-        }
-
-        IMANA(manaAddress).burn(_msgSender(), cost);
-
-        generationRegistry[bags[bagId].generationsMinted + 1] += 1;
-        
-        // set the source bag bagId
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
-        registeredCrystals += 1;
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
-    }
-
-    function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
+    function mintCrystalCollab(uint8 collabIndex, uint256 tokenId)
+        external
+        payable
+        whenNotPaused
+        nonReentrant
+    {
         require(tokenId > 0 && tokenId < 10000, "TKN");
         require(collabIndex >= 0 && collabIndex < 10, "CLB");
         require(collabs[collabIndex].contractAddress != address(0), "CLB");
         uint256 collabToken = RESERVED_OFFSET + tokenId + (collabIndex * 10000);
-        require(crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level == 0, "REG");
+        require(crystalsMap[collabToken].minted == false, "Already minted");
 
         require(
             ERC721(collabs[collabIndex].contractAddress).ownerOf(tokenId) == _msgSender(),
             "UNAUTH"
         );
 
-        uint256 cost = 0;
-        if (bags[collabToken].generationsMinted > 0) {
-            require(genReq[bags[collabToken].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
-            cost = getRegistrationCost(bags[collabToken].generationsMinted + 1);
-            if (!isOGCrystal(collabToken)) cost = cost / 10;
-        }
+        
+        crystalsMap[collabToken].level = uint64(collabs[collabIndex].levelBonus);
+        
+        crystalsMap[collabToken].minted = true;
 
-        IMANA(manaAddress).burn(_msgSender(), cost);
-
-        generationRegistry[bags[collabToken].generationsMinted + 1] += 1;
-
-        // only give bonus in first generation
-        if (bags[collabToken].generationsMinted == 0) {
-            crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = uint64(collabs[collabIndex].levelBonus);
-        } else {
-            crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = 1;
-        }
+        mintedCrystals += 1;
+        _safeMint(_msgSender(), collabToken);
     }
 
     function claimCrystalMana(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
@@ -233,10 +196,10 @@ contract Crystals is
         return ((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * generationBonus(tokenId / MAX_CRYSTALS);
     }
 
-    function getRegistrationCost(uint64 genNum) public view returns (uint256) {
-        uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
-        return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
-    }
+    // function getRegistrationCost(uint64 genNum) public view returns (uint256) {
+    //     uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
+    //     return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
+    // }
 
     function claimableMana(uint256 tokenId) public view returns (uint256) {
         return ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
@@ -250,13 +213,13 @@ contract Crystals is
         return tokenURI(lootId);
     }
 
-    function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
-        return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
-    }
+    // function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
+    //     return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
+    // }
 
-    function generationsMinted(uint256 tokenId) public view returns (uint256) {
-        return bags[tokenId % MAX_CRYSTALS].generationsMinted;
-    }
+    // function generationsMinted(uint256 tokenId) public view returns (uint256) {
+    //     return bags[tokenId % MAX_CRYSTALS].generationsMinted;
+    // }
 
     function supportsInterface(bytes4 interfaceId)
         public
@@ -317,9 +280,9 @@ contract Crystals is
         maxLevel = maxLevel_;
     }
 
-    function ownerSetGenMintRequirement(uint256 generation, uint256 manaCost_) external onlyOwner {
-        genReq[generation].manaCost = manaCost_;
-    }
+    // function ownerSetGenMintRequirement(uint256 generation, uint256 manaCost_) external onlyOwner {
+    //     genReq[generation].manaCost = manaCost_;
+    // }
 
     function ownerWithdraw() external onlyOwner {
         uint256 balance = address(this).balance;
@@ -350,7 +313,7 @@ contract Crystals is
 
         require(crystalsMap[tokenId].level > 0, "UNREG");
         require(oSeed > 0, "TKN");
-        require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
+        // require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
 
         // checking minted crystal
         if (crystalsMap[tokenId].minted == true) {
