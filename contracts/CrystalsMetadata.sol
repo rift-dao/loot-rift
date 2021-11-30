@@ -1,13 +1,8 @@
-// SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./ICrystals.sol";
 
-interface ICrystalsMetadata {
-    function tokenURI(uint256 tokenId) external view returns (string memory);
-}
+import "./Interfaces.sol";
 
 contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     using strings for string;

@@ -12,7 +12,6 @@
     
 */
 
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -22,14 +21,8 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "./CrystalsMetadata.sol";
-import "./CrystalManaCalculator.sol";
-import "./ICrystals.sol";
 
-interface IMANA {
-    function ccMintTo(address recipient, uint256 amount) external;
-    function burn(address from, uint256 amount) external;
-}
+import "./Interfaces.sol";
 
 /// @title Loot Crystals from the Rift
 contract Crystals is
@@ -43,7 +36,7 @@ contract Crystals is
 {
     ICrystalsMetadata public iMetadata;
     ICrystalManaCalculator public iCalculator;
-    IMANA public iMana;
+    IMana public iMana;
 
     ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
     ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
@@ -90,7 +83,7 @@ contract Crystals is
     }
 
     constructor(address manaAddress) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
-        iMana = IMANA(manaAddress);
+        iMana = IMana(manaAddress);
     }
 
     //WRITE
@@ -337,7 +330,7 @@ contract Crystals is
     }
 
     function ownerSetManaAddress(address addr) external onlyOwner {
-        iMana = IMANA(addr);
+        iMana = IMana(addr);
     }
 
     function ownerSetMLootAddress(address addr) external onlyOwner {
