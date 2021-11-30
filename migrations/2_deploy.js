@@ -1,16 +1,18 @@
 const Mana = artifacts.require('Mana');
 const Crystals = artifacts.require('Crystals');
+const CrystalsMetadata = artifacts.require('CrystalsMetadata');
+const ManaCalculator = artifacts.require('CrystalManaCalculator');
 
 module.exports = function(deployer) {
   deployer.then(async () => {
-     const mana = await deployer.deploy(Mana);
-     const crystals = await deployer.deploy(Crystals);
-     mana.ownerSetCContractAddress(crystals.address);
-     crystals.ownerInit(
-       mana.address,
-       '0x0000000000000000000000000000000000000000',
-       '0x0000000000000000000000000000000000000000'
-      );
+    const mana = await deployer.deploy(Mana);
+    const crystals = await deployer.deploy(Crystals, mana.address);
+    const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
+    const calculator = await deployer.deploy(ManaCalculator, crystals.address);
+
+    mana.addController(crystals.address);
+    crystals.ownerSetMetadataAddress(crystalsMeta.address);
+    crystals.ownerSetCalculatorAddress(calculator.address);
   });
 }
 
