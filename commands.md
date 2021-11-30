@@ -1,57 +1,56 @@
-# START
-truffle develop || truffle console
->
-migrate
+## Testing
+`truffle develop` or `truffle console`
+> `migrate`
 
-# VERIFY
-truffle run verify Crystals Mana --network goerli
-
-
-# SETUP
+### Setup
+```js
 mana = await Mana.deployed()
 crystals = await Crystals.deployed()
+crystals.ownerUpdateCollab(0, crystals.address, 10, 'Void')
+```
 
-
-# OWNER
-crystals.ownerUpdateCollab(0, crystals.address, 10, 'Void ')
-
-
-# MINT
+### Mint
+```js
 await crystals.testMint(1)
 crystals.mintCrystal(9900001, { value: web3.utils.toWei('0.03', 'ether') })
 await crystals.testMint(8001)
+```
 
-
-# REGISTER
+### Register
+```js
 crystals.testRegister(2)
 crystals.registerCrystalCollab(8001, 0)
+```
 
-
-# READ
+### Read
+```js
 await crystals.ownerOf(1);
 await crystals.tokenURI(1);
 (await crystals.crystals(9900001).then(a => a.tokenId)).toString()
 (await crystals.collabs(0).then(a => a.levelBonus)).toString()
-
-# CHECKS
 (await mana.balanceOf(accounts[0])) / 1
 (await crystals.mintedCrystals()) / 1
+```
 
 
-
-// Paste in browser
+## Browser Testing
+> Paste in browser console, replace `token` with string returned by `tokenURI`
+```js
 JSON.parse(atob('token'));
+```
 
 
+## Deploy Steps
 
-// v----- NOT NEEDED -----v
+1. `truffle migrate --reset --network ropsten`
+2. `truffle run verify Mana Crystals CrystalsMetadata CrystalManaCalculator --network ropsten`
 
-// set mana.ccAddress
-mana.ownerSetCContractAddress(crystals.address);
+---
 
+## Misc
 
-
-
+### Contract testRegister
+```js
 // test register
 function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
     require(bagId <= MAX_CRYSTALS, "INV");
@@ -73,3 +72,4 @@ function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * b
     registeredCrystals += 1;
     crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
 }
+```

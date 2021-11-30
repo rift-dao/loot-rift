@@ -41,8 +41,12 @@ contract Crystals is
     Ownable,
     Pausable
 {
-    address public metadataAddress;
-    address public manaCalculationAddress;
+    ICrystalsMetadata public iMetadata;
+    ICrystalManaCalculator public iCalculator;
+    IMANA public iMana;
+
+    ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
+    ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
     
     uint32 public maxLevel = 26;
     uint32 private constant MAX_CRYSTALS = 10000000;
@@ -66,11 +70,6 @@ contract Crystals is
         uint256 manaCost;
     }
 
-    address public manaAddress;
-
-    address public lootAddress = 0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7;
-    address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
-
     /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
 
@@ -90,7 +89,9 @@ contract Crystals is
         _;
     }
 
-    constructor() ERC721("Loot Crystals", "CRYSTAL") Ownable() {}
+    constructor(address manaAddress) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
+        iMana = IMANA(manaAddress);
+    }
 
     //WRITE
 
@@ -114,9 +115,9 @@ contract Crystals is
         } else {
             require(msg.value == 0, "only mana");
             if (tokenId % MAX_CRYSTALS > 8000) {
-                IMANA(manaAddress).burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 10);
+                iMana.burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 10);
             } else {
-                IMANA(manaAddress).burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 100);
+                iMana.burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 100);
             }   
         }
         
@@ -128,6 +129,30 @@ contract Crystals is
         bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
+    }
+
+    // test register
+    function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
+        require(bagId <= MAX_CRYSTALS, "INV");
+        require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
+
+        uint256 cost = 0;
+        if (bags[bagId].generationsMinted > 0) {
+            require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
+            cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
+            if (!isOGCrystal(bagId)) cost = cost / 10;
+        }
+
+        // example delegatecall usage
+        // (bool success, ) = address(iMana).delegatecall(abi.encodeWithSignature("burn(uint256)", cost));
+        iMana.burn(_msgSender(), cost);
+
+        generationRegistry[bags[bagId].generationsMinted + 1] += 1;
+        
+        // set the source bag bagId
+        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
+        registeredCrystals += 1;
+        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
     }
 
     /// @notice registers a new crystal for a given bag
@@ -145,7 +170,7 @@ contract Crystals is
             if (!isOGCrystal(bagId)) cost = cost / 10;
         }
 
-        IMANA(manaAddress).burn(_msgSender(), cost);
+        iMana.burn(_msgSender(), cost);
 
         generationRegistry[bags[bagId].generationsMinted + 1] += 1;
         
@@ -174,7 +199,7 @@ contract Crystals is
             if (!isOGCrystal(collabToken)) cost = cost / 10;
         }
 
-        IMANA(manaAddress).burn(_msgSender(), cost);
+        iMana.burn(_msgSender(), cost);
 
         generationRegistry[bags[collabToken].generationsMinted + 1] += 1;
 
@@ -187,11 +212,11 @@ contract Crystals is
     }
 
     function claimCrystalMana(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
-        uint256 manaToProduce = ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
+        uint256 manaToProduce = iCalculator.claimableMana(tokenId);
         require(manaToProduce > 0, "NONE");
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].manaProduced += manaToProduce;
-        IMANA(manaAddress).ccMintTo(_msgSender(), manaToProduce);
+        iMana.ccMintTo(_msgSender(), manaToProduce);
     }
 
     function levelUpCrystal(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
@@ -203,8 +228,8 @@ contract Crystals is
             ) >= crystalsMap[tokenId].level, "WAIT"
         );
 
-        if (ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId) > (crystalsMap[tokenId].level * getResonance(tokenId))) {
-            IMANA(manaAddress).ccMintTo(_msgSender(), ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId) - (crystalsMap[tokenId].level * getResonance(tokenId)));
+        if (iCalculator.claimableMana(tokenId) > (crystalsMap[tokenId].level * getResonance(tokenId))) {
+            iMana.ccMintTo(_msgSender(), iCalculator.claimableMana(tokenId) - (crystalsMap[tokenId].level * getResonance(tokenId)));
         } 
 
         crystalsMap[tokenId].level += 1;
@@ -240,7 +265,7 @@ contract Crystals is
     }
 
     function claimableMana(uint256 tokenId) public view returns (uint256) {
-        return ICrystalManaCalculator(manaCalculationAddress).claimableMana(tokenId);
+        return iCalculator.claimableMana(tokenId);
     }
 
     /**
@@ -274,27 +299,8 @@ contract Crystals is
         override(ERC721, ERC721URIStorage)
         returns (string memory) 
     {
-        require(metadataAddress != address(0), "no addr set");
-        return ICrystalsMetadata(metadataAddress).tokenURI(tokenId);
-    }
-
-    // OWNER 
-
-    function ownerInit(
-        address manaAddress_,
-        address lootAddress_,
-        address mLootAddress_
-    ) external onlyOwner {
-        require(manaAddress_ != address(0), "MANAADDR");
-        manaAddress = manaAddress_;
-
-        if (lootAddress_ != address(0)) {
-            lootAddress = lootAddress_;
-        }
-
-        if (mLootAddress_ != address(0)) {
-            mLootAddress = mLootAddress_;
-        }
+        require(address(iMetadata) != address(0), "no addr set");
+        return iMetadata.tokenURI(tokenId);
     }
 
     function ownerUpdateCollab(
@@ -322,21 +328,33 @@ contract Crystals is
         genReq[generation].manaCost = manaCost_;
     }
 
-    function ownerWithdraw() external onlyOwner {
-        uint256 balance = address(this).balance;
-        payable(msg.sender).transfer(balance);
+    function ownerSetCalculatorAddress(address addr) external onlyOwner {
+        iCalculator = ICrystalManaCalculator(addr);
+    }
+
+    function ownerSetLootAddress(address addr) external onlyOwner {
+        iLoot = ERC721(addr);
+    }
+
+    function ownerSetManaAddress(address addr) external onlyOwner {
+        iMana = IMANA(addr);
+    }
+
+    function ownerSetMLootAddress(address addr) external onlyOwner {
+        iMLoot = ERC721(addr);
     }
 
     function ownerSetMetadataAddress(address addr) external onlyOwner {
-        metadataAddress = addr;
+        iMetadata = ICrystalsMetadata(addr);
     }
 
     function ownerSetMintedThreshold(uint32 threshold_) external onlyOwner {
         mintedThreshold = threshold_;
     }
 
-    function ownerSetCalculatorAddress(address _calculatorAddress) external onlyOwner {
-        manaCalculationAddress = _calculatorAddress;
+    function ownerWithdraw() external onlyOwner {
+        uint256 balance = address(this).balance;
+        payable(msg.sender).transfer(balance);
     }
 
     function setPaused(bool _paused) external onlyOwner {
@@ -461,9 +479,9 @@ contract Crystals is
     function isBagHolder(uint256 tokenId) private view {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
         if (oSeed < 8001) {
-            require(ERC721(lootAddress).ownerOf(oSeed) == _msgSender(), "UNAUTH");
+            require(iLoot.ownerOf(oSeed) == _msgSender(), "UNAUTH");
         } else if (oSeed <= RESERVED_OFFSET) {
-            require(ERC721(mLootAddress).ownerOf(oSeed) == _msgSender(), "UNAUTH");
+            require(iMLoot.ownerOf(oSeed) == _msgSender(), "UNAUTH");
         } else {
             uint256 collabTokenId = tokenId % 10000;
             uint8 collabIndex = uint8((oSeed - RESERVED_OFFSET) / 10000);

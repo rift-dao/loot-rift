@@ -36,18 +36,13 @@ const setup = async () => {
 
   
   const mana = await Mana.new();
-  const crystals = await Crystals.new();
+  const crystals = await Crystals.new(mana.address);
   const crystalsMeta = await CrystalsMetadata.new(crystals.address);
   
   const promises = [
-    crystals.ownerInit(
-      mana.address,
-      '0x0000000000000000000000000000000000000000',
-      '0x0000000000000000000000000000000000000000'
-    ),
     crystals.ownerSetMetadataAddress(crystalsMeta.address),
     mana.addController(crystals.address),
-];
+  ];
 
   await Promise.all(promises);
 
