@@ -15,7 +15,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
 
     string public description;
 
-    address public crystalsAddress;
+    ICrystals public iCrystals;
 
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
@@ -35,13 +35,13 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     uint8 private constant colorsLength = 11;
     uint8 private constant slabsLength = 4;
 
-    constructor(address _crystals) Ownable() { 
-        crystalsAddress = _crystals;
+    constructor(address crystalsAddress) Ownable() {
         description = "Unknown";
+        iCrystals = ICrystals(crystalsAddress);
     }
 
     function setCrystalsAddress(address addr) public onlyOwner {
-        crystalsAddress = addr;
+        iCrystals = ICrystals(addr);
     }
 
     function setDescription(string memory desc) public onlyOwner {
@@ -49,9 +49,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     }
 
     function tokenURI(uint256 tokenId) override external view returns (string memory) {
-        ICrystals crystals = ICrystals(crystalsAddress);
-
-        require(crystals.crystalsMap(tokenId).level > 0, "INV");
+        require(iCrystals.crystalsMap(tokenId).level > 0, "INV");
 
         uint256 rows = tokenId / MAX_CRYSTALS + 1;
 
@@ -80,9 +78,9 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
             abi.encodePacked(
                 output,
                 '</text><text x="10" y="40">Resonance: ',
-                toString(crystals.getResonance(tokenId)),
+                toString(iCrystals.getResonance(tokenId)),
                 '</text><text x="10" y="60">Spin: ',
-                toString(crystals.getSpin(tokenId)),
+                toString(iCrystals.getSpin(tokenId)),
                 '</text><text x="10" y="338" style="font-size: 12px;">gen.',
                 toString(tokenId / MAX_CRYSTALS + 1),
                 '</text>',
@@ -100,15 +98,15 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 '", "bagId": ',
                 toString(tokenId % MAX_CRYSTALS),
                 ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Level", "value":',
-                toString(crystals.crystalsMap(tokenId).level),
+                toString(iCrystals.crystalsMap(tokenId).level),
                 ' }, { "trait_type": "Resonance", "value": ',
-                toString(crystals.getResonance(tokenId)),
+                toString(iCrystals.getResonance(tokenId)),
                 ' }, { "trait_type": "Spin", "value": '
         ));
 
         string memory attributes = string(
             abi.encodePacked(
-                toString(crystals.getSpin(tokenId)),
+                toString(iCrystals.getSpin(tokenId)),
                 ' }, { "trait_type": "Loot Type", "value": "',
                 getLootType(tokenId),
                 '" }, { "trait_type": "Surface", "value": "',
@@ -136,11 +134,9 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         uint256 size,
         uint256 times
     ) internal view returns (uint256) {
-        ICrystals crystals = ICrystals(crystalsAddress);
-
         uint256 index = 1;
         uint256 score = getRoll(tokenId, key, size, times);
-        uint256 level = crystals.crystalsMap(tokenId).level;
+        uint256 level = iCrystals.crystalsMap(tokenId).level;
 
         while (index < level) {
             score += ((
@@ -162,7 +158,11 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         view
         returns (uint256)
     {
-        return random(string(abi.encodePacked(tokenId, key, ICrystals(crystalsAddress).crystalsMap(tokenId).regNum)));
+        return random(string(abi.encodePacked(
+            tokenId,
+            key,
+            iCrystals.crystalsMap(tokenId).regNum
+        )));
     }
 
     /// @dev returns random roll based on the tokenId
@@ -194,11 +194,11 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
             output = getLootName(tokenId);
         }
 
-        return ICrystals(crystalsAddress).crystalsMap(tokenId).level > 1 ?
+        return iCrystals.crystalsMap(tokenId).level > 1 ?
             string(abi.encodePacked(
                 output,
                 " +",
-                toString(ICrystals(crystalsAddress).crystalsMap(tokenId).level - 1)
+                toString(iCrystals.crystalsMap(tokenId).level - 1)
             )) : output;
     }
 
@@ -245,7 +245,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
 
         if (tokenId % MAX_CRYSTALS > RESERVED_OFFSET) {
             baseName = string(abi.encodePacked(
-                ICrystals(crystalsAddress).collabMap(uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)).namePrefix,
+                iCrystals.collabMap(uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)).namePrefix,
                 ' ',
                 baseName
             ));
@@ -286,6 +286,29 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         } else {
             return getItemFromCSV("Dull,Smooth,Faceted,Glassy,Polished,", rand % 5);
         }
+    }
+
+    function getSlabs(uint256 tokenId) external view returns (string memory output) {
+        uint256 rows = tokenId / MAX_CRYSTALS + 1;
+
+        if (rows > 10) {
+          rows = rows % 10;
+
+          if (rows == 0) {
+            rows = 10;
+          }
+        }
+
+        output = '';
+
+        for (uint256 i = 0; i < rows; i++) {
+            for (uint256 j = 0; j < rows; j++) {
+                output = string(abi.encodePacked(output, getSlab(tokenId, i, j)));
+            }
+            output = string(abi.encodePacked(output, '\n'));
+        }
+
+        return output;
     }
 
     function getSlabs(uint256 tokenId, uint256 rows) private view returns (string memory output) {
@@ -329,7 +352,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         }
 
         if (oSeed > RESERVED_OFFSET) {
-            return ICrystals(crystalsAddress).collabMap(uint8((oSeed - RESERVED_OFFSET) / 10000)).namePrefix;
+            return iCrystals.collabMap(uint8((oSeed - RESERVED_OFFSET) / 10000)).namePrefix;
         }
 
         return 'mLoot';

@@ -12,6 +12,7 @@
     "gas": "yarn compile && node ./scripts/gas.js",
     "gas:quick": "node ./scripts/gas.js",
     "lint": "solium -d contracts/",
+    "meta": "yarn compile && node ./scripts/meta.js",
     "stats": "yarn compile && node ./scripts/stats.js",
     "stats:quick": "node ./scripts/stats.js",
     "test": "yarn compile && mocha --exit --recursive",
