@@ -51,7 +51,6 @@ contract Crystals is
     uint32 private mintedThreshold = 8000;
 
     uint256 public mintedCrystals;
-    uint256 public registeredCrystals;
 
     uint256 public mintFee = 0.02 ether;
     uint256 public mMintFee = 0.01 ether;
@@ -96,12 +95,12 @@ contract Crystals is
         // consume bag charge from the rift
         iRift.useCharge(bagId, _msgSender());
 
-        uint256 tokenId = bagId + (MAX_CRYSTALS * (bag.generation - 1));
+        uint256 tokenId = bagId + (MAX_CRYSTALS * (bag.generation));
 
         // register crystal data
         crystalsMap[tokenId].level = 1;
-        registeredCrystals += 1;
-        crystalsMap[tokenId].regNum = registeredCrystals;
+        mintedCrystals += 1;
+        crystalsMap[tokenId].mintNum = mintedCrystals;
 
         // mint fee is 100% MANA after minted threshold is reached
         if (mintedCrystals < mintedThreshold) {
@@ -121,7 +120,6 @@ contract Crystals is
         
         crystalsMap[tokenId].minted = true;
 
-        mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
 
@@ -362,7 +360,7 @@ contract Crystals is
         view
         returns (uint256)
     {
-        return random(string(abi.encodePacked(tokenId, key, crystalsMap[tokenId].regNum)));
+        return random(string(abi.encodePacked(tokenId, key, crystalsMap[tokenId].mintNum)));
     }
 
     /// @dev returns random roll based on the tokenId

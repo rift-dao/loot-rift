@@ -24,9 +24,6 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "./CrystalsMetadata.sol";
-import "./CrystalManaCalculator.sol";
-import "./ICrystals.sol";
 
 interface IMANA {
     function ccMintTo(address recipient, uint256 amount) external;
@@ -55,10 +52,9 @@ contract Rift is
 {  
     mapping(address => bool) controllers;
 
-    address public manaAddress;
-
-    address public lootAddress = 0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7;
-    address public mLootAddress = 0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF;
+    IMANA public iMana;
+    ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
+    ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
 
     /// @dev indexed by bagId
     mapping(uint256 => Bag) public bagsMap;
@@ -70,7 +66,9 @@ contract Rift is
 
     mapping(uint64 => uint256) public generationRegistry;
 
-    constructor() ERC721("The Rift", "RIFT") Ownable() {}
+    constructor(address manaAddress) ERC721("The Rift", "RIFT") Ownable() {
+        iMana = IMANA(manaAddress);
+    }
 
     //WRITE
 
@@ -81,22 +79,23 @@ contract Rift is
         isBagHolder(bagId, _msgSender());
 
         uint256 cost = 0;
+        // first taste is always free
         if (bagsMap[bagId].generation > 0) {
             require(genReq[bagsMap[bagId].generation + 1].manaCost > 0, "GEN NOT AVL"); 
             cost = getRegistrationCost(bagsMap[bagId].generation + 1);
             if (!isOGLoot(bagId)) cost = cost / 10;
         }
 
-        IMANA(manaAddress).burn(_msgSender(), cost);
+        iMana.burn(_msgSender(), cost);
         bagsMap[bagId].isCharged = true;
 
         generationRegistry[bagsMap[bagId].generation + 1] += 1;
     }
 
-    function useCharge(uint256 bagId, address bagOwner) external whenNotPaused nonReentrant {
+    function useCharge(uint256 bagId, address from) external whenNotPaused nonReentrant {
         require(controllers[msg.sender], "Only controllers can use charge");
-        require(bagsMap[bagId].isCharged == true, "not charged");
-        isBagHolder(bagId, bagOwner);
+        require(bagsMap[bagId].isCharged, "not charged");
+        isBagHolder(bagId, from);
 
         bagsMap[bagId].isCharged = false;
         bagsMap[bagId].generation += 1;
@@ -111,6 +110,18 @@ contract Rift is
 
 
     // Owner
+
+    function ownerSetLootAddress(address addr) external onlyOwner {
+        iLoot = ERC721(addr);
+    }
+
+    function ownerSetManaAddress(address addr) external onlyOwner {
+        iMana = IMANA(addr);
+    }
+
+    function ownerSetMLootAddress(address addr) external onlyOwner {
+        iMLoot = ERC721(addr);
+    }
 
     /**
     * enables an address to mint / burn
@@ -151,9 +162,9 @@ contract Rift is
 
     function isBagHolder(uint256 bagId, address owner) private view {
         if (bagId < 8001) {
-            require(ERC721(lootAddress).ownerOf(bagId) == owner, "UNAUTH");
+            require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
         } else {
-            require(ERC721(mLootAddress).ownerOf(bagId) == owner, "UNAUTH");
+            require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }
     }
 

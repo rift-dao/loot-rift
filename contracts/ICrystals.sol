@@ -10,7 +10,7 @@ struct Crystal {
     uint64 numOfTransfers;
     uint64 level;
     uint256 manaProduced;
-    uint256 regNum;
+    uint256 mintNum;
 }
 
 struct Collab {
