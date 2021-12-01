@@ -42,10 +42,6 @@ interface IRift {
 
 /// @title a Rift has opened 
 contract Rift is
-    ERC721,
-    ERC721Enumerable,
-    ERC721URIStorage,
-    ERC721Burnable,
     ReentrancyGuard,
     Ownable,
     Pausable
@@ -66,7 +62,7 @@ contract Rift is
 
     mapping(uint64 => uint256) public generationRegistry;
 
-    constructor(address manaAddress) ERC721("The Rift", "RIFT") Ownable() {
+    constructor(address manaAddress) Ownable() {
         iMana = IMANA(manaAddress);
     }
 
@@ -159,36 +155,5 @@ contract Rift is
         } else {
             require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }
-    }
-
-    function supportsInterface(bytes4 interfaceId)
-        public
-        view
-        override(ERC721, ERC721Enumerable)
-        returns (bool)
-    {
-        return super.supportsInterface(interfaceId);
-    }
-
-     function tokenURI(uint256 tokenId) 
-        public
-        view
-        override(ERC721, ERC721URIStorage)
-        returns (string memory) 
-    {
-        return super.tokenURI(tokenId);
-    }
-
-     // The following functions are overrides required by Solidity.
-    function _beforeTokenTransfer(
-        address from,
-        address to,
-        uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) {
-        super._beforeTokenTransfer(from, to, tokenId);
-    }
-
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
-        super._burn(tokenId);
     }
 }
