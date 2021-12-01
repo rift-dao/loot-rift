@@ -1,6 +1,6 @@
 /*
 
-▄▄▄█████▓ ██░ ██ ▓█████     ██▀███   ██▓  █████▒▄▄▄█████▓
+▄▄▄█████▓ ██░ ██ ▓█████     ██▀███   ██▓  █████▒▄▄▄█████▓   (for Adventurers)
 ▓  ██▒ ▓▒▓██░ ██▒▓█   ▀    ▓██ ▒ ██▒▓██▒▓██   ▒ ▓  ██▒ ▓▒
 ▒ ▓██░ ▒░▒██▀▀██░▒███      ▓██ ░▄█ ▒▒██▒▒████ ░ ▒ ▓██░ ▒░
 ░ ▓██▓ ░ ░▓█ ░██ ▒▓█  ▄    ▒██▀▀█▄  ░██░░▓█▒  ░ ░ ▓██▓ ░ 
@@ -40,7 +40,7 @@ interface IRift {
     function useCharge(uint256 bagId, address bagOwner) external; 
 }
 
-/// @title Loot Crystals from the Rift
+/// @title a Rift has opened 
 contract Rift is
     ERC721,
     ERC721Enumerable,
@@ -59,10 +59,10 @@ contract Rift is
     /// @dev indexed by bagId
     mapping(uint256 => Bag) public bagsMap;
 
-    struct GenerationMintRequirement {
+    struct RiftVentureCost {
         uint256 manaCost;
     }
-    mapping(uint256 => GenerationMintRequirement) public genReq;
+    mapping(uint256 => RiftVentureCost) public riftCost;
 
     mapping(uint64 => uint256) public generationRegistry;
 
@@ -73,7 +73,6 @@ contract Rift is
     //WRITE
 
     function chargeBag(uint256 bagId) external whenNotPaused nonReentrant {
-        // require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
         require(bagsMap[bagId].isCharged == false, "already charged");
 
         isBagHolder(bagId, _msgSender());
@@ -81,9 +80,9 @@ contract Rift is
         uint256 cost = 0;
         // first taste is always free
         if (bagsMap[bagId].generation > 0) {
-            require(genReq[bagsMap[bagId].generation + 1].manaCost > 0, "GEN NOT AVL"); 
+            require(riftCost[bagsMap[bagId].generation + 1].manaCost > 0, "GEN NOT AVL"); 
             cost = getRegistrationCost(bagsMap[bagId].generation + 1);
-            if (!isOGLoot(bagId)) cost = cost / 10;
+            if (bagId > 8000) cost = cost / 10; // mLoot discount
         }
 
         iMana.burn(_msgSender(), cost);
@@ -104,10 +103,9 @@ contract Rift is
     // READ 
 
     function getRegistrationCost(uint64 genNum) public view returns (uint256) {
-        uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
-        return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
+        uint256 cost = riftCost[genNum].manaCost - generationRegistry[genNum];
+        return cost < (riftCost[genNum].manaCost / 10) ? (riftCost[genNum].manaCost / 10) : cost;
     }
-
 
     // Owner
 
@@ -139,8 +137,8 @@ contract Rift is
         controllers[controller] = false;
     }
 
-    function ownerSetGenMintRequirement(uint256 generation, uint256 manaCost_) external onlyOwner {
-        genReq[generation].manaCost = manaCost_;
+    function ownerSetRiftVentureCost(uint256 generation, uint256 manaCost_) external onlyOwner {
+        riftCost[generation].manaCost = manaCost_;
     }
 
     function ownerWithdraw() external onlyOwner {
@@ -154,11 +152,6 @@ contract Rift is
     }
 
     // HELPER
-
-    function isOGLoot(uint256 bagId) internal pure returns (bool) {
-        // treat OG Loot and GA Crystals as OG
-        return bagId < 8001;
-    }
 
     function isBagHolder(uint256 bagId, address owner) private view {
         if (bagId < 8001) {

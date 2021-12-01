@@ -195,11 +195,6 @@ contract Crystals is
         return ((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * generationBonus(tokenId / MAX_CRYSTALS);
     }
 
-    // function getRegistrationCost(uint64 genNum) public view returns (uint256) {
-    //     uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
-    //     return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
-    // }
-
     function claimableMana(uint256 tokenId) public view returns (uint256) {
         return iCalculator.claimableMana(tokenId);
     }
@@ -211,14 +206,6 @@ contract Crystals is
     function getLootExpansionTokenUri(uint256 lootId) external view returns (string memory) {
         return tokenURI(lootId);
     }
-
-    // function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
-    //     return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
-    // }
-
-    // function generationsMinted(uint256 tokenId) public view returns (uint256) {
-    //     return bags[tokenId % MAX_CRYSTALS].generationsMinted;
-    // }
 
     function supportsInterface(bytes4 interfaceId)
         public
