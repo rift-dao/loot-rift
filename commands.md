@@ -6,6 +6,8 @@
 ```js
 mana = await Mana.deployed()
 crystals = await Crystals.deployed()
+rift = await Rift.deployed()
+notLoot = await NotLoot.deployed()
 crystals.ownerUpdateCollab(0, crystals.address, 10, 'Void')
 ```
 
@@ -43,7 +45,7 @@ JSON.parse(atob('token'));
 ## Deploy Steps
 
 1. `truffle migrate --reset --network ropsten`
-2. `truffle run verify Mana Crystals CrystalsMetadata CrystalManaCalculator --network ropsten`
+2. `truffle run verify Mana Crystals CrystalsMetadata CrystalManaCalculator Rift --network ropsten`
 
 ---
 

@@ -37,6 +37,7 @@ contract Crystals is
     ICrystalsMetadata public iMetadata;
     ICrystalManaCalculator public iCalculator;
     IMana public iMana;
+    IRift public iRift;
 
     ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
     ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
@@ -51,7 +52,7 @@ contract Crystals is
     }
 
     uint256 public mintedCrystals;
-    uint256 public registeredCrystals;
+    // uint256 public registeredCrystals;
 
     uint256 public mintFee = 0.02 ether;
     uint256 public mMintFee = 0.01 ether;
@@ -95,8 +96,7 @@ contract Crystals is
         unminted(tokenId)
         nonReentrant
     {
-        require(tokenId > 0, "TKN");
-        require(crystalsMap[tokenId].level > 0, "UNREG");
+        // require(crystalsMap[tokenId].level > 0, "UNREG");
 
         // mint fee is 100% MANA after registration threshold is reached
         if (mintedCrystals < mintedThreshold) {
@@ -113,96 +113,100 @@ contract Crystals is
                 iMana.burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 100);
             }   
         }
-        
-        isBagHolder(tokenId % MAX_CRYSTALS);        
 
-        crystalsMap[tokenId].minted = true;
+        isBagHolder(tokenId % MAX_CRYSTALS);
 
-        // bag goes up a generation. owner can now register another crystal
-        bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
-        mintedCrystals += 1;
-        _safeMint(_msgSender(), tokenId);
+        (bool success, ) = address(iRift).delegatecall(abi.encodeWithSignature("useCharge(uint32, uint32)", tokenId, 1));
+
+        if (success) {
+            crystalsMap[tokenId].minted = true;
+
+            // bag goes up a generation. owner can now register another crystal
+            bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
+            mintedCrystals += 1;
+            _safeMint(_msgSender(), tokenId);
+        }
     }
 
     // test register
-    function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
-        require(bagId <= MAX_CRYSTALS, "INV");
-        require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
+    // function testRegister(uint256 bagId) external unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
+    //     require(bagId <= MAX_CRYSTALS, "INV");
+    //     require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
 
-        uint256 cost = 0;
-        if (bags[bagId].generationsMinted > 0) {
-            require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
-            cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
-            if (!isOGCrystal(bagId)) cost = cost / 10;
-        }
+    //     uint256 cost = 0;
+    //     if (bags[bagId].generationsMinted > 0) {
+    //         require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
+    //         cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
+    //         if (!isOGCrystal(bagId)) cost = cost / 10;
+    //     }
 
-        // example delegatecall usage
-        // (bool success, ) = address(iMana).delegatecall(abi.encodeWithSignature("burn(uint256)", cost));
-        iMana.burn(_msgSender(), cost);
+    //     // example delegatecall usage
+    //     // (bool success, ) = address(iMana).delegatecall(abi.encodeWithSignature("burn(uint256)", cost));
+    //     iMana.burn(_msgSender(), cost);
 
-        generationRegistry[bags[bagId].generationsMinted + 1] += 1;
+    //     generationRegistry[bags[bagId].generationsMinted + 1] += 1;
         
-        // set the source bag bagId
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
-        registeredCrystals += 1;
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
-    }
+    //     // set the source bag bagId
+    //     crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
+    //     registeredCrystals += 1;
+    //     crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
+    // }
 
-    /// @notice registers a new crystal for a given bag
-    /// @notice bag must not have a currently registered crystal
-    function registerCrystal(uint256 bagId) external whenNotPaused unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
-        require(bagId <= MAX_CRYSTALS, "INV");
-        require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
+    // /// @notice registers a new crystal for a given bag
+    // /// @notice bag must not have a currently registered crystal
+    // function registerCrystal(uint256 bagId) external whenNotPaused unminted(bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)) nonReentrant {
+    //     require(bagId <= MAX_CRYSTALS, "INV");
+    //     require(crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level == 0, "REG");
 
-        isBagHolder(bagId);
+    //     isBagHolder(bagId);
 
-        uint256 cost = 0;
-        if (bags[bagId].generationsMinted > 0) {
-            require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
-            cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
-            if (!isOGCrystal(bagId)) cost = cost / 10;
-        }
+    //     uint256 cost = 0;
+    //     if (bags[bagId].generationsMinted > 0) {
+    //         require(genReq[bags[bagId].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
+    //         cost = getRegistrationCost(bags[bagId].generationsMinted + 1);
+    //         if (!isOGCrystal(bagId)) cost = cost / 10;
+    //     }
 
-        iMana.burn(_msgSender(), cost);
+    //     iMana.burn(_msgSender(), cost);
 
-        generationRegistry[bags[bagId].generationsMinted + 1] += 1;
+    //     generationRegistry[bags[bagId].generationsMinted + 1] += 1;
         
-        // set the source bag bagId
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
-        registeredCrystals += 1;
-        crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
-    }
+    //     // set the source bag bagId
+    //     crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].level = 1;
+    //     registeredCrystals += 1;
+    //     crystalsMap[bagId + (MAX_CRYSTALS * bags[bagId].generationsMinted)].regNum = registeredCrystals;
+    // }
 
-    function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
-        require(tokenId > 0 && tokenId < 10000, "TKN");
-        require(collabIndex >= 0 && collabIndex < 10, "CLB");
-        require(collabs[collabIndex].contractAddress != address(0), "CLB");
-        uint256 collabToken = RESERVED_OFFSET + tokenId + (collabIndex * 10000);
-        require(crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level == 0, "REG");
+    // function registerCrystalCollab(uint256 tokenId, uint8 collabIndex) external nonReentrant {
+    //     require(tokenId > 0 && tokenId < 10000, "TKN");
+    //     require(collabIndex >= 0 && collabIndex < 10, "CLB");
+    //     require(collabs[collabIndex].contractAddress != address(0), "CLB");
+    //     uint256 collabToken = RESERVED_OFFSET + tokenId + (collabIndex * 10000);
+    //     require(crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level == 0, "REG");
 
-        require(
-            ERC721(collabs[collabIndex].contractAddress).ownerOf(tokenId) == _msgSender(),
-            "UNAUTH"
-        );
+    //     require(
+    //         ERC721(collabs[collabIndex].contractAddress).ownerOf(tokenId) == _msgSender(),
+    //         "UNAUTH"
+    //     );
 
-        uint256 cost = 0;
-        if (bags[collabToken].generationsMinted > 0) {
-            require(genReq[bags[collabToken].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
-            cost = getRegistrationCost(bags[collabToken].generationsMinted + 1);
-            if (!isOGCrystal(collabToken)) cost = cost / 10;
-        }
+    //     uint256 cost = 0;
+    //     if (bags[collabToken].generationsMinted > 0) {
+    //         require(genReq[bags[collabToken].generationsMinted + 1].manaCost > 0, "GEN NOT AVL"); 
+    //         cost = getRegistrationCost(bags[collabToken].generationsMinted + 1);
+    //         if (!isOGCrystal(collabToken)) cost = cost / 10;
+    //     }
 
-        iMana.burn(_msgSender(), cost);
+    //     iMana.burn(_msgSender(), cost);
 
-        generationRegistry[bags[collabToken].generationsMinted + 1] += 1;
+    //     generationRegistry[bags[collabToken].generationsMinted + 1] += 1;
 
-        // only give bonus in first generation
-        if (bags[collabToken].generationsMinted == 0) {
-            crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = uint64(collabs[collabIndex].levelBonus);
-        } else {
-            crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = 1;
-        }
-    }
+    //     // only give bonus in first generation
+    //     if (bags[collabToken].generationsMinted == 0) {
+    //         crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = uint64(collabs[collabIndex].levelBonus);
+    //     } else {
+    //         crystalsMap[collabToken + (MAX_CRYSTALS * bags[collabToken].generationsMinted)].level = 1;
+    //     }
+    // }
 
     function claimCrystalMana(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
         uint256 manaToProduce = iCalculator.claimableMana(tokenId);
@@ -252,10 +256,10 @@ contract Crystals is
         return ((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier)) * generationBonus(tokenId / MAX_CRYSTALS);
     }
 
-    function getRegistrationCost(uint64 genNum) public view returns (uint256) {
-        uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
-        return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
-    }
+    // function getRegistrationCost(uint64 genNum) public view returns (uint256) {
+    //     uint256 cost = genReq[genNum].manaCost - generationRegistry[genNum];
+    //     return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
+    // }
 
     function claimableMana(uint256 tokenId) public view returns (uint256) {
         return iCalculator.claimableMana(tokenId);
@@ -269,12 +273,12 @@ contract Crystals is
         return tokenURI(lootId);
     }
 
-    function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
-        return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
-    }
+    // function getRegisteredCrystal(uint256 bagId) public view returns (uint256) {
+    //     return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
+    // }
 
-    function generationsMinted(uint256 tokenId) public view returns (uint256) {
-        return bags[tokenId % MAX_CRYSTALS].generationsMinted;
+    function getNextCrystal(uint256 bagId) public view returns (uint256) {
+        return bags[bagId].generationsMinted * MAX_CRYSTALS + bagId;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -325,6 +329,10 @@ contract Crystals is
         iCalculator = ICrystalManaCalculator(addr);
     }
 
+    function ownerSetRiftAddress(address addr) external onlyOwner {
+        iRift = IRift(addr);
+    }
+
     function ownerSetLootAddress(address addr) external onlyOwner {
         iLoot = ERC721(addr);
     }
@@ -360,16 +368,15 @@ contract Crystals is
     modifier ownsCrystal(uint256 tokenId) {
         uint256 oSeed = tokenId % MAX_CRYSTALS;
 
-        require(crystalsMap[tokenId].level > 0, "UNREG");
-        require(oSeed > 0, "TKN");
+        // require(crystalsMap[tokenId].level > 0, "UNREG");
         require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
 
-        // checking minted crystal
-        if (crystalsMap[tokenId].minted == true) {
-            require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
-        } else {
-            isBagHolder(tokenId);
-        }
+        require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
+        // // checking minted crystal
+        // if (crystalsMap[tokenId].minted == true) {
+        // } else {
+        //     isBagHolder(tokenId);
+        // }
         _;
     }
 

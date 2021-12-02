@@ -27,6 +27,8 @@ interface ICrystals {
     function getResonance(uint256 tokenId) external view returns (uint256);
     function getSpin(uint256 tokenId) external view returns (uint256);
     function claimableMana(uint256 tokenID) external view returns (uint256);
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+    function transferFrom(address from, address to, uint256 tokenId) external;
 }
 
 interface ICrystalsMetadata {
@@ -36,4 +38,8 @@ interface ICrystalsMetadata {
 interface IMana {
     function ccMintTo(address recipient, uint256 amount) external;
     function burn(address from, uint256 amount) external;
+}
+
+interface IRift {
+    function useCharge(uint32 bagId, uint16 amount, bool unstake) external;
 }
