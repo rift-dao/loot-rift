@@ -34,6 +34,13 @@ contract Crystals is
     Ownable,
     Pausable
 {
+    struct GenerationMintRequirement {
+        uint256 manaCost;
+    }
+
+    event ManaClaimed(address owner, uint256 tokenId, uint256 amount);
+    event CrystalLeveled(address owner, uint256 tokenId, uint256 level);
+
     ICrystalsMetadata public iMetadata;
     ICrystalManaCalculator public iCalculator;
     IMana public iMana;
@@ -60,10 +67,6 @@ contract Crystals is
     // uint256 public lootMintFee = 0;
     // uint256 public mintLevel = 5;
 
-    struct GenerationMintRequirement {
-        uint256 manaCost;
-    }
-
     /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
 
@@ -89,40 +92,47 @@ contract Crystals is
 
     //WRITE
 
-    function mintCrystal(uint256 tokenId)
+    function mintCrystal(uint256 bagId, uint16 charges)
         external
         payable
         whenNotPaused
-        unminted(tokenId)
+        unminted(bagId)
         nonReentrant
     {
         // require(crystalsMap[tokenId].level > 0, "UNREG");
 
         // mint fee is 100% MANA after registration threshold is reached
         if (mintedCrystals < mintedThreshold) {
-            if (tokenId % MAX_CRYSTALS > 8000) {
-                require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mMintFee, "FEE");
+            if (bagId > 8000) {
+                require(msg.value == (bagId / MAX_CRYSTALS + 1) * mMintFee, "FEE");
             } else {
-                require(msg.value == (tokenId / MAX_CRYSTALS + 1) * mintFee, "FEE");
+                require(msg.value == (bagId / MAX_CRYSTALS + 1) * mintFee, "FEE");
             }   
         } else {
             require(msg.value == 0, "only mana");
-            if (tokenId % MAX_CRYSTALS > 8000) {
-                iMana.burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 10);
+            if (bagId > 8000) {
+                iMana.burn(_msgSender(), (bagId / MAX_CRYSTALS + 1) * 10);
             } else {
-                iMana.burn(_msgSender(), (tokenId / MAX_CRYSTALS + 1) * 100);
+                iMana.burn(_msgSender(), (bagId / MAX_CRYSTALS + 1) * 100);
             }   
         }
 
-        isBagHolder(tokenId % MAX_CRYSTALS);
+        isBagHolder(bagId);
 
-        (bool success, ) = address(iRift).delegatecall(abi.encodeWithSignature("useCharge(uint32, uint32)", tokenId, 1));
+        (bool success, ) = address(iRift).delegatecall(abi.encodeWithSignature(
+            "useCharge(uint32, uint16)",
+            uint32(bagId),
+            charges
+        ));
+
+        uint256 tokenId = getNextCrystal(bagId);
 
         if (success) {
             crystalsMap[tokenId].minted = true;
+            crystalsMap[tokenId].attunement = charges;
 
             // bag goes up a generation. owner can now register another crystal
-            bags[tokenId % MAX_CRYSTALS].generationsMinted += 1;
+            bags[bagId].generationsMinted += 1;
             mintedCrystals += 1;
             _safeMint(_msgSender(), tokenId);
         }
@@ -214,6 +224,7 @@ contract Crystals is
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].manaProduced += manaToProduce;
         iMana.ccMintTo(_msgSender(), manaToProduce);
+        emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
     }
 
     function levelUpCrystal(uint256 tokenId) external whenNotPaused ownsCrystal(tokenId) nonReentrant {
@@ -227,12 +238,13 @@ contract Crystals is
 
         if (iCalculator.claimableMana(tokenId) > (crystalsMap[tokenId].level * getResonance(tokenId))) {
             iMana.ccMintTo(_msgSender(), iCalculator.claimableMana(tokenId) - (crystalsMap[tokenId].level * getResonance(tokenId)));
-        } 
+        }
 
         crystalsMap[tokenId].level += 1;
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].lastLevelUp = uint64(block.timestamp);
         crystalsMap[tokenId].manaProduced = 0;
+        emit CrystalLeveled(_msgSender(), tokenId, crystalsMap[tokenId].level);
     }
 
     // READ 
@@ -261,9 +273,9 @@ contract Crystals is
     //     return cost < (genReq[genNum].manaCost / 10) ? (genReq[genNum].manaCost / 10) : cost;
     // }
 
-    function claimableMana(uint256 tokenId) public view returns (uint256) {
-        return iCalculator.claimableMana(tokenId);
-    }
+    // function claimableMana(uint256 tokenId) public view returns (uint256) {
+    //     return iCalculator.claimableMana(tokenId);
+    // }
 
     /**
      * @dev Return the token URI through the Loot Expansion interface
@@ -366,12 +378,10 @@ contract Crystals is
     // HELPER
 
     modifier ownsCrystal(uint256 tokenId) {
-        uint256 oSeed = tokenId % MAX_CRYSTALS;
+        require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
+        // uint256 oSeed = tokenId % MAX_CRYSTALS;
 
         // require(crystalsMap[tokenId].level > 0, "UNREG");
-        require(tokenId <= (tokenId + (MAX_CRYSTALS * bags[tokenId].generationsMinted)), "INV");
-
-        require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
         // // checking minted crystal
         // if (crystalsMap[tokenId].minted == true) {
         // } else {

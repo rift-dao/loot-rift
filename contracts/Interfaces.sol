@@ -2,10 +2,9 @@ pragma solidity ^0.8.9;
 
 struct Crystal {
     bool minted;
+    uint16 attunement;
     uint64 lastClaim;
     uint64 lastLevelUp;
-    uint64 lastTransfer;
-    uint64 numOfTransfers;
     uint64 level;
     uint256 manaProduced;
     uint256 regNum;

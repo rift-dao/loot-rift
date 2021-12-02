@@ -11,26 +11,28 @@ contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
         iCrystals = ICrystals(crystalsAddress);
     }
 
-    function claimableMana(uint256 tokenId) override public view returns (uint256) {
+    function claimableMana(uint256 crystalId) override public view returns (uint256) {
         uint256 daysSinceClaim = diffDays(
-            iCrystals.crystalsMap(tokenId).lastClaim,
+            iCrystals.crystalsMap(crystalId).lastClaim,
             block.timestamp
         );
 
-        require(daysSinceClaim >= 1, "NONE");
+        if (block.timestamp - iCrystals.crystalsMap(crystalId).lastClaim < 1 days) {
+            return 0;
+        }
 
-        uint256 manaToProduce = daysSinceClaim * iCrystals.getResonance(tokenId);
+        uint256 manaToProduce = daysSinceClaim * iCrystals.getResonance(crystalId);
 
         // if cap is hit, limit mana to cap or level, whichever is greater
-        if ((manaToProduce + iCrystals.crystalsMap(tokenId).manaProduced) > iCrystals.getSpin(tokenId)) {
-            if (iCrystals.getSpin(tokenId) >= iCrystals.crystalsMap(tokenId).manaProduced) {
-                manaToProduce = iCrystals.getSpin(tokenId) - iCrystals.crystalsMap(tokenId).manaProduced;
+        if ((manaToProduce + iCrystals.crystalsMap(crystalId).manaProduced) > iCrystals.getSpin(crystalId)) {
+            if (iCrystals.getSpin(crystalId) >= iCrystals.crystalsMap(crystalId).manaProduced) {
+                manaToProduce = iCrystals.getSpin(crystalId) - iCrystals.crystalsMap(crystalId).manaProduced;
             } else {
                 manaToProduce = 0;
             }
 
-            if (manaToProduce < iCrystals.crystalsMap(tokenId).level) {
-                manaToProduce = iCrystals.crystalsMap(tokenId).level;
+            if (manaToProduce < iCrystals.crystalsMap(crystalId).level) {
+                manaToProduce = iCrystals.crystalsMap(crystalId).level;
             }
         }
 

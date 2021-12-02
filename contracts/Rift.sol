@@ -17,6 +17,10 @@ contract Rift is Ownable {
       uint256 consumed;
   }
 
+  event BagCharged(address owner, uint256 tokenId, uint16 amount);
+  event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
+  event CrystalSacraficed(address owner, uint256 tokenId, uint256 powerIncrease);
+
   uint32 public SACRAFICE_COST = 2;
   uint256 public crystalPower = 0;
   uint256 public crystalsSacraficed = 0;
@@ -57,21 +61,21 @@ contract Rift is Ownable {
     return 1 + crystalPower / SACRAFICE_COST;
   }
 
-  function chargeBags(uint32[] calldata bagIds) external {
-    for (uint i = 0; i < bagIds.length; i++) {
-      _charge(bagIds[i]);
+  function chargeBags(uint32[] calldata bagIds, uint16 amount) external {
+    for (uint256 i = 0; i < bagIds.length; i++) {
+      _charge(bagIds[i], amount);
     }
   }
 
-  function _charge(uint32 bagId) _bagCheck(bagId) internal {
-    if (bags[bagId].owner != _msgSender()) {
+  function _charge(uint32 bagId, uint16 amount) _bagCheck(bagId) internal {
       bags[bagId] = Bag({
-        attunement: 1,
-        charges: bags[bagId].owner == address(0) ? 1 : 0, // start your journey filled with energy
+        attunement: _msgSender() != bags[bagId].owner ? 1 : bags[bagId].attunement + 1,
+        charges: amount,
         consumed: bags[bagId].consumed,
         owner: _msgSender()
       });
-    }
+
+      emit BagCharged(_msgSender(), bagId, amount);
   }
 
   function useCharge(uint32 bagId, uint16 amount) external {
@@ -87,9 +91,21 @@ contract Rift is Ownable {
     bags[bagId].attunement += 1;
     bags[bagId].charges -= amount;
     bags[bagId].consumed += amount;
+
+    emit ChargesConsumed(_msgSender(), bagId, amount);
   }
 
   function growTheRift(uint256 crystalId) external {
+    _sacrificeCrystal(crystalId);
+  }
+
+  function growTheRiftMany(uint256[] calldata crystalIds) external {
+    for (uint256 i = 0; i < crystalIds.length; i++) {
+      _sacrificeCrystal(crystalIds[i]);
+    }
+  }
+
+  function _sacrificeCrystal(uint256 crystalId) internal {
     uint256 powerIncrease = iCrystals.crystalsMap(crystalId).level;
     (bool success,) = address(iCrystals).delegatecall(
       abi.encodeWithSignature("burn(uint256)", crystalId)
@@ -99,14 +115,12 @@ contract Rift is Ownable {
       crystalPower += powerIncrease;
       karma[_msgSender()] += powerIncrease;
       crystalsSacraficed += 1;
+      emit CrystalSacraficed(_msgSender(), crystalId, powerIncrease);
     }
   }
 
   modifier _bagCheck(uint32 bagId) {
-    if (iLoot.ownerOf(bagId) != _msgSender()) {
-      naughty[_msgSender()] += 1;
-      revert("NAUGHTY");
-    }
+    require(iLoot.ownerOf(bagId) != _msgSender(), "UNAUTH");
     _;
   }
 }
