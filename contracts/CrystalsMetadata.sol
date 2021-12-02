@@ -46,7 +46,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     function tokenURI(uint256 tokenId) override external view returns (string memory) {
         require(iCrystals.crystalsMap(tokenId).level > 0, "INV");
 
-        uint256 rows = tokenId / MAX_CRYSTALS + 1;
+        uint256 rows = iCrystals.crystalsMap(tokenId).attunement;
 
         if (rows > 10) {
           rows = rows % 10;
