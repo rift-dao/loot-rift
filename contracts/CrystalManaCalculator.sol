@@ -11,6 +11,10 @@ contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
         iCrystals = ICrystals(crystalsAddress);
     }
 
+    function ownerSetCrystalsAddress(address addr) public onlyOwner {
+        iCrystals = ICrystals(addr);
+    }
+
     function claimableMana(uint256 crystalId) override public view returns (uint256) {
         uint256 daysSinceClaim = diffDays(
             iCrystals.crystalsMap(crystalId).lastClaim,
