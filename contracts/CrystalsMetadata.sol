@@ -156,7 +156,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         return random(string(abi.encodePacked(
             tokenId,
             key,
-            iCrystals.crystalsMap(tokenId).regNum
+            iCrystals.crystalsMap(tokenId).mintNum
         )));
     }
 
