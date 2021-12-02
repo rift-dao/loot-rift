@@ -1,6 +1,5 @@
 const NotLoot = artifacts.require('NotLoot');
 const Mana = artifacts.require('Mana');
-const Rift = artifacts.require('Rift');
 const Crystals = artifacts.require('Crystals');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
 const ManaCalculator = artifacts.require('CrystalManaCalculator');
@@ -10,7 +9,6 @@ module.exports = function(deployer) {
   deployer.then(async () => {
     const notLoot = await deployer.deploy(NotLoot);
     const mana = await deployer.deploy(Mana);
-    const rift = await deployer.deploy(Rift, mana.address);
     const crystals = await deployer.deploy(Crystals, mana.address, rift.address);
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
     const calculator = await deployer.deploy(ManaCalculator, crystals.address);
