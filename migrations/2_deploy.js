@@ -9,12 +9,14 @@ module.exports = function(deployer) {
   deployer.then(async () => {
     const notLoot = await deployer.deploy(NotLoot);
     const mana = await deployer.deploy(Mana);
-    const crystals = await deployer.deploy(Crystals, mana.address);
+    const crystals = await deployer.deploy(Crystals, mana.address, rift.address);
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
     const calculator = await deployer.deploy(ManaCalculator, crystals.address);
     const rift = await deployer.deploy(Rift, crystals.address);
 
     mana.addController(crystals.address);
+    mana.addController(rift.address);
+    rift.addController(crystals.address);
     crystals.ownerSetMetadataAddress(crystalsMeta.address);
     crystals.ownerSetCalculatorAddress(calculator.address);
     crystals.ownerSetRiftAddress(rift.address);

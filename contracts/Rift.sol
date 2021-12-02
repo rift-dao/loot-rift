@@ -14,8 +14,6 @@
     
 */
 
-// SPDX-License-Identifier: MIT
-
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
@@ -26,7 +24,7 @@ import "./Interfaces.sol";
 contract Rift is Ownable {
   // struct to store a stake's token, owner, and earning values
 
-  struct Bag {
+  struct RiftBag {
       uint16 charges;
       uint16 attunement;
       address owner;
@@ -48,7 +46,7 @@ contract Rift is Ownable {
 
   string public description = "Unknown";
 
-  mapping(uint256 => Bag) public bags;
+  mapping(uint256 => RiftBag) public bags;
   mapping(address => uint256) public karma;
   
   mapping(address => uint32) public naughty;
@@ -84,7 +82,7 @@ contract Rift is Ownable {
   }
 
   function _charge(uint32 bagId, uint16 amount) _bagCheck(bagId) internal {
-      bags[bagId] = Bag({
+      bags[bagId] = RiftBag({
         attunement: _msgSender() != bags[bagId].owner ? 1 : bags[bagId].attunement + 1,
         charges: amount,
         consumed: bags[bagId].consumed,
