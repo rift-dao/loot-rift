@@ -24,12 +24,13 @@ import "./Interfaces.sol";
 contract Rift is Ownable {
   // struct to store a stake's token, owner, and earning values
 
-  struct RiftBag {
-      uint16 charges;
-      uint16 attunement;
-      address owner;
-      uint256 consumed;
-      uint256 xp;
+    struct RiftBag {
+        uint16 charges;
+        uint16 chargesUsed;
+        uint16 level;
+        address owner;
+        uint256 consumed;
+        uint256 xp;
   }
 
   event BagCharged(address owner, uint256 tokenId, uint16 amount);
@@ -51,7 +52,9 @@ contract Rift is Ownable {
   mapping(uint256 => RiftBag) public bags;
   mapping(address => uint256) public karma;
   
-  mapping(address => uint32) public naughty;
+    mapping(address => uint32) public naughty;
+    mapping(uint16 => uint16) public xpRequired;
+    mapping(uint16 => uint16) public levelChargeAward;
 
   constructor(address crystalsAddress) Ownable() {
     iCrystals = ICrystals(crystalsAddress);
@@ -88,13 +91,13 @@ contract Rift is Ownable {
   }
 
   function _charge(uint32 bagId, uint16 amount) _bagCheck(bagId) internal {
-      bags[bagId] = RiftBag({
-        attunement: _msgSender() != bags[bagId].owner ? 1 : bags[bagId].attunement + 1,
-        charges: amount,
-        consumed: bags[bagId].consumed,
-        owner: _msgSender(),
-        xp: bags[bagId].xp 
-      });
+    //   bags[bagId] = RiftBag({
+    //     chargesUsed: _msgSender() != bags[bagId].owner ? 1 : bags[bagId].chargesUsed + 1,
+    //     charges: amount,
+    //     consumed: bags[bagId].consumed,
+    //     owner: _msgSender(),
+    //     xp: bags[bagId].xp 
+    //   });
 
       emit BagCharged(_msgSender(), bagId, amount);
   }
@@ -109,7 +112,7 @@ contract Rift is Ownable {
   {
     require(bags[bagId].charges >= amount, "NOT ENOUGH CHARGE");
 
-    bags[bagId].attunement += 1;
+    bags[bagId].chargesUsed += 1;
     bags[bagId].charges -= amount;
     bags[bagId].consumed += amount;
 
@@ -118,12 +121,39 @@ contract Rift is Ownable {
 
     function awardXP(uint32 bagId, uint32 xp) external {
         require(_msgSender() == riftQuests, "only the worthy");
+    
+        if (bags[bagId].level == 0) {
+            bags[bagId].level = 1;
+            bags[bagId].charges = 1;
+        }
+
         bags[bagId].xp += xp;
+        
+        /*
+ _        _______           _______  _                   _______ 
+( \      (  ____ \|\     /|(  ____ \( \        |\     /|(  ____ )
+| (      | (    \/| )   ( || (    \/| (        | )   ( || (    )|
+| |      | (__    | |   | || (__    | |        | |   | || (____)|
+| |      |  __)   ( (   ) )|  __)   | |        | |   | ||  _____)
+| |      | (       \ \_/ / | (      | |        | |   | || (      
+| (____/\| (____/\  \   /  | (____/\| (____/\  | (___) || )      
+(_______/(_______/   \_/   (_______/(_______/  (_______)|/       
+                                                                 
+        */
+        while (bags[bagId].xp > xpRequired[bags[bagId].level]) {
+            bags[bagId].xp -= xpRequired[bags[bagId].level];
+            bags[bagId].level += 1;
+            bags[bagId].charges += levelChargeAward[bags[bagId].level];
+        }
     }
 
-  function growTheRift(uint256 crystalId) external {
-    _sacrificeCrystal(crystalId);
-  }
+    function getBagLevel(uint256 bagId) public view returns (uint32) {
+        
+    }
+
+    function growTheRift(uint256 crystalId) external {
+        _sacrificeCrystal(crystalId);
+    }
 
   function growTheRiftMany(uint256[] calldata crystalIds) external {
     for (uint256 i = 0; i < crystalIds.length; i++) {

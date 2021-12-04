@@ -26,12 +26,16 @@ contract EnterTheRift is Ownable, IRiftQuest {
         steps[1].action = "Step into the Rift";
         steps[1].description = "Ever since you first picked up that bag, you've felt drawn to this place. Now you see what's beckoning you, a chaotic rip in reality. You're struck with pure fear, and yet you cannot help but step towards it.";
         steps[1].result = "You didn't venture far, a few feet maybe. You couldn't stand the tremendous force for more than a few moments. You're not ready.";
-        steps[1].xp = 100;
 
         steps[2].action = "Distill a Crystal";
         steps[2].description = "You've returned to camp to make sense of what you experienced, when you notice that same strange force emanating from your bag.";
         steps[2].result = "You peek inside, and see the glowing force crystalize before your eyes. It's glowing with the Rift's power...";
         steps[2].xp = 100;
+
+        steps[3].action = "Distill a Crystal";
+        steps[3].description = "You've returned to camp to make sense of what you experienced, when you notice that same strange force emanating from your bag.";
+        steps[3].result = "You peek inside, and see the glowing force crystalize before your eyes. It's glowing with the Rift's power...";
+        steps[3].xp = 100;
     }
 
     //IRiftQuest
