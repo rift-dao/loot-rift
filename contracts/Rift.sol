@@ -171,7 +171,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 (_______/(_______/   \_/   (_______/(_______/  (_______)|/       (_)                                                    
                                                                  
         */
-        while (bags[bagId].xp > xpRequired[bags[bagId].level]) {
+        while (bags[bagId].xp >= xpRequired[bags[bagId].level]) {
             bags[bagId].xp -= xpRequired[bags[bagId].level];
             bags[bagId].level += 1;
             bags[bagId].charges += levelChargeAward[bags[bagId].level];
