@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
-import "./Interfaces.sol";
+import "./IRift.sol";
 import "./IRiftQuest.sol";
 
 /// @title Quests in the Rift

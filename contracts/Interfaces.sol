@@ -38,14 +38,3 @@ interface ICrystals {
 interface ICrystalsMetadata {
     function tokenURI(uint256 tokenId) external view returns (string memory);
 }
-
-interface IMana {
-    function ccMintTo(address recipient, uint256 amount) external;
-    function burn(address from, uint256 amount) external;
-}
-
-interface IRift {
-    function useCharge(uint32 bagId, uint16 amount, bool unstake) external;
-    function bagCheck(uint32 bagId) external;
-    function awardXP(uint32 bagId, uint32 xp) external;
-}

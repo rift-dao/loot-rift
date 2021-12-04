@@ -23,6 +23,7 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "./Interfaces.sol";
+import "./IRift.sol";
 
 /// @title Loot Crystals from the Rift
 contract Crystals is
@@ -32,7 +33,8 @@ contract Crystals is
     ERC721Burnable,
     ReentrancyGuard,
     Ownable,
-    Pausable
+    Pausable,
+    IRiftBurnable
 {
     struct GenerationMintRequirement {
         uint256 manaCost;
@@ -189,6 +191,10 @@ contract Crystals is
         return ((88 * (crystalsMap[tokenId].level))
             + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
             * attunementBonus(crystalsMap[tokenId].attunement);
+    }
+
+    function riftPower(uint256 tokenId) public view override returns (uint256) {
+        return crystalsMap[tokenId].level * crystalsMap[tokenId].attunement;
     }
 
     /**

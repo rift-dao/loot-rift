@@ -18,108 +18,136 @@ pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "./Interfaces.sol";
+import "./IRift.sol";
 
-contract Rift is Ownable {
-  // struct to store a stake's token, owner, and earning values
+contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     struct RiftBag {
         uint16 charges;
         uint16 chargesUsed;
         uint16 level;
-        address owner;
-        uint256 consumed;
         uint256 xp;
-  }
+    }
 
-  event BagCharged(address owner, uint256 tokenId, uint16 amount);
-  event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
-  event CrystalSacraficed(address owner, uint256 tokenId, uint256 powerIncrease);
+    event BagCharged(address owner, uint256 tokenId, uint16 amount);
+    event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
+    // event CrystalSacrificed(address owner, uint256 tokenId, uint256 powerIncrease);
 
-  uint32 public SACRAFICE_COST = 2;
-  uint256 public crystalPower = 0;
-  uint256 public crystalsSacraficed = 0;
-  uint256 public constant CHARGE_TIME = 1 days;
-
-  ERC721 public iLoot;
-  ICrystals public iCrystals;
-  address public riftQuests;
+    ERC721 public iLoot;
+    ERC721 public iMLoot;
+    address public riftQuests;
   // IMana public iMana;
 
-  string public description = "Unknown";
+    string public description = "The Great Unknown";
 
-  mapping(uint256 => RiftBag) public bags;
-  mapping(address => uint256) public karma;
-  
-    mapping(address => uint32) public naughty;
+    uint256 public riftPower = 100000;
+    uint256 public riftObjectsSacrificed = 0;
+
+    mapping(uint256 => RiftBag) public bags;
+    mapping(address => uint256) public karma;
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
+    mapping(address => bool) controllers;
 
-  constructor(address crystalsAddress) Ownable() {
-    iCrystals = ICrystals(crystalsAddress);
-  }
+    constructor() Ownable() {
+    }
 
-  function ownerSetDescription(string memory desc) public onlyOwner {
-      description = desc;
-  }
+    function ownerSetDescription(string memory desc) public onlyOwner {
+        description = desc;
+    }
 
-  function ownerSetCrystalsAddress(address addr) public onlyOwner {
-      iCrystals = ICrystals(addr);
-  }
+    function ownerSetLootAddress(address addr) public onlyOwner {
+        iLoot = ERC721(addr);
+    }
 
-  function ownerSetLootAddress(address addr) public onlyOwner {
-      iLoot = ERC721(addr);
-  }
+    function ownerSetMLootAddress(address addr) public onlyOwner {
+        iMLoot = ERC721(addr);
+    }
 
-  function ownerSetRiftQuestsAddress(address addr) public onlyOwner {
-      riftQuests = addr;
-  }
+    function ownerSetRiftQuestsAddress(address addr) public onlyOwner {
+        riftQuests = addr;
+    }
+
+    /**
+    * enables an address to mint / burn
+    * @param controller the address to enable
+    */
+    function addController(address controller) external onlyOwner {
+        controllers[controller] = true;
+    }
+
+    /**
+    * disables an address from minting / burning
+    * @param controller the address to disbale
+    */
+    function removeController(address controller) external onlyOwner {
+        controllers[controller] = false;
+    }
+
+    function setPaused(bool _paused) external onlyOwner {
+        if (_paused) _pause();
+        else _unpause();
+    }
+
+    function ownerWithdraw() external onlyOwner {
+        uint256 balance = address(this).balance;
+        payable(msg.sender).transfer(balance);
+    }
 
   // function ownerSetManaAddress(address addr) public onlyOwner {
   //     iMana = IMana(addr);
   // }
 
-  function getRiftLevel() public view returns (uint256) {
-    return 1 + crystalPower / SACRAFICE_COST;
-  }
+    // READ
 
-  function chargeBags(uint32[] calldata bagIds, uint16 amount) external {
-    for (uint256 i = 0; i < bagIds.length; i++) {
-      _charge(bagIds[i], amount);
+    modifier _isBagHolder(uint256 bagId, address owner) {
+        if (bagId < 8001) {
+            require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
+        } else {
+            require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
+        }
     }
-  }
+    
+    // WRITE
 
-  function _charge(uint32 bagId, uint16 amount) _bagCheck(bagId) internal {
-    //   bags[bagId] = RiftBag({
-    //     chargesUsed: _msgSender() != bags[bagId].owner ? 1 : bags[bagId].chargesUsed + 1,
-    //     charges: amount,
-    //     consumed: bags[bagId].consumed,
-    //     owner: _msgSender(),
-    //     xp: bags[bagId].xp 
-    //   });
+    // pay to charge
+    // function chargeBag(uint256 bagId) external whenNotPaused nonReentrant {
+    //     require(bagsMap[bagId].isCharged == false, "already charged");
 
-      emit BagCharged(_msgSender(), bagId, amount);
-  }
+    //     isBagHolder(bagId, _msgSender());
 
-  function useCharge(uint32 bagId, uint16 amount) external {
-    _useCharge(bagId, amount);
-  }
+    //     uint256 cost = 0;
+    //     // first taste is always free
+    //     if (bagsMap[bagId].generation > 0) {
+    //         require(riftCost[bagsMap[bagId].generation + 1].manaCost > 0, "GEN NOT AVL"); 
+    //         cost = getRegistrationCost(bagsMap[bagId].generation + 1);
+    //         if (bagId > 8000) cost = cost / 10; // mLoot discount
+    //     }
 
-  function _useCharge(uint32 bagId, uint16 amount)
-    _bagCheck(bagId)
-    internal
-  {
-    require(bags[bagId].charges >= amount, "NOT ENOUGH CHARGE");
+    //     iMana.burn(_msgSender(), cost);
+    //     bagsMap[bagId].isCharged = true;
 
-    bags[bagId].chargesUsed += 1;
-    bags[bagId].charges -= amount;
-    bags[bagId].consumed += amount;
+    //     generationRegistry[bagsMap[bagId].generation + 1] += 1;
+    // }
 
-    emit ChargesConsumed(_msgSender(), bagId, amount);
-  }
+    function useCharge(uint16 amount, uint256 bagId, address from) 
+        _isBagHolder(bagId, from) 
+        external 
+        whenNotPaused 
+        nonReentrant 
+    {
+        require(controllers[msg.sender], "Only controllers can use charge");
+        require(bags[bagId].charges >= amount, "Not enough Rift charges");
 
-    function awardXP(uint32 bagId, uint32 xp) external {
+        bags[bagId].chargesUsed += amount;
+        bags[bagId].charges -= amount;
+    }
+
+     function awardXP(uint32 bagId, uint32 xp) external nonReentrant {
         require(_msgSender() == riftQuests, "only the worthy");
     
         if (bags[bagId].level == 0) {
@@ -147,36 +175,21 @@ contract Rift is Ownable {
         }
     }
 
-    function growTheRift(uint256 crystalId) external {
-        _sacrificeCrystal(crystalId);
+    function growTheRift(address burnableAddr, uint256 tokenId) external {
+        _sacrificeRiftObject(burnableAddr, tokenId);
     }
 
-  function growTheRiftMany(uint256[] calldata crystalIds) external {
-    for (uint256 i = 0; i < crystalIds.length; i++) {
-      _sacrificeCrystal(crystalIds[i]);
+    function _sacrificeRiftObject(address burnableAddr, uint256 tokenId) internal {
+        uint256 powerIncrease = IRiftBurnable(burnableAddr).riftPower(tokenId);
+        (bool success,) = address(burnableAddr).delegatecall(
+            abi.encodeWithSignature("burn(uint256)", tokenId)
+        );
+
+        if (success) {
+            riftPower += powerIncrease;
+            karma[_msgSender()] += powerIncrease;
+            riftObjectsSacrificed += 1;
+            // emit CrystalSacrificed(_msgSender(), crystalId, powerIncrease);
+        }
     }
-  }
-
-  function _sacrificeCrystal(uint256 crystalId) internal {
-    uint256 powerIncrease = iCrystals.crystalsMap(crystalId).level;
-    (bool success,) = address(iCrystals).delegatecall(
-      abi.encodeWithSignature("burn(uint256)", crystalId)
-    );
-
-    if (success) {
-      crystalPower += powerIncrease;
-      karma[_msgSender()] += powerIncrease;
-      crystalsSacraficed += 1;
-      emit CrystalSacraficed(_msgSender(), crystalId, powerIncrease);
-    }
-  }
-
-  modifier _bagCheck(uint32 bagId) {
-    require(iLoot.ownerOf(bagId) != _msgSender(), "UNAUTH");
-    _;
-  }
-
-  function backCheck(uint32 bagId) external view {
-    require(iLoot.ownerOf(bagId) != _msgSender(), "UNAUTH");
-  }
 }
