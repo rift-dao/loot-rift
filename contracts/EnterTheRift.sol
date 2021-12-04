@@ -1,10 +1,12 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 import "./Interfaces.sol";
-import "./IRiftQuest.sol";
+import "./IRift.sol";
 
 contract EnterTheRift is Ownable, IRiftQuest {
 
@@ -69,7 +71,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
         return _numSteps;
     }
 
-    function canStartQuest(uint256 bagId) override public pure returns (bool) {
+    function canStartQuest(uint256 /*bagId*/) override public pure returns (bool) {
         return true;
     }
 
@@ -85,7 +87,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
         return steps[step].xp;
     }
 
-    function tokenURI(uint256 bagId) override external pure returns (string memory) {
+    function tokenURI(uint256 /*bagId*/) override external pure returns (string memory) {
         string memory output;
         return output;
     }

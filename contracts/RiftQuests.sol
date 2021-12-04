@@ -7,6 +7,7 @@
 
 by chris and tony                                  
 */
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.9;
 
@@ -18,7 +19,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "./IRift.sol";
-import "./IRiftQuest.sol";
+import "./IRift.sol";
 
 /// @title Quests in the Rift
 contract RiftQuests is ERC721,
@@ -49,7 +50,7 @@ contract RiftQuests is ERC721,
      }
 
     function completeStep(address quest, uint64 step, uint256 bagId) external whenNotPaused nonReentrant {
-        iRift.bagCheck(uint32(bagId));
+        iRift.isBagHolder(bagId, _msgSender());
         IRiftQuest(quest).completeStep(step, bagId, _msgSender());
 
         uint256 questId = bagQuests[bagId][quest];

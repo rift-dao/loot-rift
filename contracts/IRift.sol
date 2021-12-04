@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.8.9;
 
 struct RiftBag {
@@ -11,6 +13,7 @@ interface IRift {
     function useCharge(uint32 bagId, uint16 amount, address from) external;
     function bags(uint256 bagId) external view returns (RiftBag memory);
     function awardXP(uint32 bagId, uint32 xp) external;
+    function isBagHolder(uint256 bagId, address owner) external;
 }
 
 struct QuestStep {

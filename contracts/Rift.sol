@@ -13,6 +13,7 @@
     by chris and tony
     
 */
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.9;
 
@@ -98,6 +99,15 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     // READ
 
     modifier _isBagHolder(uint256 bagId, address owner) {
+        if (bagId < 8001) {
+            require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
+        } else {
+            require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
+        }
+        _;
+    }
+
+    function isBagHolder(uint256 bagId, address owner) external view {
         if (bagId < 8001) {
             require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
         } else {
