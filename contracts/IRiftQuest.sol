@@ -17,9 +17,10 @@ struct BagProgress {
 interface IRiftQuest {
     function title() external view returns (string memory);
     function numSteps() external view returns (uint64);
+    function canStartQuest(uint256 bagId) external view returns (bool);
     function isCompleted(uint256 bagId) external view returns (bool);
     function currentStep(uint256 bagId) external view returns (QuestStep memory);
     function completeStep(uint64 step, uint256 bagId, address from) external;
-    function awardXP(uint64 step) external view returns (uint32);
+    function stepAwardXP(uint64 step) external view returns (uint32);
     function tokenURI(uint256 bagId) external view returns (string memory);
 }

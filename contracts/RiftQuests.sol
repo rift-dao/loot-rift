@@ -37,7 +37,6 @@ contract RiftQuests is ERC721,
     }
 
     mapping(uint256 => QuestLogEntry) public questLog;
-    mapping(uint256 => QuestStep) public steps;
     mapping(uint256 => mapping(address => uint256)) public bagQuests;
 
     uint256 questsBegan;
@@ -65,7 +64,7 @@ contract RiftQuests is ERC721,
         }
 
         questLog[questId].stepsCompleted = step;
-        iRift.awardXP(uint32(bagId), IRiftQuest(quest).awardXP(step));
+        iRift.awardXP(uint32(bagId), IRiftQuest(quest).stepAwardXP(step));
     }
 
     // todo: what sort of payment should this function support? 
