@@ -1,8 +1,15 @@
 pragma solidity ^0.8.9;
 
+struct RiftBag {
+        uint16 charges;
+        uint16 chargesUsed;
+        uint16 level;
+        uint256 xp;
+    }
+
 interface IRift {
-    function useCharge(uint32 bagId, uint16 amount, bool unstake) external;
-    function bagCheck(uint32 bagId) external;
+    function useCharge(uint32 bagId, uint16 amount, address from) external;
+    function bags(uint256 bagId) external view returns (RiftBag memory);
     function awardXP(uint32 bagId, uint32 xp) external;
 }
 

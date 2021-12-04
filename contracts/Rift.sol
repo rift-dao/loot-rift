@@ -26,13 +26,6 @@ import "./IRift.sol";
 
 contract Rift is ReentrancyGuard, Pausable, Ownable {
 
-    struct RiftBag {
-        uint16 charges;
-        uint16 chargesUsed;
-        uint16 level;
-        uint256 xp;
-    }
-
     event BagCharged(address owner, uint256 tokenId, uint16 amount);
     event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
     // event CrystalSacrificed(address owner, uint256 tokenId, uint256 powerIncrease);

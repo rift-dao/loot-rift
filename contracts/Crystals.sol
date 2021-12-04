@@ -80,46 +80,41 @@ contract Crystals is
 
     //WRITE
 
-    function mintCrystal(uint256 bagId, uint16 charges)
+    function mintCrystal(uint256 bagId)
         external
         payable
         whenNotPaused
         unminted(bagId)
         nonReentrant
     {
-        // require(crystalsMap[tokenId].level > 0, "UNREG");
+        uint16 bagLevel = iRift.bags(bagId).level;
 
         // mint fee is 100% MANA after minted threshold is reached
         if (mintedCrystals < mintedThreshold) {
             if (bagId > 8000) {
-                require(msg.value == (bagId / MAX_CRYSTALS + 1) * mMintFee, "FEE");
+                require(msg.value == bagLevel * mMintFee, "FEE");
             } else {
-                require(msg.value == (bagId / MAX_CRYSTALS + 1) * mintFee, "FEE");
+                require(msg.value == bagLevel * mintFee, "FEE");
             }   
         } else {
             require(msg.value == 0, "only mana");
             if (bagId > 8000) {
-                iMana.burn(_msgSender(), (bagId / MAX_CRYSTALS + 1) * 10);
+                iMana.burn(_msgSender(), bagLevel * 10);
             } else {
-                iMana.burn(_msgSender(), (bagId / MAX_CRYSTALS + 1) * 100);
+                iMana.burn(_msgSender(), bagLevel * 100);
             }   
         }
 
-        (bool success, ) = address(iRift).delegatecall(abi.encodeWithSignature(
-            "useCharge(uint32, uint16)",
-            uint32(bagId),
-            charges
-        ));
+        iRift.useCharge(uint32(bagId), 1, _msgSender());
 
         uint256 tokenId = getNextCrystal(bagId);
 
-        if (success) {
-            bags[tokenId % MAX_CRYSTALS].mintCount += 1;
-            crystalsMap[tokenId].attunement = charges;
+        bags[tokenId % MAX_CRYSTALS].mintCount += 1;
+        crystalsMap[tokenId].attunement = bagLevel;
+        crystalsMap[tokenId].level = 1;
 
-            mintedCrystals += 1;
-            _safeMint(_msgSender(), tokenId);
-        }
+        mintedCrystals += 1;
+        _safeMint(_msgSender(), tokenId);
     }
 
     function claimCrystalMana(uint256 tokenId)
