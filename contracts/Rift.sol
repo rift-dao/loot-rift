@@ -29,6 +29,7 @@ contract Rift is Ownable {
       uint16 attunement;
       address owner;
       uint256 consumed;
+      uint256 xp;
   }
 
   event BagCharged(address owner, uint256 tokenId, uint16 amount);
@@ -42,6 +43,7 @@ contract Rift is Ownable {
 
   ERC721 public iLoot;
   ICrystals public iCrystals;
+  address public riftQuests;
   // IMana public iMana;
 
   string public description = "Unknown";
@@ -67,6 +69,10 @@ contract Rift is Ownable {
       iLoot = ERC721(addr);
   }
 
+  function ownerSetRiftQuestsAddress(address addr) public onlyOwner {
+      riftQuests = addr;
+  }
+
   // function ownerSetManaAddress(address addr) public onlyOwner {
   //     iMana = IMana(addr);
   // }
@@ -86,7 +92,8 @@ contract Rift is Ownable {
         attunement: _msgSender() != bags[bagId].owner ? 1 : bags[bagId].attunement + 1,
         charges: amount,
         consumed: bags[bagId].consumed,
-        owner: _msgSender()
+        owner: _msgSender(),
+        xp: bags[bagId].xp 
       });
 
       emit BagCharged(_msgSender(), bagId, amount);
@@ -108,6 +115,11 @@ contract Rift is Ownable {
 
     emit ChargesConsumed(_msgSender(), bagId, amount);
   }
+
+    function awardXP(uint32 bagId, uint32 xp) external {
+        require(_msgSender() == riftQuests, "only the worthy");
+        bags[bagId].xp += xp;
+    }
 
   function growTheRift(uint256 crystalId) external {
     _sacrificeCrystal(crystalId);
@@ -136,5 +148,9 @@ contract Rift is Ownable {
   modifier _bagCheck(uint32 bagId) {
     require(iLoot.ownerOf(bagId) != _msgSender(), "UNAUTH");
     _;
+  }
+
+  function backCheck(uint32 bagId) external view {
+    require(iLoot.ownerOf(bagId) != _msgSender(), "UNAUTH");
   }
 }

@@ -46,4 +46,6 @@ interface IMana {
 
 interface IRift {
     function useCharge(uint32 bagId, uint16 amount, bool unstake) external;
+    function bagCheck(uint32 bagId) external;
+    function awardXP(uint32 bagId, uint32 xp) external;
 }
