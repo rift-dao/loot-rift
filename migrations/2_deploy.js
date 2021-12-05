@@ -11,10 +11,10 @@ module.exports = function(deployer) {
   deployer.then(async () => {
     const notLoot = await deployer.deploy(NotLoot);
     const mana = await deployer.deploy(Mana);
-    const crystals = await deployer.deploy(Crystals, mana.address, rift.address);
+    const rift = await deployer.deploy(Rift);
+    const crystals = await deployer.deploy(Crystals, mana.address);
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
     const calculator = await deployer.deploy(ManaCalculator, crystals.address);
-    const rift = await deployer.deploy(Rift);
     const riftQuests = await deployer.deploy(RiftQuests, rift.address);
     const enterRift = await deployer.deploy(EnterRift, riftQuests.address, crystals.address, mana.address);
 
