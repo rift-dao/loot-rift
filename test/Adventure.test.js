@@ -97,6 +97,14 @@ contract('Adventure', function ([owner, other]) {
     //     assert.equal((await this.crystals.bags(1)).mintCount, 1, "1 Crystal minted for this bag");
     // });
 
+    // it ('can level up a crystal', async function () {
+    //     await this.quests.completeStep(this.enterRift.address, 1, 1)
+    //     await this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") });
+    //     assert.equal((await this.crystals.crystalsMap(1)).level, 1, "Starts at level 1");
+    //     await this.crystals.levelUpCrystal(1);
+    //     assert.equal((await this.crystals.crystalsMap(1)).level, 2, "Leveled up");
+    // });
+
     // it ('can complete the first quest', async function () {
     //     // // do first step for a rift charge
     //     await this.quests.completeStep(this.enterRift.address, 1, 1)
@@ -116,4 +124,27 @@ contract('Adventure', function ([owner, other]) {
     //     assert((await this.enterRift.bagsProgress(1)).completedQuest, "Has completed quest");
     //     assert.equal((await this.rift.getBag(1)).level, 3, "Should level up");
     // });
+
+    it ('can reduce the rifts power', async function () {
+        assert.equal((await this.rift.riftPower()), 100000, "Rift starts at 100000");
+        await this.quests.completeStep(this.enterRift.address, 1, 1)
+        assert.equal((await this.rift.riftPower()), 99999, "Charges reduce power");
+    
+        // // use charge
+        await this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") });
+        assert.equal((await this.crystals.riftPower(1)), 1, "Potential Rift Power of Crystal");
+        await this.crystals.levelUpCrystal(1);
+        assert.equal((await this.crystals.riftPower(1)), 1, "Potential Rift Power of Crystal");
+
+        assert.equal((await this.rift.riftPower()), 99999, "Charges reduce power");
+
+        // a crystal that doesn't exist should fail
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2));
+        // can't be burned by other user
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, { from: other }));
+        // burning increases power
+        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, { from: owner }));
+
+        assert.equal((await this.rift.riftPower()), 100000, "Rifts power grows");
+    });
 });

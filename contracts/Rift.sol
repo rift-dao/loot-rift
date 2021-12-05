@@ -21,6 +21,7 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
@@ -168,6 +169,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         if (bags[bagId].level == 0) {
             bags[bagId].level = 1;
             bags[bagId].charges = 1;
+            riftPower -= 1;
         }
 
         bags[bagId].xp += xp;
@@ -192,21 +194,17 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function growTheRift(address burnableAddr, uint256 tokenId) external {
-        require(riftObjects[msg.sender], "Not of the Rift");
+        require(riftObjects[burnableAddr], "Not of the Rift");
+        require(ERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
         _sacrificeRiftObject(burnableAddr, tokenId);
     }
 
     function _sacrificeRiftObject(address burnableAddr, uint256 tokenId) internal {
         uint256 powerIncrease = IRiftBurnable(burnableAddr).riftPower(tokenId);
-        (bool success,) = address(burnableAddr).delegatecall(
-            abi.encodeWithSignature("burn(uint256)", tokenId)
-        );
+        ERC721Burnable(burnableAddr).burn(tokenId);
 
-        if (success) {
-            riftPower += powerIncrease;
-            karma[_msgSender()] += powerIncrease;
-            riftObjectsSacrificed += 1;
-            // emit CrystalSacrificed(_msgSender(), crystalId, powerIncrease);
-        }
+        riftPower += powerIncrease;
+        karma[_msgSender()] += powerIncrease;
+        riftObjectsSacrificed += 1;        
     }
 }

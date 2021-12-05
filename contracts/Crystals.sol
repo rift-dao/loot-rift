@@ -188,7 +188,9 @@ contract Crystals is
     }
 
     function riftPower(uint256 tokenId) public view override returns (uint256) {
-        return crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2;
+        return (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
+            1 :
+            crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2;
     }
 
     /**
@@ -253,6 +255,7 @@ contract Crystals is
 
     function ownerSetRiftAddress(address addr) external onlyOwner {
         iRift = IRift(addr);
+        setApprovalForAll(addr, true);
     }
 
     function ownerSetLootAddress(address addr) external onlyOwner {
