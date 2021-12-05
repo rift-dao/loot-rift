@@ -19,12 +19,10 @@ contract EnterTheRift is Ownable, IRiftQuest {
     ERC20 public iMana;
     
     address riftQuest;
-    address crystals;
-    address mana;
 
     constructor(address riftQuest_, address crystals_, address mana_) Ownable() {
         iCrystals = ICrystals(crystals_);
-        iRiftQuest = IRiftQuest(riftQuest_);
+        riftQuest = riftQuest_;
         iMana = ERC20(mana_);
 
         _numSteps = 3;
@@ -97,7 +95,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
     }
 
     //owner
-    
+
     function ownerSetCrystalsAddress(address crystals_) external onlyOwner {
         iCrystals = ICrystals(crystals_);
     }
