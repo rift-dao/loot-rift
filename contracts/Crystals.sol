@@ -190,7 +190,7 @@ contract Crystals is
     }
 
     function riftPower(uint256 tokenId) public view override returns (uint256) {
-        return crystalsMap[tokenId].level * crystalsMap[tokenId].attunement;
+        return crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2;
     }
 
     /**

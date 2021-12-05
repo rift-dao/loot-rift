@@ -175,6 +175,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
             bags[bagId].xp -= xpRequired[bags[bagId].level];
             bags[bagId].level += 1;
             bags[bagId].charges += levelChargeAward[bags[bagId].level];
+            riftPower -= levelChargeAward[bags[bagId].level] * bags[bagId].level;
         }
     }
 
