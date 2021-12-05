@@ -43,7 +43,6 @@ module.exports = function(deployer) {
     await rift.ownerSetLevelChargeAward(3, 1);
     await rift.ownerSetLevelChargeAward(4, 1);
     await rift.ownerSetLevelChargeAward(5, 2);
-
   });
 }
 
