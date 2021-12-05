@@ -45,7 +45,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     mapping(address => uint256) public karma;
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
-    mapping(address => bool) controllers;
+    mapping(address => bool) riftObjects;
 
     constructor() Ownable() {
     }
@@ -70,16 +70,16 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     * enables an address to mint / burn
     * @param controller the address to enable
     */
-    function addController(address controller) external onlyOwner {
-        controllers[controller] = true;
+    function addRiftObject(address controller) external onlyOwner {
+        riftObjects[controller] = true;
     }
 
     /**
     * disables an address from minting / burning
     * @param controller the address to disbale
     */
-    function removeController(address controller) external onlyOwner {
-        controllers[controller] = false;
+    function removeRiftObject(address controller) external onlyOwner {
+        riftObjects[controller] = false;
     }
 
     function setPaused(bool _paused) external onlyOwner {
@@ -143,7 +143,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         whenNotPaused 
         nonReentrant 
     {
-        require(controllers[msg.sender], "Only controllers can use charge");
+        require(riftObjects[msg.sender], "Not of the Rift");
         require(bags[bagId].charges >= amount, "Not enough Rift charges");
 
         bags[bagId].chargesUsed += amount;
@@ -180,6 +180,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function growTheRift(address burnableAddr, uint256 tokenId) external {
+        require(riftObjects[msg.sender], "Not of the Rift");
         _sacrificeRiftObject(burnableAddr, tokenId);
     }
 
