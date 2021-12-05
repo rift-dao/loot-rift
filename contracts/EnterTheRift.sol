@@ -14,14 +14,18 @@ contract EnterTheRift is Ownable, IRiftQuest {
     mapping(uint256 => BagProgress) public bagsProgress;
     uint32 private _numSteps;
 
+    ICrystals public iCrystals;
+    IRiftQuest public iRiftQuest;
+    ERC20 public iMana;
+    
     address riftQuest;
     address crystals;
     address mana;
 
     constructor(address riftQuest_, address crystals_, address mana_) Ownable() {
-        riftQuest = riftQuest_;
-        crystals = crystals_;
-        mana = mana_;
+        iCrystals = ICrystals(crystals_);
+        iRiftQuest = IRiftQuest(riftQuest_);
+        iMana = ERC20(mana_);
 
         _numSteps = 3;
         
@@ -52,10 +56,10 @@ contract EnterTheRift is Ownable, IRiftQuest {
             bagsProgress[bagId].lastCompletedStep = 1;
         } else if (step == 2) {
             // verify bag made a crystal
-            require(ICrystals(crystals).bags(bagId).mintCount > 0, "Make a Crystal");
+            require(iCrystals.bags(bagId).mintCount > 0, "Make a Crystal");
             bagsProgress[bagId].lastCompletedStep = 2;
         } else if (step == 3) {
-            require(ERC20(mana).balanceOf(from) > 0, "Claim your Mana");
+            require(iMana.balanceOf(from) > 0, "Claim your Mana");
             bagsProgress[bagId].lastCompletedStep = 3;
             bagsProgress[bagId].completedQuest = true;
         }
@@ -93,7 +97,16 @@ contract EnterTheRift is Ownable, IRiftQuest {
     }
 
     //owner
+    
     function ownerSetCrystalsAddress(address crystals_) external onlyOwner {
-        crystals = crystals_;
+        iCrystals = ICrystals(crystals_);
+    }
+
+    function ownerSetRiftQuestsAddress(address riftQuests_) external onlyOwner {
+        iRiftQuest = IRiftQuest(riftQuests_);
+    }
+
+    function ownerSetManaAddress(address mana_) external onlyOwner {
+        iMana = ERC20(mana_);
     }
 }

@@ -40,12 +40,17 @@ contract RiftQuests is ERC721,
         bool turnedIn;
     }
 
+    struct QuestingStats {
+        uint256 questsBegan;
+        uint256 questsCompleted;
+    }
+
+    mapping(uint256 => QuestingStats) public bagQuestStats;
     mapping(uint256 => QuestLogEntry) public questLog;
-    mapping(uint256 => mapping(address => uint256)) public bagQuests;
+    mapping(uint256 => mapping(address => uint256)) public bagQuestIds;
     mapping(address => bool) approvedQuests;
 
     uint256 questsBegan;
-    uint256 questsCompleted;
 
     IRift public iRift;
 
@@ -58,15 +63,17 @@ contract RiftQuests is ERC721,
         iRift.isBagHolder(bagId, _msgSender());
         IRiftQuest(quest).completeStep(step, bagId, _msgSender());
 
-        uint256 questId = bagQuests[bagId][quest];
+        uint256 questId = bagQuestIds[bagId][quest];
         // quest just started
         if (questId == 0) {
-            bagQuests[bagId][quest] = questsBegan;
+            questsBegan += 1;
+
+            bagQuestIds[bagId][quest] = questsBegan;
             questId = questsBegan;
             questLog[questId].quest = quest;
             questLog[questId].bagId = bagId;
 
-            questsBegan += 1;
+            bagQuestStats[bagId].questsBegan += 1;
         }
 
         questLog[questId].stepsCompleted = step;
@@ -82,8 +89,9 @@ contract RiftQuests is ERC721,
     {
         require(IRiftQuest(quest).isCompleted(bagId), "your quest is not complete");
         
-        uint256 questId = bagQuests[bagId][quest];
+        uint256 questId = bagQuestIds[bagId][quest];
         questLog[questId].turnedIn = true;
+        bagQuestStats[bagId].questsCompleted += 1;
 
         _safeMint(_msgSender(), questId);
     }
