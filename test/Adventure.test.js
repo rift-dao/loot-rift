@@ -2,6 +2,7 @@
 const { BN } = require('@openzeppelin/test-helpers');
 const truffleAssert = require('truffle-assertions');
 const { expect } = require('chai');
+const { assertion } = require('@openzeppelin/test-helpers/src/expectRevert');
 const Mana = artifacts.require('Mana');
 const Crystals = artifacts.require('Crystals');
 const Loot = artifacts.require('NotLoot');
@@ -37,9 +38,11 @@ contract('Adventure', function ([owner, other]) {
 
         await this.rift.ownerSetXpRequirement(1, 100);
         await this.rift.ownerSetXpRequirement(2, 100);
+        await this.rift.ownerSetXpRequirement(3, 100);
 
         await this.rift.ownerSetLevelChargeAward(1, 1);
         await this.rift.ownerSetLevelChargeAward(2, 1);
+        await this.rift.ownerSetLevelChargeAward(3, 1);
 
         await this.loot.mint(1);
     });
@@ -81,27 +84,36 @@ contract('Adventure', function ([owner, other]) {
     //     await truffleAssert.fails(this.quests.completeStep(this.enterRift.address, 1, 1));
     // });
 
-    it ('can create a crystal', async function () {
-        await truffleAssert.fails(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0", "ether") }));
+    // it ('can create a crystal', async function () {
+    //     await truffleAssert.fails(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0", "ether") }));
 
-        // // do first step for a rift charge
-        await this.quests.completeStep(this.enterRift.address, 1, 1)
-        assert.equal((await this.rift.getBag(1)).charges, 1, "Should have 1 charge");
-
-        // // use charge
-        await truffleAssert.passes(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") }));
-        assert.equal((await this.rift.getBag(1)).charges, 0, "Should have 0 charges");
-        assert.equal((await this.crystals.bags(1).mintCount, 1, "1 Crystal minted for this bag"));
-    });
-
-    // it ('can complete the first quest', async function () {
     //     // // do first step for a rift charge
     //     await this.quests.completeStep(this.enterRift.address, 1, 1)
     //     assert.equal((await this.rift.getBag(1)).charges, 1, "Should have 1 charge");
 
     //     // // use charge
     //     await truffleAssert.passes(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") }));
-    //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 2, 1));
+    //     assert.equal((await this.rift.getBag(1)).charges, 0, "Should have 0 charges");
+    //     assert.equal((await this.crystals.bags(1)).mintCount, 1, "1 Crystal minted for this bag");
+    // });
 
+    // it ('can complete the first quest', async function () {
+    //     // // do first step for a rift charge
+    //     await this.quests.completeStep(this.enterRift.address, 1, 1)
+    //     assert.equal((await this.rift.getBag(1)).level, 1, "Should be level 1");
+
+    //     // can't complete without crystal
+    //     await truffleAssert.fails(this.quests.completeStep(this.enterRift.address, 2, 1));
+
+    //     // use charge
+    //     await truffleAssert.passes(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") }));
+    //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 2, 1));
+    //     assert.equal((await this.rift.getBag(1)).level, 2, "Should level up");
+
+    //     // can claim mana
+    //     await truffleAssert.passes(this.crystals.claimCrystalMana(1));
+    //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 3, 1));
+    //     assert((await this.enterRift.bagsProgress(1)).completedQuest, "Has completed quest");
+    //     assert.equal((await this.rift.getBag(1)).level, 3, "Should level up");
     // });
 });
