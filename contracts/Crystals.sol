@@ -60,7 +60,6 @@ contract Crystals is
 
     uint256 public mintedCrystals;
 
-
     uint256 public mintFee = 0.02 ether;
     uint256 public mMintFee = 0.01 ether;
 
@@ -85,7 +84,6 @@ contract Crystals is
         external
         payable
         whenNotPaused
-        unminted(bagId)
         nonReentrant
     {
         uint16 bagLevel = iRift.bags(bagId).level;
@@ -106,7 +104,7 @@ contract Crystals is
             }   
         }
 
-        iRift.useCharge(uint32(bagId), 1, _msgSender());
+        iRift.useCharge(1, bagId, _msgSender());
 
         uint256 tokenId = getNextCrystal(bagId);
 
@@ -387,11 +385,6 @@ contract Crystals is
 
     modifier ownsCrystal(uint256 tokenId) {
         require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
-        _;
-    }
-
-    modifier unminted(uint256 tokenId) {
-        require(ownerOf(tokenId) == address(0), "MNTD");
         _;
     }
 }

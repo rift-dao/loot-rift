@@ -34,7 +34,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     ERC721 public iLoot;
     ERC721 public iMLoot;
     address public riftQuests;
-  // IMana public iMana;
+    IMana public iMana;
 
     string public description = "The Great Unknown";
 
@@ -92,9 +92,17 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         payable(msg.sender).transfer(balance);
     }
 
-  // function ownerSetManaAddress(address addr) public onlyOwner {
-  //     iMana = IMana(addr);
-  // }
+    function ownerSetXpRequirement(uint16 level, uint16 xp) external onlyOwner {
+        xpRequired[level] = xp;
+    }
+
+    function ownerSetLevelChargeAward(uint16 level, uint16 charges) external onlyOwner {
+        levelChargeAward[level] = charges;
+    }
+
+    function ownerSetManaAddress(address addr) public onlyOwner {
+        iMana = IMana(addr);
+    }
 
     // READ
 
@@ -113,6 +121,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         } else {
             require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }
+    }
+
+    function getBag(uint256 bagId) external view returns (RiftBag memory) {
+        return bags[bagId];
     }
     
     // WRITE

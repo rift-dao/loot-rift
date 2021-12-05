@@ -4,6 +4,12 @@ const { expect } = require('chai');
 
 const Crystals = contract.fromArtifact('Crystals');
 const Mana = contract.fromArtifact('Mana');
+const Rift = contract.fromArtifact('Rift');
+const EnterRift = contract.fromArtifact('EnterTheRift');
+const RiftQuests = contract.fromArtifact('RiftQuests');
+const NotLoot = contract.fromArtifact('NotLoot');
+const Calculator = contract.fromArtifact('CrystalManaCalculator');
+const CrystalsMetadata = contract.fromArtifact('CrystalMetadata');
 
 const MOCK_0001 = {
     id: 1,
@@ -14,12 +20,25 @@ const MOCK_0001 = {
 
 let crystalInstance = null;
 let manaInstance = null;
+let lootInstance = null;
+let riftInstance = null;
+let crystalMetaInstance = null;
+let calcInstance = null;
+let riftQuestsInstance = null;
+let enterRiftInstance = null;
 
 describe('Crystal getters', () => {
 
     before(async () => {
+        lootInstance = await NotLoot.new();
         manaInstance = await Mana.new();
+        riftInstance = await Rift.new();
         crystalInstance = await Crystals.new(manaInstance.address);
+        crystalMetaInstance = await CrystalsMetadata.new(crystalInstance.address);
+        calcInstance = await Calculator.new(crystalInstance.address);
+        riftQuestsInstance = await RiftQuests.new(riftInstance.address);
+        enterRiftInstance = await EnterRift.new(riftQuestsInstance.address, crystalInstance.address, manaInstance.address);
+
     });
 
     it('should have valid tokenURI', async () => {

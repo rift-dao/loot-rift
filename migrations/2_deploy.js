@@ -28,7 +28,22 @@ module.exports = function(deployer) {
     rift.addRiftObject(crystals.address);
     rift.ownerSetLootAddress(notLoot.address);
     rift.ownerSetRiftQuestsAddress(riftQuests.address);
+    rift.ownerSetManaAddress(mana.address);
     riftQuests.addQuest(enterRift.address);
+
+    // starting rift information
+    await rift.ownerSetXpRequirement(1, 100);
+    await rift.ownerSetXpRequirement(2, 150);
+    await rift.ownerSetXpRequirement(3, 225);
+    await rift.ownerSetXpRequirement(4, 350);
+    await rift.ownerSetXpRequirement(5, 525);
+
+    await rift.ownerSetLevelChargeAward(1, 1);
+    await rift.ownerSetLevelChargeAward(2, 1);
+    await rift.ownerSetLevelChargeAward(3, 1);
+    await rift.ownerSetLevelChargeAward(4, 1);
+    await rift.ownerSetLevelChargeAward(5, 2);
+
   });
 }
 
