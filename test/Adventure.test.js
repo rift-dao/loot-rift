@@ -36,6 +36,10 @@ contract('Adventure', function ([owner, other]) {
         await this.rift.ownerSetRiftQuestsAddress(this.quests.address);
         await this.quests.addQuest(this.enterRift.address);
 
+        await this.quests.ownerSetXP(this.enterRift.address, 1, 2);
+        await this.quests.ownerSetXP(this.enterRift.address, 2, 2);
+        await this.quests.ownerSetXP(this.enterRift.address, 3, 2);
+
         await this.rift.ownerSetXpRequirement(1, 100);
         await this.rift.ownerSetXpRequirement(2, 100);
         await this.rift.ownerSetXpRequirement(3, 100);
@@ -70,14 +74,14 @@ contract('Adventure', function ([owner, other]) {
     //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 1, 1));
     // });
 
-    // it ('has 50 xp after first quest step', async function () {
-    //     assert.equal((await this.rift.getBag(1)).xp, 0, "New bags have no XP");
+    it ('has 50 xp after first quest step', async function () {
+        assert.equal((await this.rift.getBag(1)).xp, 0, "New bags have no XP");
 
-    //     // performs quest step
-    //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 1, 1));
+        // performs quest step
+        await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 1, 1));
 
-    //     assert.equal((await this.rift.getBag(1)).xp, 50, "First quest step gives 50");
-    // });
+        assert.equal((await this.rift.getBag(1)).xp, 50, "First quest step gives 50");
+    });
 
     // it ('can not perform the same step twice', async function () {
     //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 1, 1));

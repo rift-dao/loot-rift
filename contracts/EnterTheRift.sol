@@ -27,31 +27,32 @@ contract EnterTheRift is Ownable, IRiftQuest {
 
         _numSteps = 3;
         
-        steps[1].action = "Step into the Rift";
+        steps[1].requirements = "Step into the Rift";
         steps[1].description = "Ever since you first picked up that bag, you've felt drawn to this place. Now you see what's beckoning you, a chaotic rip in reality. You're struck with pure fear, and yet you cannot help but step towards it.";
         steps[1].result = "You didn't venture far, a few feet maybe. You couldn't stand the tremendous force for more than a few moments. You're not ready. ~~you got a rift charge~~";
-        steps[1].xp = 50;
+        steps[1].xp = XP_AMOUNT.MODERATE;
 
-        steps[2].action = "Distill a Crystal";
+        steps[2].requirements = "Distill a Crystal";
         steps[2].description = "You've returned to camp to make sense of what you experienced, when you notice that same strange force emanating from your bag.";
         steps[2].result = "You peek inside, and see the glowing force crystalize before your eyes. It's glowing with the Rift's power... ~~you found a crystal!~~";
-        steps[2].xp = 100;
+        steps[2].xp = XP_AMOUNT.MODERATE;
 
-        steps[3].action = "Claim Mana";
+        steps[3].requirements = "Claim Mana";
         steps[3].description = "You take the Crystal out of your bag, it's heavier than it looks.";
         steps[3].result = "Its glow intensifies, and you feel a powerful energy move from the Crystal into you. ~~you gained mana~~";
-        steps[3].xp = 100;
+        steps[3].xp = XP_AMOUNT.MODERATE;
     }
 
     // step logic 
     
-    function completeStep(uint64 step, uint256 bagId, address from) override public {
+    function completeStep(uint32 step, uint256 bagId, address from) override public {
         require(_msgSender() == riftQuest, "must be interacted through RiftQuests");
         require(bagsProgress[bagId].lastCompletedStep < step, "you've completed this step already");
 
         if (step == 1) {
             // owner bag check performed by RiftQuests
             bagsProgress[bagId].lastCompletedStep = 1;
+            
         } else if (step == 2) {
             // verify bag made a crystal
             require(iCrystals.bags(bagId).mintCount > 0, "Make a Crystal");
@@ -85,7 +86,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
         return steps[bagsProgress[bagId].lastCompletedStep + 1];
     }
 
-    function stepAwardXP(uint64 step) external view returns (uint32) {
+    function stepAwardXP(uint64 step) external view returns (XP_AMOUNT) {
         return steps[step].xp;
     }
 
@@ -118,7 +119,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
                         '</text><text x="10" y="40">',
                         steps[1].description,
                         '</text><text x="10" y="60">',
-                        steps[1].action,
+                        steps[1].requirements,
                         '</text></svg>'
                     )
                 );
@@ -131,7 +132,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
                         '</text><text x="10" y="60">',
                         steps[step].description,
                         '</text><text x="10" y="80">',
-                        steps[step].action,
+                        steps[step].requirements,
                         '</text></svg>'
                     )
                 );
@@ -213,7 +214,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
                         '</text><text x="10" y="40">',
                         currentStep(bagId).description,
                         '</text><text x="10" y="60">',
-                        currentStep(bagId).action,
+                        currentStep(bagId).requirements,
                         '</text></svg>'
                     )
                 );
@@ -226,7 +227,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
                         '</text><text x="10" y="60">',
                         currentStep(bagId).description,
                         '</text><text x="10" y="80">',
-                        currentStep(bagId).action,
+                        currentStep(bagId).requirements,
                         '</text></svg>'
                     )
                 );

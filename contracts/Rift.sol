@@ -41,6 +41,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     uint256 public riftPower = 100000;
     uint256 public riftObjectsSacrificed = 0;
+    uint32 internal xpMultTiny = 10;
+    uint32 internal xpMultMod = 50;
+    uint32 internal xpMultLrg = 100;
+    uint32 internal xpMultEpc = 300;
 
     mapping(uint256 => RiftBag) public bags;
     mapping(address => uint256) public karma;
@@ -105,6 +109,13 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         iMana = IMana(addr);
     }
 
+    function ownerSetXPMultipliers(uint32 tiny, uint32 moderate, uint32 large, uint32 epic) external onlyOwner {
+        xpMultTiny = tiny;
+        xpMultMod = moderate;
+        xpMultLrg = large;
+        xpMultEpc = epic;
+    }
+
     // READ
 
     modifier _isBagHolder(uint256 bagId, address owner) {
@@ -163,7 +174,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         bags[bagId].charges -= amount;
     }
 
-     function awardXP(uint32 bagId, uint32 xp) external nonReentrant {
+     function awardXP(uint32 bagId, XP_AMOUNT xp) external nonReentrant {
         require(_msgSender() == riftQuests, "only the worthy");
     
         if (bags[bagId].level == 0) {
@@ -172,7 +183,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
             riftPower -= 1;
         }
 
-        bags[bagId].xp += xp;
+        bags[bagId].xp += convertXP(xp, bagId);
         
         /*
  _        _______           _______  _                   _______  _ 
@@ -191,6 +202,16 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
             bags[bagId].charges += levelChargeAward[bags[bagId].level];
             riftPower -= levelChargeAward[bags[bagId].level] * bags[bagId].level;
         }
+    }
+
+    function convertXP(XP_AMOUNT xp, uint32 bagId) internal view returns (uint32) {
+        if (xp == XP_AMOUNT.NONE) { return 0; }
+        else if (xp == XP_AMOUNT.TINY) { return bags[bagId].level * xpMultTiny; }
+        else if (xp == XP_AMOUNT.MODERATE) { return bags[bagId].level * xpMultMod; }
+        else if (xp == XP_AMOUNT.LARGE) { return bags[bagId].level * xpMultLrg; }
+        else if (xp == XP_AMOUNT.EPIC) { return bags[bagId].level * xpMultEpc; }
+
+        return 0;
     }
 
     function growTheRift(address burnableAddr, uint256 tokenId) external {

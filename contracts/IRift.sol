@@ -12,15 +12,15 @@ struct RiftBag {
 interface IRift {
     function useCharge(uint16 amount, uint256 bagId, address from) external;
     function bags(uint256 bagId) external view returns (RiftBag memory);
-    function awardXP(uint32 bagId, uint32 xp) external;
+    function awardXP(uint32 bagId, XP_AMOUNT xp) external;
     function isBagHolder(uint256 bagId, address owner) external;
 }
 
 struct QuestStep {
-    string action;
+    string requirements;
     string description;
     string result;
-    uint32 xp;
+    XP_AMOUNT xp;
 }
 
 struct BagProgress {
@@ -28,14 +28,16 @@ struct BagProgress {
     bool completedQuest;
 }
 
+enum XP_AMOUNT { NONE, TINY, MODERATE, LARGE, EPIC }
+
 interface IRiftQuest {
     function title() external view returns (string memory);
     function numSteps() external view returns (uint64);
     function canStartQuest(uint256 bagId) external view returns (bool);
     function isCompleted(uint256 bagId) external view returns (bool);
     function currentStep(uint256 bagId) external view returns (QuestStep memory);
-    function completeStep(uint64 step, uint256 bagId, address from) external;
-    function stepAwardXP(uint64 step) external view returns (uint32);
+    function completeStep(uint32 step, uint256 bagId, address from) external;
+    function stepAwardXP(uint64 step) external view returns (XP_AMOUNT);
     function tokenURI(uint256 bagId) external view returns (string memory);
 }
 

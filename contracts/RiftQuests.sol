@@ -47,8 +47,11 @@ contract RiftQuests is ERC721,
 
     mapping(uint256 => QuestingStats) public bagQuestStats;
     mapping(uint256 => QuestLogEntry) public questLog;
+    mapping(uint256 => address) public discoveredQuests;
+    mapping(uint256 => address[]) public completedQuests;
     mapping(uint256 => mapping(address => uint256)) public bagQuestIds;
     mapping(address => bool) approvedQuests;
+    mapping(address => mapping(uint32 => XP_AMOUNT)) public questXPMap;
 
     uint256 questsBegan;
 
@@ -58,11 +61,11 @@ contract RiftQuests is ERC721,
         iRift = IRift(rift);
      }
 
-    function completeStep(address quest, uint64 step, uint256 bagId) external whenNotPaused nonReentrant {
+    function completeStep(address quest, uint32 step, uint256 bagId) external whenNotPaused nonReentrant {
         require(approvedQuests[quest], "Only complete step on approved quests");
         iRift.isBagHolder(bagId, _msgSender());
         IRiftQuest(quest).completeStep(step, bagId, _msgSender());
-
+        
         uint256 questId = bagQuestIds[bagId][quest];
         // quest just started
         if (questId == 0) {
@@ -77,7 +80,7 @@ contract RiftQuests is ERC721,
         }
 
         questLog[questId].stepsCompleted = step;
-        iRift.awardXP(uint32(bagId), IRiftQuest(quest).stepAwardXP(step));
+        iRift.awardXP(uint32(bagId), questXPMap[quest][step]);
     }
 
     // todo: what sort of payment should this function support? 
@@ -112,6 +115,12 @@ contract RiftQuests is ERC721,
         returns (string memory) 
     {
         return IRiftQuest(questLog[questId].quest).tokenURI(questLog[questId].bagId);
+    }
+
+    // owner
+
+    function ownerSetXP(address quest, uint32 step, XP_AMOUNT xp) external onlyOwner {
+        questXPMap[quest][step] = xp;
     }
 
     function setPaused(bool _paused) external onlyOwner {
