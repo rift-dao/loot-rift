@@ -7,6 +7,7 @@ struct RiftBag {
         uint16 chargesUsed;
         uint16 level;
         uint256 xp;
+        uint64 lastChargePurchase;
     }
 
 interface IRift {

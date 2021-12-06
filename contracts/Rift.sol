@@ -143,25 +143,22 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     
     // WRITE
 
-    // pay to charge
-    // function chargeBag(uint256 bagId) external whenNotPaused nonReentrant {
-    //     require(bagsMap[bagId].isCharged == false, "already charged");
-
-    //     isBagHolder(bagId, _msgSender());
-
-    //     uint256 cost = 0;
-    //     // first taste is always free
-    //     if (bagsMap[bagId].generation > 0) {
-    //         require(riftCost[bagsMap[bagId].generation + 1].manaCost > 0, "GEN NOT AVL"); 
-    //         cost = getRegistrationCost(bagsMap[bagId].generation + 1);
-    //         if (bagId > 8000) cost = cost / 10; // mLoot discount
-    //     }
-
-    //     iMana.burn(_msgSender(), cost);
-    //     bagsMap[bagId].isCharged = true;
-
-    //     generationRegistry[bagsMap[bagId].generation + 1] += 1;
-    // }
+    // pay to charge. only once per day
+    function buyCharge(uint256 bagId) external
+        _isBagHolder(bagId, _msgSender()) 
+        whenNotPaused 
+        nonReentrant {
+    
+        require(block.timestamp - bags[bagId].lastChargePurchase > 1 days, "Too soon"); 
+        
+        //one with the rift
+        if (karma[_msgSender()] > 500) {
+            _chargeBag(bagId);
+        } else {
+            iMana.burn(_msgSender(), bags[bagId].level * 1000);
+            _chargeBag(bagId);
+        }
+    }
 
     function useCharge(uint16 amount, uint256 bagId, address from) 
         _isBagHolder(bagId, from) 
@@ -181,8 +178,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     
         if (bags[bagId].level == 0) {
             bags[bagId].level = 1;
-            bags[bagId].charges = 1;
-            riftPower -= 1;
+            _chargeBag(bagId);
         }
 
         bags[bagId].xp += convertXP(xp, bagId);
@@ -201,9 +197,13 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         while (bags[bagId].xp >= xpRequired[bags[bagId].level]) {
             bags[bagId].xp -= xpRequired[bags[bagId].level];
             bags[bagId].level += 1;
-            bags[bagId].charges += levelChargeAward[bags[bagId].level];
-            riftPower -= levelChargeAward[bags[bagId].level] * bags[bagId].level;
+            _chargeBag(bagId);
         }
+    }
+
+    function _chargeBag(uint256 bagId) internal {
+        bags[bagId].charges += levelChargeAward[bags[bagId].level];
+        riftPower -= levelChargeAward[bags[bagId].level] * bags[bagId].level;
     }
 
     function convertXP(XP_AMOUNT xp, uint32 bagId) internal view returns (uint32) {
