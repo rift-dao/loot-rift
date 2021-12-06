@@ -50,7 +50,8 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     mapping(address => uint256) public karma;
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
-    mapping(address => bool) riftObjects;
+    mapping(address => bool) public riftObjects;
+    address[] public riftObjectsArr;
 
     constructor() Ownable() {
     }
@@ -77,6 +78,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     */
     function addRiftObject(address controller) external onlyOwner {
         riftObjects[controller] = true;
+        riftObjectsArr.push(controller);
     }
 
     /**
