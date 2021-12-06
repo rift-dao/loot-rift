@@ -158,6 +158,8 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
             iMana.burn(_msgSender(), bags[bagId].level * 1000);
             _chargeBag(bagId);
         }
+
+        bags[bagId].lastChargePurchase = uint64(block.timestamp);
     }
 
     function useCharge(uint16 amount, uint256 bagId, address from) 
