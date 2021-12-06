@@ -45,11 +45,16 @@ contract RiftQuests is ERC721,
         uint256 questsCompleted;
     }
 
-    mapping(uint256 => QuestingStats) public bagQuestStats;
+    // look up by quest id
     mapping(uint256 => QuestLogEntry) public questLog;
-    mapping(uint256 => address) public discoveredQuests;
-    mapping(uint256 => address[]) public completedQuests;
-    mapping(uint256 => mapping(address => uint256)) public bagQuestIds;
+
+    // look up by bag id
+    mapping(uint256 => QuestingStats) public bagQuestStats;
+    mapping(uint256 => address[]) public bagDiscoveredQuests;
+    mapping(uint256 => address[]) public bagCompletedQuests;
+    mapping(uint256 => mapping(address => uint256)) public bagQuestIds; // bagId questAddress questId
+
+    // look up by quest address
     mapping(address => bool) approvedQuests;
     mapping(address => mapping(uint32 => XP_AMOUNT)) public questXPMap;
 
@@ -77,6 +82,10 @@ contract RiftQuests is ERC721,
             questLog[questId].bagId = bagId;
 
             bagQuestStats[bagId].questsBegan += 1;
+        }
+
+        if (IRiftQuest(quest).bagsProgress(bagId).completedQuest) {
+            bagCompletedQuests[bagId].push(quest);
         }
 
         questLog[questId].stepsCompleted = step;

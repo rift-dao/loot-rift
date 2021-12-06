@@ -11,11 +11,11 @@ import "./IRift.sol";
 contract EnterTheRift is Ownable, IRiftQuest {
 
     mapping(uint64 => QuestStep) public steps;
-    mapping(uint256 => BagProgress) public bagsProgress;
+    mapping(uint256 => BagProgress) public bagsProgress_;
+    // address[] public chainedQuests;
     uint32 private _numSteps;
 
     ICrystals public iCrystals;
-    IRiftQuest public iRiftQuest;
     ERC20 public iMana;
     
     address riftQuest;
@@ -47,20 +47,20 @@ contract EnterTheRift is Ownable, IRiftQuest {
     
     function completeStep(uint32 step, uint256 bagId, address from) override public {
         require(_msgSender() == riftQuest, "must be interacted through RiftQuests");
-        require(bagsProgress[bagId].lastCompletedStep < step, "you've completed this step already");
+        require(bagsProgress_[bagId].lastCompletedStep < step, "you've completed this step already");
 
         if (step == 1) {
             // owner bag check performed by RiftQuests
-            bagsProgress[bagId].lastCompletedStep = 1;
-            
+            bagsProgress_[bagId].lastCompletedStep = 1;
+
         } else if (step == 2) {
             // verify bag made a crystal
             require(iCrystals.bags(bagId).mintCount > 0, "Make a Crystal");
-            bagsProgress[bagId].lastCompletedStep = 2;
+            bagsProgress_[bagId].lastCompletedStep = 2;
         } else if (step == 3) {
             require(iMana.balanceOf(from) > 0, "Claim your Mana");
-            bagsProgress[bagId].lastCompletedStep = 3;
-            bagsProgress[bagId].completedQuest = true;
+            bagsProgress_[bagId].lastCompletedStep = 3;
+            bagsProgress_[bagId].completedQuest = true;
         }
     }
 
@@ -79,15 +79,19 @@ contract EnterTheRift is Ownable, IRiftQuest {
     }
 
     function isCompleted(uint256 bagId) override public view returns (bool) {
-        return bagsProgress[bagId].completedQuest;
+        return bagsProgress_[bagId].completedQuest;
     }
 
     function currentStep(uint256 bagId) override public view returns (QuestStep memory) {
-        return steps[bagsProgress[bagId].lastCompletedStep + 1];
+        return steps[bagsProgress_[bagId].lastCompletedStep + 1];
     }
 
     function stepAwardXP(uint64 step) external view returns (XP_AMOUNT) {
         return steps[step].xp;
+    }
+
+    function bagsProgress(uint256 bagId) override public view returns (BagProgress memory) {
+        return bagsProgress_[bagId];
     }
 
     function testTokenURI(uint64 step) external view returns (string memory) {
@@ -201,12 +205,12 @@ contract EnterTheRift is Ownable, IRiftQuest {
                 abi.encodePacked(
                     output,
                     '</text><text x="10" y="40">',
-                    steps[bagsProgress[bagId].lastCompletedStep].result,
+                    steps[bagsProgress_[bagId].lastCompletedStep].result,
                     '</text><text x="10" y="60">Quest Completed!</text></svg>'
                 )
             );
         } else {
-            if (bagsProgress[bagId].lastCompletedStep == 0) {
+            if (bagsProgress_[bagId].lastCompletedStep == 0) {
                 // hasn't started quest, no result to show
                 output = string(
                     abi.encodePacked(
@@ -223,7 +227,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
                     abi.encodePacked(
                         output,
                         '</text><text x="10" y="40">',
-                        steps[bagsProgress[bagId].lastCompletedStep].result,
+                        steps[bagsProgress_[bagId].lastCompletedStep].result,
                         '</text><text x="10" y="60">',
                         currentStep(bagId).description,
                         '</text><text x="10" y="80">',
@@ -288,10 +292,6 @@ contract EnterTheRift is Ownable, IRiftQuest {
 
     function ownerSetCrystalsAddress(address crystals_) external onlyOwner {
         iCrystals = ICrystals(crystals_);
-    }
-
-    function ownerSetRiftQuestsAddress(address riftQuests_) external onlyOwner {
-        iRiftQuest = IRiftQuest(riftQuests_);
     }
 
     function ownerSetManaAddress(address mana_) external onlyOwner {

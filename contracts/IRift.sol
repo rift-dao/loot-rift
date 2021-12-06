@@ -31,6 +31,7 @@ struct BagProgress {
 enum XP_AMOUNT { NONE, TINY, MODERATE, LARGE, EPIC }
 
 interface IRiftQuest {
+    function bagsProgress(uint256 bagId) external view returns (BagProgress memory);
     function title() external view returns (string memory);
     function numSteps() external view returns (uint64);
     function canStartQuest(uint256 bagId) external view returns (bool);
