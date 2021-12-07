@@ -28,18 +28,31 @@ contract EnterTheRift is Ownable, IRiftQuest {
         _numSteps = 3;
         
         steps[1].requirements = "Step into the Rift";
-        steps[1].description = "Ever since you first picked up that bag, you've felt drawn to this place. Now you see what's beckoning you, a chaotic rip in reality. You're struck with pure fear, and yet you cannot help but step towards it.";
-        steps[1].result = "You didn't venture far, a few feet maybe. You couldn't stand the tremendous force for more than a few moments. You're not ready. ~~you got a rift charge~~";
+        steps[1].description = ["Ever since you first picked up that bag, you've",
+                                "felt drawn to this place. Now you see what beckons",
+                                "you, a chaotic rip in reality. You're struck with",
+                                "pure fear, and yet you cannot help but step towards it."];
+        steps[1].result =       ["You didn't venture far, a few feet maybe. You couldn't",
+                                "stand the tremendous force for more than a few moments.",
+                                "You're not ready.", "",
+                                "~~you got a rift charge~~"];
         steps[1].xp = XP_AMOUNT.MODERATE;
 
         steps[2].requirements = "Distill a Crystal";
-        steps[2].description = "You've returned to camp to make sense of what you experienced, when you notice that same strange force emanating from your bag.";
-        steps[2].result = "You peek inside, and see the glowing force crystalize before your eyes. It's glowing with the Rift's power... ~~you found a crystal!~~";
+        steps[2].description = ["You've returned to camp to make sense of what you",
+                                "experienced, when you notice that same strange force",
+                                "emanating from your bag."];
+        steps[2].result = ["You peek inside, and see the glowing force crystalize",
+                            "before your eyes. It's glowing with the Rift's power...",
+                            "","~~you found a crystal!~~"];
         steps[2].xp = XP_AMOUNT.MODERATE;
 
         steps[3].requirements = "Claim Mana";
-        steps[3].description = "You take the Crystal out of your bag, it's heavier than it looks.";
-        steps[3].result = "Its glow intensifies, and you feel a powerful energy move from the Crystal into you. ~~you gained mana~~";
+        steps[3].description = ["You take the Crystal out of your bag, it's heavier ",
+                                "than it looks."];
+        steps[3].result = ["Its glow intensifies, and you feel a powerful",
+                            "energy move from the Crystal into you.",
+                            "","~~you gained mana~~"];
         steps[3].xp = XP_AMOUNT.MODERATE;
     }
 
@@ -94,119 +107,161 @@ contract EnterTheRift is Ownable, IRiftQuest {
         return bagsProgress_[bagId];
     }
 
-    function testTokenURI(uint64 step) external view returns (string memory) {
+    function buildMessage(uint start, string[] memory strings) internal pure returns (string memory) {
         string memory output;
 
-        output = string(
-            abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 20px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">',
-                title()
-            )
-        );
-
-
-        if (step == 4) {
+        uint _i = 0;
+        uint _xoffset = 20;
+        while (_i < strings.length) {
+            if (_i > 0) { _xoffset = 10; }
             output = string(
                 abi.encodePacked(
                     output,
-                    '</text><text x="10" y="40">',
-                    steps[3].result,
-                    '</text><text x="10" y="60">Quest Completed!</text></svg>'
+                    '</text><text x="',
+                    toString(_xoffset),
+                    '" y="',
+                    toString(_i * 20 + start),
+                    '">',
+                    strings[_i]
                 )
             );
-        } else {
-            if (step == 1) {
-                // hasn't started quest, no result to show
-                output = string(
-                    abi.encodePacked(
-                        output,
-                        '</text><text x="10" y="40">',
-                        steps[1].description,
-                        '</text><text x="10" y="60">',
-                        steps[1].requirements,
-                        '</text></svg>'
-                    )
-                );
-            } else {
-                output = string(
-                    abi.encodePacked(
-                        output,
-                        '</text><text x="10" y="40">',
-                        steps[step - 1].result,
-                        '</text><text x="10" y="60">',
-                        steps[step].description,
-                        '</text><text x="10" y="80">',
-                        steps[step].requirements,
-                        '</text></svg>'
-                    )
-                );
-            }
+            _i+=1;
         }
-        
-        // output = string(
-        //     abi.encodePacked(
-        //         '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>text{fill:',
-        //         getColor(tokenId),
-        //         ";font-family:serif;font-size:14px};transform-origin:bottom right;font-size:",
-        //         toString(160 / rows),
-        //         'px;}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
-        //         title()
-        //     )
-        // );
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         '</text><text x="10" y="40">Resonance: ',
-        //         toString(iCrystals.getResonance(tokenId)),
-        //         '</text><text x="10" y="60">Spin: ',
-        //         toString(iCrystals.getSpin(tokenId)),
-        //         '</text><text x="10" y="338" style="font-size: 12px;">gen.',
-        //         toString(tokenId / MAX_CRYSTALS + 1),
-        //         '</text>',
-        //         getSlabs(tokenId, rows),
-        //         '</svg>'
-        //     )
-        // );
 
-        string memory metadata = string(
-            abi.encodePacked(
-                '{"id": 0001, "name": "',
-                title(),
-                '", "bagId": 0001, "description": "The first steps into the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Step Count", "value":',
-                toString(numSteps()),
-                ' }, { "trait_type": "Completed", "value": ',
-                step == numSteps() ? 'true' : 'false'
-        ));
-
-
-        return string(
-            abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(string(
-                abi.encodePacked(
-                    metadata,
-                    '" }], "image": "data:image/svg+xml;base64,',
-                    Base64.encode(bytes(output)), '"}'
-                )
-        )))));
+        return output;
     }
+
+    // function testTokenURI(uint64 step) external view returns (string memory) {
+    //     string memory output;
+
+    //     string memory status = string(
+    //         abi.encodePacked(
+    //             'Step ',
+    //             toString(step),
+    //             ' out of 3'
+    //         )
+    //     );
+    //     if (step == 4) {
+    //         status = "Complete";
+    //     }
+
+    //     output = string(
+    //         abi.encodePacked(
+    //             '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>text{ fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">',
+    //             title(),
+    //             ' -- ',
+    //             status
+    //         )
+    //     );
+
+    //     uint _offset = 80;
+    //     if (step == 4) {
+    //         output = string(
+    //             abi.encodePacked(
+    //                 output,
+    //                 buildMessage(_offset, steps[3].result)
+    //             )
+    //         );
+    //         _offset += 20 * steps[3].result.length;
+                                
+    //         output = string(
+    //             abi.encodePacked(
+    //                 output,
+    //                 '</text></svg>'
+    //             )
+    //         );
+    //     } else {
+    //         if (step == 1) {
+    //             // hasn't started quest, no result to show
+    //             output = string(
+    //                 abi.encodePacked(
+    //                     output,
+    //                     buildMessage(_offset, steps[1].description)
+    //                 )
+    //             );
+    //             _offset += 20 * steps[1].description.length;
+                                
+    //             output = string(
+    //                 abi.encodePacked(
+    //                     output,
+    //                     '</text><text x="10" y="',
+    //                     toString(_offset + 40),
+    //                     '">Requirement: ',
+    //                     steps[1].requirements,
+    //                     '</text></svg>'
+    //                 )
+    //             );
+    //         } else {
+    //             output = string(
+    //                 abi.encodePacked(
+    //                     output,
+    //                     buildMessage(_offset, steps[step - 1].result)
+    //                 )
+    //             );
+    //             _offset += 20 * steps[step - 1].result.length + 20;
+
+    //             output = string(
+    //                 abi.encodePacked(
+    //                     output,
+    //                     buildMessage(_offset, steps[step].description)
+    //                 )
+    //             );
+    //             _offset += 20 * steps[step].description.length;
+                                
+    //             output = string(
+    //                 abi.encodePacked(
+    //                     output,
+    //                     '</text><text x="10" y="',
+    //                     toString(_offset + 40),
+    //                     '">Requirement: ',
+    //                     steps[step].requirements,
+    //                     '</text></svg>'
+    //                 )
+    //             );
+    //         }
+    //     }
+
+    //     string memory metadata = string(
+    //         abi.encodePacked(
+    //             '{"id": 0001, "name": "',
+    //             title(),
+    //             '", "bagId": 0001, "description": "The first steps into the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Step Count", "value":',
+    //             toString(numSteps()),
+    //             ' }, { "trait_type": "Completed", "value": ',
+    //             step == numSteps() ? 'true' : 'false'
+    //     ));
+
+
+    //     return string(
+    //         abi.encodePacked("data:application/json;base64,", Base64.encode(bytes(string(
+    //             abi.encodePacked(
+    //                 metadata,
+    //                 '" }], "image": "data:image/svg+xml;base64,',
+    //                 Base64.encode(bytes(output)), '"}'
+    //             )
+    //     )))));
+    // }
 
     function tokenURI(uint256 bagId) override external view returns (string memory) {
         string memory output;
 
+        QuestStep memory _currentStep = currentStep(bagId);
+
         output = string(
             abi.encodePacked(
-                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>.base { fill: white; font-family: serif; font-size: 20px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">',
-                title()
+                '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>text{ fill: white; font-family: serif; font-size: 14px; }</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20" class="base">',
+                title(),
+                isCompleted(bagId) ? " -- Complete!" : ""
             )
         );
 
-
+        uint _offset = 80;
         if (isCompleted(bagId)) {
             output = string(
                 abi.encodePacked(
                     output,
-                    '</text><text x="10" y="40">',
-                    steps[bagsProgress_[bagId].lastCompletedStep].result,
-                    '</text><text x="10" y="60">Quest Completed!</text></svg>'
+                    buildMessage(_offset, steps[bagsProgress_[bagId].lastCompletedStep].result),
+                    '</text></svg>'
                 )
             );
         } else {
@@ -215,10 +270,18 @@ contract EnterTheRift is Ownable, IRiftQuest {
                 output = string(
                     abi.encodePacked(
                         output,
-                        '</text><text x="10" y="40">',
-                        currentStep(bagId).description,
-                        '</text><text x="10" y="60">',
-                        currentStep(bagId).requirements,
+                        buildMessage(_offset, _currentStep.description)
+                    )
+                );
+                _offset += 20 * _currentStep.description.length;
+                                
+                output = string(
+                    abi.encodePacked(
+                        output,
+                        '</text><text x="10" y="',
+                        toString(_offset + 40),
+                        '">Requirement: ',
+                        _currentStep.requirements,
                         '</text></svg>'
                     )
                 );
@@ -226,42 +289,31 @@ contract EnterTheRift is Ownable, IRiftQuest {
                 output = string(
                     abi.encodePacked(
                         output,
-                        '</text><text x="10" y="40">',
-                        steps[bagsProgress_[bagId].lastCompletedStep].result,
-                        '</text><text x="10" y="60">',
-                        currentStep(bagId).description,
-                        '</text><text x="10" y="80">',
-                        currentStep(bagId).requirements,
+                        buildMessage(_offset, steps[bagsProgress_[bagId].lastCompletedStep].result)
+                    )
+                );
+                _offset += 20 * steps[bagsProgress_[bagId].lastCompletedStep].result.length + 20;
+
+                output = string(
+                    abi.encodePacked(
+                        output,
+                        buildMessage(_offset, _currentStep.description)
+                    )
+                );
+                _offset += 20 * _currentStep.description.length;
+                                
+                output = string(
+                    abi.encodePacked(
+                        output,
+                        '</text><text x="10" y="',
+                        toString(_offset + 40),
+                        '">Requirement: ',
+                        _currentStep.requirements,
                         '</text></svg>'
                     )
                 );
             }
         }
-        
-        // output = string(
-        //     abi.encodePacked(
-        //         '<svg xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMinYMin meet" viewBox="0 0 350 350"><style>text{fill:',
-        //         getColor(tokenId),
-        //         ";font-family:serif;font-size:14px};transform-origin:bottom right;font-size:",
-        //         toString(160 / rows),
-        //         'px;}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
-        //         title()
-        //     )
-        // );
-        // output = string(
-        //     abi.encodePacked(
-        //         output,
-        //         '</text><text x="10" y="40">Resonance: ',
-        //         toString(iCrystals.getResonance(tokenId)),
-        //         '</text><text x="10" y="60">Spin: ',
-        //         toString(iCrystals.getSpin(tokenId)),
-        //         '</text><text x="10" y="338" style="font-size: 12px;">gen.',
-        //         toString(tokenId / MAX_CRYSTALS + 1),
-        //         '</text>',
-        //         getSlabs(tokenId, rows),
-        //         '</svg>'
-        //     )
-        // );
 
         string memory metadata = string(
             abi.encodePacked(

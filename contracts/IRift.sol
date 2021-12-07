@@ -19,8 +19,8 @@ interface IRift {
 
 struct QuestStep {
     string requirements;
-    string description;
-    string result;
+    string[] description;
+    string[] result;
     XP_AMOUNT xp;
 }
 
