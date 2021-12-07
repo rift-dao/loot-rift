@@ -41,6 +41,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     uint256 public riftPower = 100000;
     uint256 public riftObjectsSacrificed = 0;
+
+    uint256 internal karmaTotal;
+    uint256 internal karmaHolders;
+
     uint32 internal xpMultTiny = 10;
     uint32 internal xpMultMod = 50;
     uint32 internal xpMultLrg = 100;
@@ -152,7 +156,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         require(block.timestamp - bags[bagId].lastChargePurchase > 1 days, "Too soon"); 
         
         //one with the rift
-        if (karma[_msgSender()] > 500) {
+        if (topKarmaHolder(_msgSender())) {
             _chargeBag(bagId);
         } else {
             iMana.burn(_msgSender(), bags[bagId].level * 1000);
@@ -229,7 +233,15 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         ERC721Burnable(burnableAddr).burn(tokenId);
 
         riftPower += powerIncrease;
+        if (karma[_msgSender()] == 0) { karmaHolders += 1; }
+        karmaTotal += powerIncrease;
         karma[_msgSender()] += powerIncrease;
         riftObjectsSacrificed += 1;        
+    }
+
+    function topKarmaHolder(address holder) public view returns (bool) {
+        require(karma[holder] > 0, "has no karma");
+        uint256 medianKarma = karmaTotal / karmaHolders;
+        return karma[holder] > (medianKarma * 2);
     }
 }
