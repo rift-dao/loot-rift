@@ -28,9 +28,9 @@ module.exports = function(deployer) {
     rift.addRiftObject(crystals.address);
     rift.ownerSetLootAddress(notLoot.address);
     rift.ownerSetRiftQuestsAddress(riftQuests.address);
-    rift.addXPAddress(crystals.address);
-    rift.addXPAddress(rift.address);
-    rift.addXPAddress(riftQuests.address);
+    rift.addRiftQuest(crystals.address);
+    rift.addRiftQuest(rift.address);
+    rift.addRiftQuest(riftQuests.address);
     rift.ownerSetManaAddress(mana.address);
     riftQuests.addQuest(enterRift.address);
 

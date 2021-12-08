@@ -34,7 +34,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     ERC721 public iLoot;
     ERC721 public iMLoot;
-    address public riftQuests;
     IMana public iMana;
 
     string public description = "The Great Unknown";
@@ -55,7 +54,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
     mapping(address => bool) public riftObjects;
-    mapping(address => bool) public xpAddresses;
+    mapping(address => bool) public riftQuests;
     address[] public riftObjectsArr;
 
     constructor() Ownable() {
@@ -73,8 +72,12 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         iMLoot = ERC721(addr);
     }
 
-    function ownerSetRiftQuestsAddress(address addr) public onlyOwner {
-        riftQuests = addr;
+    function addRiftQuest(address addr) public onlyOwner {
+        riftQuests[addr] = true;
+    }
+
+    function removeRiftQuest(address addr) public onlyOwner {
+        riftQuests[addr] = false;
     }
 
     /**
@@ -92,14 +95,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     */
     function removeRiftObject(address controller) external onlyOwner {
         riftObjects[controller] = false;
-    }
-
-    function addXPAddress(address controller) external onlyOwner {
-        xpAddresses[controller] = true;
-    }
-
-    function removeXPAddress(address controller) external onlyOwner {
-        xpAddresses[controller] = false;
     }
 
     function setPaused(bool _paused) external onlyOwner {
@@ -189,7 +184,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function awardXP(uint32 bagId, XP_AMOUNT xp) public nonReentrant {
-        require(xpAddresses[msg.sender], "only the worthy");
+        require(riftQuests[msg.sender], "only the worthy");
     
         if (bags[bagId].level == 0) {
             bags[bagId].level = 1;

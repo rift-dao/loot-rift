@@ -34,9 +34,9 @@ contract('Adventure', function ([owner, other]) {
         await this.rift.addRiftObject(this.crystals.address);
         await this.rift.ownerSetLootAddress(this.loot.address);
         await this.rift.ownerSetRiftQuestsAddress(this.quests.address);
-        await this.rift.addXPAddress(this.crystals.address);
-        await this.rift.addXPAddress(this.rift.address);
-        await this.rift.addXPAddress(this.quests.address);
+        await this.rift.addRiftQuest(this.crystals.address);
+        await this.rift.addRiftQuest(this.rift.address);
+        await this.rift.addRiftQuest(this.quests.address);
         await this.quests.addQuest(this.enterRift.address);
 
         await this.quests.ownerSetXP(this.enterRift.address, 1, 2);
