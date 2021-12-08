@@ -11,6 +11,7 @@ struct RiftBag {
     }
 
 interface IRift {
+    function setupNewBag(uint256 bagId) external;
     function useCharge(uint16 amount, uint256 bagId, address from) external;
     function bags(uint256 bagId) external view returns (RiftBag memory);
     function awardXP(uint32 bagId, XP_AMOUNT xp) external;

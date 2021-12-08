@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "./Interfaces.sol";
 import "./IRift.sol";
 
-contract EnterTheRift is Ownable, IRiftQuest {
+contract CrystalGuide is Ownable, IRiftQuest {
 
     mapping(uint64 => QuestStep) public steps;
     mapping(uint256 => BagProgress) public bagsProgress_;
@@ -27,33 +27,36 @@ contract EnterTheRift is Ownable, IRiftQuest {
 
         _numSteps = 3;
         
-        steps[1].requirements = "Step into the Rift";
-        steps[1].description = ["Ever since you first picked up that bag, you've",
-                                "felt drawn to this place. Now you see what beckons",
-                                "you, a chaotic rip in reality. You're struck with",
-                                "pure fear, and yet you cannot help but step towards it."];
-        steps[1].result =       ["You didn't venture far, a few feet maybe. You couldn't",
-                                "stand the tremendous force for more than a few moments.",
-                                "You're not ready.", 
-                                "","~~you got a rift charge~~"];
+        steps[1].requirements = "Use a Rift Charge to make a Crystal";
+        steps[1].description = ["What's this? You find an old scroll in your bag. You could",
+                                "swear it wasn't there before. Did the Crystal make it? The",
+                                "first line reads: 'Crystals are a physical manifestation",
+                                "of the Rift...' "];
+        steps[1].result =       ["You did it again! You Crystalized the Rift charge from",
+                                "your bag. The Crystal looks different from the first one.",
+                                "It feels more powerful, more in tune with the Rift.", 
+                                "","~~you made a more powerful crystal!~~"];
         steps[1].xp = XP_AMOUNT.MODERATE;
 
-        steps[2].requirements = "Distill a Crystal";
-        steps[2].description =  ["You've returned to camp to make sense of what you",
-                                "experienced, when you notice that same strange force",
-                                "emanating from your bag."];
-        steps[2].result =       ["You peek inside, and see the glowing force crystalize",
-                                "before your eyes. It's glowing with the Rift's power...",
-                                "","~~you made a crystal!~~"];
+        steps[2].requirements = "Refocus a Crystal";
+        steps[2].description =  ["The scroll goes on: '...magic crystals absorb power",
+                                "from the Rift over time. That power can be extracted",
+                                "by the crystal bearer or refocused to improve the",
+                                "Crystal's properties...'"];
+        steps[2].result =       ["You hold the Crystal in your hands, and feel the power",
+                                "inside. It's tempting to take it for yourself, but instead",
+                                "you will the Crystal to consume it. The power instantly",
+                                "vanishes, but now the Crystal is humming even louder!",
+                                "","~~you refocused a crystal!~~"];
         steps[2].xp = XP_AMOUNT.MODERATE;
 
-        steps[3].requirements = "Claim Mana";
-        steps[3].description = ["You take the Crystal out of your bag, it's heavier ",
+        steps[3].requirements = "Generate 500 Mana";
+        steps[3].description =  ["You take the Crystal out of your bag, it's heavier",
                                 "than it looks."];
         steps[3].result =       ["Its glow intensifies, and you feel a powerful energy",
                                 "move from the Crystal into you.",
                                 "","~~you gained mana~~"];
-        steps[3].xp = XP_AMOUNT.MODERATE;
+        steps[3].xp = XP_AMOUNT.LARGE;
     }
 
     // step logic 
@@ -80,7 +83,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
     //IRiftQuest
 
     function title() override public pure returns (string memory) {
-        return "Enter the Rift";
+        return "Crystals: A Guide";
     }
 
     function numSteps() override public view returns (uint64) {

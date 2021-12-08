@@ -60,7 +60,7 @@ contract Crystals is
 
     uint256 public mintedCrystals;
 
-    uint256 public mintFee = 0.02 ether;
+    uint256 public mintFee = 0.04 ether;
     uint256 public mMintFee = 0.01 ether;
 
     // uint256 public lootMintFee = 0;
@@ -80,38 +80,50 @@ contract Crystals is
 
     //WRITE
 
-    function mintCrystal(uint256 bagId)
+    function firstMint(uint256 bagId) 
         external
         payable
         whenNotPaused
         nonReentrant
     {
-        uint16 bagLevel = iRift.bags(bagId).level;
-
-        // mint fee is 100% MANA after minted threshold is reached
-        if (mintedCrystals < mintedThreshold) {
-            if (bagId > 8000) {
-                require(msg.value == bagLevel * mMintFee, "FEE");
-            } else {
-                require(msg.value == bagLevel * mintFee, "FEE");
-            }   
+        require(iRift.bags(bagId).level == 0, "Use mint crystal");
+        if (bagId > 8000) {
+            require(msg.value == mMintFee, "FEE");
         } else {
-            require(msg.value == 0, "only mana");
-            if (bagId > 8000) {
-                iMana.burn(_msgSender(), bagLevel * 10);
-            } else {
-                iMana.burn(_msgSender(), bagLevel * 100);
-            }   
-        }
+            require(msg.value == mintFee, "FEE");
+        }   
+        // set up bag in rift and give it a charge
+        iRift.setupNewBag(bagId);
 
+        _mintCrystal(bagId);
+    }
+
+    // lock to level 2 or higher
+    function mintCrystal(uint256 bagId)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        require(iRift.bags(bagId).level > 0, "Use first mint");
+
+        if (bagId > 8000) {
+            iMana.burn(_msgSender(), iRift.bags(bagId).level * 10);
+        } else {
+            iMana.burn(_msgSender(), iRift.bags(bagId).level * 100);
+        }   
+        _mintCrystal(bagId);
+    }
+
+    function _mintCrystal(uint256 bagId) internal {
         iRift.useCharge(1, bagId, _msgSender());
 
         uint256 tokenId = getNextCrystal(bagId);
 
         bags[tokenId % MAX_CRYSTALS].mintCount += 1;
-        crystalsMap[tokenId].attunement = bagLevel;
+        crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
         crystalsMap[tokenId].level = 1;
 
+        iRift.awardXP(uint32(bagId), XP_AMOUNT.MODERATE);
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
