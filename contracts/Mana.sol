@@ -6,6 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "./IRift.sol";
 
 /// @title Mana (for Adventurers)
 /// @notice This contract mints Mana for Crystals
@@ -14,14 +15,24 @@ contract Mana is Context, Ownable, ERC20 {
     // a mapping from an address to whether or not it can mint / burn
     mapping(address => bool) controllers;
     IERC721Enumerable public crystalsContract;
+    IRift public iRift;
+    uint256 public supplyMultiplier = 10000000;
 
     constructor() Ownable() ERC20("Adventure Mana", "AMNA") {
         _mint(_msgSender(), 1000000);
     }
 
-    // function testMint(uint256 amount) external {
-    //     _mint(_msgSender(), amount);
-    // }
+    function ownerSetRift(address rift) public onlyOwner {
+        iRift = IRift(rift);
+    }
+
+    function ownerSetSupplyMultiplier(uint256 mult) public onlyOwner {
+        supplyMultiplier = mult;
+    }
+
+    function availableSupply() internal view returns (uint256) {
+        return iRift.riftLevel() * supplyMultiplier;
+    }
 
     /// @notice function for Crystals contract to mint on behalf of to
     /// @param recipient address to send mana to
@@ -29,6 +40,7 @@ contract Mana is Context, Ownable, ERC20 {
     function ccMintTo(address recipient, uint256 amount) external {
         // Check that the msgSender is from Crystals
         require(controllers[msg.sender], "Only controllers can mint");
+        require((totalSupply() + amount) < availableSupply(), "The rift's power is low");
 
         _mint(recipient, amount);
     }

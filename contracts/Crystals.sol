@@ -158,6 +158,8 @@ contract Crystals is
             ) >= crystal.level, "WAIT"
         );
         uint256 claimableMana = iCalculator.claimableMana(tokenId);
+
+        // mint extra mana
         if (claimableMana > (crystal.level * getResonance(tokenId))) {
             iMana.ccMintTo(_msgSender(), claimableMana - (crystal.level * getResonance(tokenId)));
         }

@@ -4,8 +4,8 @@ const Crystals = artifacts.require('Crystals');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
 const ManaCalculator = artifacts.require('CrystalManaCalculator');
 const Rift = artifacts.require('Rift');
-const RiftQuests = artifacts.require('RiftQuests');
-const EnterRift = artifacts.require('EnterTheRift');
+// const RiftQuests = artifacts.require('RiftQuests');
+// const EnterRift = artifacts.require('EnterTheRift');
 
 module.exports = function(deployer) {
   deployer.then(async () => {
@@ -15,11 +15,12 @@ module.exports = function(deployer) {
     const crystals = await deployer.deploy(Crystals, mana.address);
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
     const calculator = await deployer.deploy(ManaCalculator, crystals.address);
-    const riftQuests = await deployer.deploy(RiftQuests, rift.address);
-    const enterRift = await deployer.deploy(EnterRift, riftQuests.address, crystals.address, mana.address);
+    // const riftQuests = await deployer.deploy(RiftQuests, rift.address);
+    // const enterRift = await deployer.deploy(EnterRift, riftQuests.address, crystals.address, mana.address);
 
     mana.addController(crystals.address);
     mana.addController(rift.address);
+    mana.ownerSetRift(rift.address);
     crystals.ownerSetMetadataAddress(crystalsMeta.address);
     crystals.ownerSetCalculatorAddress(calculator.address);
     crystals.ownerSetRiftAddress(rift.address);
@@ -27,16 +28,16 @@ module.exports = function(deployer) {
     crystals.ownerSetMLootAddress(notLoot.address);
     rift.addRiftObject(crystals.address);
     rift.ownerSetLootAddress(notLoot.address);
-    rift.ownerSetRiftQuestsAddress(riftQuests.address);
+    // rift.ownerSetRiftQuestsAddress(riftQuests.address);
     rift.addRiftQuest(crystals.address);
     rift.addRiftQuest(rift.address);
-    rift.addRiftQuest(riftQuests.address);
+    // rift.addRiftQuest(riftQuests.address);
     rift.ownerSetManaAddress(mana.address);
-    riftQuests.addQuest(enterRift.address);
+    // riftQuests.addQuest(enterRift.address);
 
-    riftQuests.ownerSetXP(enterRift.address, 1, 2);
-    riftQuests.ownerSetXP(enterRift.address, 2, 2);
-    riftQuests.ownerSetXP(enterRift.address, 3, 2);
+    // riftQuests.ownerSetXP(enterRift.address, 1, 2);
+    // riftQuests.ownerSetXP(enterRift.address, 2, 2);
+    // riftQuests.ownerSetXP(enterRift.address, 3, 2);
 
     // starting rift information
     rift.ownerSetXpRequirement(1, 100);

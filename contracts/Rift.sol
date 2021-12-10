@@ -38,7 +38,14 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     string public description = "The Great Unknown";
 
-    uint256 public riftPower = 100000;
+    // rift level variables
+    uint256 public riftLevel = 3;
+    uint256 internal riftTier = 1;
+    uint256 internal riftTierPower = 17500;
+    uint16 internal riftTierSize = 5;
+    uint16 internal riftTierIncrease = 15; // 15% increase
+    uint256 internal riftPowerPerLevel = 5000;
+
     uint256 public riftObjectsSacrificed = 0;
 
     uint256 internal karmaTotal;
@@ -78,6 +85,12 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function removeRiftQuest(address addr) public onlyOwner {
         riftQuests[addr] = false;
+    }
+
+    function ownerUpdateRiftTier(uint16 tierSize, uint16 tierIncrease, uint256 ppl) public onlyOwner {
+        riftTierSize = tierSize;
+        riftTierIncrease = tierIncrease;
+        riftPowerPerLevel = ppl;
     }
 
     /**
@@ -213,7 +226,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function _chargeBag(uint256 bagId) internal {
         bags[bagId].charges += levelChargeAward[bags[bagId].level];
-        riftPower -= levelChargeAward[bags[bagId].level] * bags[bagId].level;
+        removeRiftPower(levelChargeAward[bags[bagId].level] * bags[bagId].level);
     }
 
     function setupNewBag(uint256 bagId) external {
@@ -243,7 +256,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         uint256 powerIncrease = IRiftBurnable(burnableAddr).riftPower(tokenId);
         ERC721Burnable(burnableAddr).burn(tokenId);
 
-        riftPower += powerIncrease;
+        addRiftPower(powerIncrease);
         if (karma[_msgSender()] == 0) { karmaHolders += 1; }
         karmaTotal += powerIncrease;
         karma[_msgSender()] += powerIncrease;
@@ -256,5 +269,28 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         require(karma[holder] > 0, "has no karma");
         uint256 medianKarma = karmaTotal / karmaHolders;
         return karma[holder] > (medianKarma * 2);
+    }
+
+    // Rift Power
+    function addRiftPower(uint256 power) internal {
+        riftTierPower += power;
+        riftLevel = riftTierPower/riftPowerPerLevel;
+
+        // up a tier
+        if (riftLevel > (riftTier * riftTierSize)) {
+            riftTierPower -= riftTierSize * riftPowerPerLevel;
+            riftTier += 1;
+            riftPowerPerLevel += (riftPowerPerLevel * riftTierIncrease)/100; // add increase as a percentage
+        }
+    }
+
+    function removeRiftPower(uint256 power) internal {
+        if (power > riftTierPower) {
+            riftTierPower = 0;
+        } else {
+            riftTierPower -= power;
+        }
+
+        riftLevel = riftTierPower/riftPowerPerLevel;
     }
 }
