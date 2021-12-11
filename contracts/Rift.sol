@@ -157,10 +157,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
             require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }
     }
-
-    function getBag(uint256 bagId) external view returns (RiftBag memory) {
-        return bags[bagId];
-    }
     
     // WRITE
 
@@ -176,7 +172,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         if (topKarmaHolder(_msgSender())) {
             _chargeBag(bagId);
         } else {
-            iMana.burn(_msgSender(), bags[bagId].level * 1000);
+            iMana.burn(_msgSender(), bags[bagId].level * 100);
             _chargeBag(bagId);
         }
 
@@ -198,7 +194,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function awardXP(uint32 bagId, XP_AMOUNT xp) public nonReentrant {
         require(riftQuests[msg.sender], "only the worthy");
-    
+    // verify the rift has power
         if (bags[bagId].level == 0) {
             bags[bagId].level = 1;
             _chargeBag(bagId);

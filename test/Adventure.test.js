@@ -55,9 +55,9 @@ contract('Adventure', function ([owner, other]) {
     });
 
     it ('can mint crystal with unregistered bag', async function () {
-        assert.equal((await this.rift.getBag(1)).xp, 0, "New bags have no XP");
+        assert.equal((await this.rift.bags(1)).xp, 0, "New bags have no XP");
         await truffleAssert.passes(this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }));
-        assert.equal((await this.rift.getBag(1)).xp, 50, "First quest step gives 50");
+        assert.equal((await this.rift.bags(1)).xp, 50, "First quest step gives 50");
     });
 
     // it('has a deploying balance', async function () {
@@ -84,12 +84,12 @@ contract('Adventure', function ([owner, other]) {
     // });
 
     // it ('has 50 xp after first quest step', async function () {
-    //     assert.equal((await this.rift.getBag(1)).xp, 0, "New bags have no XP");
+    //     assert.equal((await this.rift.bags(1)).xp, 0, "New bags have no XP");
 
     //     // performs quest step
     //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 1, 1));
 
-    //     assert.equal((await this.rift.getBag(1)).xp, 50, "First quest step gives 50");
+    //     assert.equal((await this.rift.bags(1)).xp, 50, "First quest step gives 50");
     // });
 
     // it ('can not perform the same step twice', async function () {
@@ -102,11 +102,11 @@ contract('Adventure', function ([owner, other]) {
 
     //     // // do first step for a rift charge
     //     await this.quests.completeStep(this.enterRift.address, 1, 1)
-    //     assert.equal((await this.rift.getBag(1)).charges, 1, "Should have 1 charge");
+    //     assert.equal((await this.rift.bags(1)).charges, 1, "Should have 1 charge");
 
     //     // // use charge
     //     await truffleAssert.passes(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") }));
-    //     assert.equal((await this.rift.getBag(1)).charges, 0, "Should have 0 charges");
+    //     assert.equal((await this.rift.bags(1)).charges, 0, "Should have 0 charges");
     //     assert.equal((await this.crystals.bags(1)).mintCount, 1, "1 Crystal minted for this bag");
     // });
 
@@ -121,7 +121,7 @@ contract('Adventure', function ([owner, other]) {
     // it ('can complete the first quest', async function () {
     //     // // do first step for a rift charge
     //     await this.quests.completeStep(this.enterRift.address, 1, 1)
-    //     assert.equal((await this.rift.getBag(1)).level, 1, "Should be level 1");
+    //     assert.equal((await this.rift.bags(1)).level, 1, "Should be level 1");
 
     //     // can't complete without crystal
     //     await truffleAssert.fails(this.quests.completeStep(this.enterRift.address, 2, 1));
@@ -129,13 +129,13 @@ contract('Adventure', function ([owner, other]) {
     //     // use charge
     //     await truffleAssert.passes(this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") }));
     //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 2, 1));
-    //     assert.equal((await this.rift.getBag(1)).level, 2, "Should level up");
+    //     assert.equal((await this.rift.bags(1)).level, 2, "Should level up");
 
     //     // can claim mana
     //     await truffleAssert.passes(this.crystals.claimCrystalMana(1));
     //     await truffleAssert.passes(this.quests.completeStep(this.enterRift.address, 3, 1));
     //     assert((await this.enterRift.bagsProgress(1)).completedQuest, "Has completed quest");
-    //     assert.equal((await this.rift.getBag(1)).level, 3, "Should level up");
+    //     assert.equal((await this.rift.bags(1)).level, 3, "Should level up");
 
     //     await truffleAssert.passes(this.quests.mintQuest(this.enterRift.address, 1));
     // });
