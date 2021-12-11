@@ -106,11 +106,6 @@ contract Crystals is
     {
         require(iRift.bags(bagId).level > 0, "Use first mint");
 
-        if (bagId > 8000) {
-            iMana.burn(_msgSender(), iRift.bags(bagId).level * 10);
-        } else {
-            iMana.burn(_msgSender(), iRift.bags(bagId).level * 100);
-        }   
         _mintCrystal(bagId);
     }
 
@@ -196,8 +191,7 @@ contract Crystals is
 
     function getSpin(uint256 tokenId) public view returns (uint256) {
         uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
-        return ((88 * (crystalsMap[tokenId].level))
-            + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
+        return ((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
             * attunementBonus(crystalsMap[tokenId].attunement);
     }
 
