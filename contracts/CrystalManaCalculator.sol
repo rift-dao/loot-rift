@@ -16,7 +16,7 @@ contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
         iCrystals = ICrystals(addr);
     }
 
-    function claimableMana(uint256 crystalId) override public view returns (uint256) {
+    function claimableMana(uint256 crystalId) override public view returns (uint32) {
         uint256 daysSinceClaim = diffDays(
             iCrystals.crystalsMap(crystalId).lastClaim,
             block.timestamp
@@ -26,7 +26,7 @@ contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
             return 0;
         }
 
-        uint256 manaToProduce = daysSinceClaim * iCrystals.getResonance(crystalId);
+        uint32 manaToProduce = uint32(daysSinceClaim) * iCrystals.getResonance(crystalId);
 
         // if cap is hit, limit mana to cap or level, whichever is greater
         if ((manaToProduce + iCrystals.crystalsMap(crystalId).levelManaProduced) > iCrystals.getSpin(crystalId)) {

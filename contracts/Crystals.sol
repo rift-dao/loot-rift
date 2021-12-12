@@ -53,12 +53,11 @@ contract Crystals is
     ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
     ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
     
-    uint32 public maxLevel = 26;
+    uint8 public maxLevel = 10;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
-    uint32 private mintedThreshold = 8000;
 
-    uint256 public mintedCrystals;
+    uint64 public mintedCrystals;
 
     uint256 public mintFee = 0.04 ether;
     uint256 public mMintFee = 0.01 ether;
@@ -129,7 +128,7 @@ contract Crystals is
         ownsCrystal(tokenId)
         nonReentrant
     {
-        uint256 manaToProduce = iCalculator.claimableMana(tokenId);
+        uint32 manaToProduce = iCalculator.claimableMana(tokenId);
         require(manaToProduce > 0, "NONE");
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].levelManaProduced += manaToProduce;
@@ -172,15 +171,15 @@ contract Crystals is
     }
 
     // READ 
-    function getResonance(uint256 tokenId) public view returns (uint256) {
+    function getResonance(uint256 tokenId) public view returns (uint32) {
         // 1 or 2 per level                             loot vs mloot multiplier               generation bonus
-        return getLevelRolls(tokenId, "%RES", 2, 1)
+        return uint32(getLevelRolls(tokenId, "%RES", 2, 1)
             * (isOGCrystal(tokenId) ? 10 : 1)
-            * attunementBonus(crystalsMap[tokenId].attunement);
+            * attunementBonus(crystalsMap[tokenId].attunement));
     }
 
     // 10% increase per generation
-    function attunementBonus(uint256 genNum) internal pure returns (uint256) {
+    function attunementBonus(uint16 genNum) internal pure returns (uint32) {
         // first gen
         if (genNum == 0) {
             return 1;
@@ -189,10 +188,10 @@ contract Crystals is
         }
     }
 
-    function getSpin(uint256 tokenId) public view returns (uint256) {
-        uint256 multiplier = isOGCrystal(tokenId) ? 10 : 1;
-        return ((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
-            * attunementBonus(crystalsMap[tokenId].attunement);
+    function getSpin(uint256 tokenId) public view returns (uint32) {
+        uint32 multiplier = isOGCrystal(tokenId) ? 10 : 1;
+        return uint32(((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
+            * attunementBonus(crystalsMap[tokenId].attunement));
     }
 
     function riftPower(uint256 tokenId) public view override returns (uint256) {
@@ -248,7 +247,7 @@ contract Crystals is
         collabs[collabIndex] = Collab(contractAddress, namePrefix, MAX_CRYSTALS * levelBonus);
     }
 
-    function ownerUpdateMaxLevel(uint32 maxLevel_) external onlyOwner {
+    function ownerUpdateMaxLevel(uint8 maxLevel_) external onlyOwner {
         require(maxLevel_ > maxLevel, "INV");
         maxLevel = maxLevel_;
     }
@@ -280,10 +279,6 @@ contract Crystals is
 
     function ownerSetMetadataAddress(address addr) external onlyOwner {
         iMetadata = ICrystalsMetadata(addr);
-    }
-
-    function ownerSetMintedThreshold(uint32 threshold_) external onlyOwner {
-        mintedThreshold = threshold_;
     }
 
     function ownerWithdraw() external onlyOwner {
@@ -318,9 +313,9 @@ contract Crystals is
         uint256 size,
         uint256 times
     ) internal view returns (uint256) {
-        uint256 index = 1;
+        uint8 index = 1;
         uint256 score = getRoll(tokenId, key, size, times);
-        uint256 level = crystalsMap[tokenId].level;
+        uint8 level = crystalsMap[tokenId].level;
 
         while (index < level) {
             score += ((

@@ -4,9 +4,9 @@ pragma solidity ^0.8.9;
 
 struct RiftBag {
         uint16 charges;
-        uint16 chargesUsed;
+        uint32 chargesUsed;
         uint16 level;
-        uint256 xp;
+        uint32 xp;
         uint64 lastChargePurchase;
     }
 
@@ -27,7 +27,7 @@ struct QuestStep {
 }
 
 struct BagProgress {
-    uint64 lastCompletedStep;
+    uint32 lastCompletedStep;
     bool completedQuest;
 }
 
