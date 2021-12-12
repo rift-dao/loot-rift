@@ -128,10 +128,12 @@ contract Crystals is
         ownsCrystal(tokenId)
         nonReentrant
     {
+        require(crystalsMap[tokenId].lvlClaims < iRift.riftLevel(), "Rift not powerful enough for this action");
         uint32 manaToProduce = iCalculator.claimableMana(tokenId);
         require(manaToProduce > 0, "NONE");
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].levelManaProduced += manaToProduce;
+        crystalsMap[tokenId].lvlClaims += 1;
         bags[tokenId % MAX_CRYSTALS].totalManaProduced += manaToProduce;
         iMana.ccMintTo(_msgSender(), manaToProduce);
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
@@ -164,7 +166,8 @@ contract Crystals is
             lastLevelUp: uint64(block.timestamp),
             levelManaProduced: 0,
             attunement: crystal.attunement,
-            regNum: crystal.regNum
+            regNum: crystal.regNum,
+            lvlClaims: 0
         });
 
         emit CrystalLeveled(_msgSender(), tokenId, crystal.level);

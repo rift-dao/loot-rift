@@ -14,7 +14,7 @@ struct Crystal {
     uint8 level;
     uint32 levelManaProduced;
     uint32 regNum;
-
+    uint16 lvlClaims;
 }
 
 struct Collab {
