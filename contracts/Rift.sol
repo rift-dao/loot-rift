@@ -172,7 +172,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         if (topKarmaHolder(_msgSender())) {
             _chargeBag(bagId);
         } else {
-            iMana.burn(_msgSender(), bags[bagId].level * 100);
+            iMana.burn(_msgSender(), bags[bagId].level * (bagId < 8001 ? 100 : 10));
             _chargeBag(bagId);
         }
 
@@ -267,7 +267,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function topKarmaHolder(address holder) public view returns (bool) {
-        require(karma[holder] > 0, "has no karma");
+        if (karma[holder] == 0) return false;
         uint256 medianKarma = karmaTotal / karmaHolders;
         return karma[holder] > (medianKarma * 2);
     }

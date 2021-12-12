@@ -47,7 +47,7 @@ contract('Adventure', function ([owner, other]) {
         await this.rift.ownerSetXpRequirement(2, 100);
         await this.rift.ownerSetXpRequirement(3, 100);
 
-        await this.rift.ownerSetLevelChargeAward(1, 2);
+        await this.rift.ownerSetLevelChargeAward(1, 1);
         await this.rift.ownerSetLevelChargeAward(2, 3);
         await this.rift.ownerSetLevelChargeAward(3, 1);
 
@@ -163,21 +163,35 @@ contract('Adventure', function ([owner, other]) {
     //     assert.equal((await this.rift.riftPower()), 100000, "Rifts power grows");
     // });
 
-    it ('burning crystal increases mana gain by spin', async function () {
-        // // use charge
-        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
+    // it ('burning crystal increases mana gain by spin', async function () {
+    //     // // use charge
+    //     await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
 
+    //     const startingMana = await this.mana.balanceOf(owner);
+    //     // const spin = await this.crystals.getSpin(1);
+
+    //     // // a crystal that doesn't exist should fail
+    //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
+    //     // // can't be burned by other user
+    //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
+    //     // // burning increases power
+    //     await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
+
+    //     const endingMana = await this.mana.balanceOf(owner);
+    //     assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
+    // });
+
+    it ('can buy charge', async function () {
+        // this creates and consumes charge
+        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }); 
         const startingMana = await this.mana.balanceOf(owner);
-        // const spin = await this.crystals.getSpin(1);
-
-        // // a crystal that doesn't exist should fail
-        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
-        // // can't be burned by other user
-        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
-        // // burning increases power
-        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
+        // buy a charge
+        await truffleAssert.passes(this.rift.buyCharge(1));
+        assert.equal((await this.rift.bags(1)).charges, 1, "Should have 1 charge");
+        // can't buy 2 in a day
+        await truffleAssert.fails(this.rift.buyCharge(1));
 
         const endingMana = await this.mana.balanceOf(owner);
-        assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
+        assert.equal(startingMana - 100, endingMana, "used 100 mana to buy");
     });
 });
