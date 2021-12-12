@@ -13,7 +13,7 @@ struct Crystal {
     uint64 lastLevelUp;
     uint8 level;
     uint32 levelManaProduced;
-    uint16 regNum;
+    uint32 regNum;
 
 }
 
