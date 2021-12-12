@@ -37,10 +37,12 @@ contract Mana is Context, Ownable, ERC20 {
     /// @notice function for Crystals contract to mint on behalf of to
     /// @param recipient address to send mana to
     /// @param amount number of mana to mint
-    function ccMintTo(address recipient, uint256 amount) external {
+    function ccMintTo(address recipient, uint256 amount, uint8 considerSupply) external {
         // Check that the msgSender is from Crystals
         require(controllers[msg.sender], "Only controllers can mint");
-        require((totalSupply() + amount) < availableSupply(), "The rift's power is low");
+        if (considerSupply > 0) {
+            require((totalSupply() + amount) < availableSupply(), "The rift's power is low");
+        }
 
         _mint(recipient, amount);
     }

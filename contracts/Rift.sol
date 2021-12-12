@@ -194,7 +194,11 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function awardXP(uint32 bagId, XP_AMOUNT xp) public nonReentrant {
         require(riftQuests[msg.sender], "only the worthy");
-    // verify the rift has power
+        _awardXP(bagId, xp);
+    }
+
+    function _awardXP(uint32 bagId, XP_AMOUNT xp) internal {
+        // verify the rift has power
         if (bags[bagId].level == 0) {
             bags[bagId].level = 1;
             _chargeBag(bagId);
@@ -243,23 +247,23 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {
         require(riftObjects[burnableAddr], "Not of the Rift");
-        require(IRiftBurnable(burnableAddr).canBurn(tokenId), "Not ready to burn");
         require(ERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
         
         _sacrificeRiftObject(burnableAddr, tokenId, bagId);
     }
 
     function _sacrificeRiftObject(address burnableAddr, uint256 tokenId, uint256 bagId) internal {
-        uint64 powerIncrease = IRiftBurnable(burnableAddr).riftPower(tokenId);
+        BurnableObject memory bo = IRiftBurnable(burnableAddr).burnObject(tokenId);
         ERC721Burnable(burnableAddr).burn(tokenId);
 
-        addRiftPower(powerIncrease);
+        addRiftPower(bo.power);
         if (karma[_msgSender()] == 0) { karmaHolders += 1; }
-        karmaTotal += powerIncrease;
-        karma[_msgSender()] += powerIncrease;
+        karmaTotal += bo.power;
+        karma[_msgSender()] += bo.power;
         riftObjectsSacrificed += 1;     
 
-        awardXP(uint32(bagId), XP_AMOUNT.MODERATE);
+        _awardXP(uint32(bagId), XP_AMOUNT.MODERATE);
+        iMana.ccMintTo(_msgSender(), bo.mana, 0);
     }
 
     function topKarmaHolder(address holder) public view returns (bool) {

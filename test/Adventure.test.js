@@ -33,7 +33,7 @@ contract('Adventure', function ([owner, other]) {
         await this.crystals.ownerSetMLootAddress(this.loot.address);
         await this.rift.addRiftObject(this.crystals.address);
         await this.rift.ownerSetLootAddress(this.loot.address);
-        await this.rift.ownerSetRiftQuestsAddress(this.quests.address);
+        await this.rift.ownerSetManaAddress(this.mana.address);
         await this.rift.addRiftQuest(this.crystals.address);
         await this.rift.addRiftQuest(this.rift.address);
         await this.rift.addRiftQuest(this.quests.address);
@@ -54,11 +54,11 @@ contract('Adventure', function ([owner, other]) {
         await this.loot.mint(1);
     });
 
-    it ('can mint crystal with unregistered bag', async function () {
-        assert.equal((await this.rift.bags(1)).xp, 0, "New bags have no XP");
-        await truffleAssert.passes(this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }));
-        assert.equal((await this.rift.bags(1)).xp, 50, "First quest step gives 50");
-    });
+    // it ('can mint crystal with unregistered bag', async function () {
+    //     assert.equal((await this.rift.bags(1)).xp, 0, "New bags have no XP");
+    //     await truffleAssert.passes(this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }));
+    //     assert.equal((await this.rift.bags(1)).xp, 50, "First quest step gives 50");
+    // });
 
     // it('has a deploying balance', async function () {
     //     const balance = await this.mana.balanceOf(owner);
@@ -162,4 +162,22 @@ contract('Adventure', function ([owner, other]) {
 
     //     assert.equal((await this.rift.riftPower()), 100000, "Rifts power grows");
     // });
+
+    it ('burning crystal increases mana gain by spin', async function () {
+        // // use charge
+        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
+
+        const startingMana = await this.mana.balanceOf(owner);
+        // const spin = await this.crystals.getSpin(1);
+
+        // // a crystal that doesn't exist should fail
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
+        // // can't be burned by other user
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
+        // // burning increases power
+        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
+
+        const endingMana = await this.mana.balanceOf(owner);
+        assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
+    });
 });

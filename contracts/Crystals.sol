@@ -135,7 +135,7 @@ contract Crystals is
         crystalsMap[tokenId].levelManaProduced += manaToProduce;
         crystalsMap[tokenId].lvlClaims += 1;
         bags[tokenId % MAX_CRYSTALS].totalManaProduced += manaToProduce;
-        iMana.ccMintTo(_msgSender(), manaToProduce);
+        iMana.ccMintTo(_msgSender(), manaToProduce, 1);
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
     }
 
@@ -157,7 +157,7 @@ contract Crystals is
 
         // mint extra mana
         if (claimableMana > (crystal.level * getResonance(tokenId))) {
-            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.level * getResonance(tokenId)));
+            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.level * getResonance(tokenId)), 1);
         }
 
         crystalsMap[tokenId] = Crystal({
@@ -198,14 +198,14 @@ contract Crystals is
     }
 
     // rift burnable
-    function canBurn(uint256 tokenId) public view override returns (bool) {
-        return diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].level;
-    }
-
-    function riftPower(uint256 tokenId) public view override returns (uint64) {
-        return (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
-            1 :
-            crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2;
+    function burnObject(uint256 tokenId) public view override returns (BurnableObject memory) {
+        require(diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].level, "not ready");
+        return BurnableObject({
+            power: (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
+                    1 :
+                    crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2,
+            mana: getSpin(tokenId)
+        });
     }
 
     /**

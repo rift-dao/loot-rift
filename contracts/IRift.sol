@@ -45,12 +45,16 @@ interface IRiftQuest {
     function tokenURI(uint256 bagId) external view returns (string memory);
 }
 
+struct BurnableObject {
+    uint64 power;
+    uint32 mana;
+}
+
 interface IRiftBurnable {
-    function canBurn(uint256 tokenId) external view returns (bool);
-    function riftPower(uint256 tokenId) external view returns (uint64);
+    function burnObject(uint256 tokenId) external view returns (BurnableObject memory);
 }
 
 interface IMana {
-    function ccMintTo(address recipient, uint256 amount) external;
+    function ccMintTo(address recipient, uint256 amount, uint8 considerSupply) external;
     function burn(address from, uint256 amount) external;
 }
