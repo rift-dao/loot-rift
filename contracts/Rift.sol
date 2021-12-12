@@ -243,6 +243,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {
         require(riftObjects[burnableAddr], "Not of the Rift");
+        require(IRiftBurnable(burnableAddr).canBurn(tokenId), "Not ready to burn");
         require(ERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
         
         _sacrificeRiftObject(burnableAddr, tokenId, bagId);

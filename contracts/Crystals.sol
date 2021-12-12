@@ -197,6 +197,11 @@ contract Crystals is
             * attunementBonus(crystalsMap[tokenId].attunement));
     }
 
+    // rift burnable
+    function canBurn(uint256 tokenId) public view override returns (bool) {
+        return diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].level;
+    }
+
     function riftPower(uint256 tokenId) public view override returns (uint64) {
         return (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
             1 :

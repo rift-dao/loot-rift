@@ -46,6 +46,7 @@ interface IRiftQuest {
 }
 
 interface IRiftBurnable {
+    function canBurn(uint256 tokenId) external view returns (bool);
     function riftPower(uint256 tokenId) external view returns (uint64);
 }
 
