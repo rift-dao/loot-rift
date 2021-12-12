@@ -39,22 +39,22 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     string public description = "The Great Unknown";
 
     // rift level variables
-    uint256 public riftLevel = 3;
-    uint256 internal riftTier = 1;
-    uint256 internal riftTierPower = 17500;
-    uint16 internal riftTierSize = 5;
-    uint16 internal riftTierIncrease = 15; // 15% increase
-    uint256 internal riftPowerPerLevel = 5000;
+    uint32 public riftLevel = 3;
+    uint32 internal riftTier = 1;
+    uint64 internal riftTierPower = 17500;
+    uint8 internal riftTierSize = 5;
+    uint8 internal riftTierIncrease = 15; // 15% increase
+    uint64 internal riftPowerPerLevel = 5000;
 
-    uint256 public riftObjectsSacrificed = 0;
+    uint64 public riftObjectsSacrificed = 0;
 
     uint256 internal karmaTotal;
     uint256 internal karmaHolders;
 
-    uint32 internal xpMultTiny = 10;
-    uint32 internal xpMultMod = 50;
-    uint32 internal xpMultLrg = 100;
-    uint32 internal xpMultEpc = 300;
+    uint16 internal xpMultTiny = 10;
+    uint16 internal xpMultMod = 50;
+    uint16 internal xpMultLrg = 100;
+    uint16 internal xpMultEpc = 300;
 
     mapping(uint256 => RiftBag) public bags;
     mapping(address => uint256) public karma;
@@ -87,7 +87,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         riftQuests[addr] = false;
     }
 
-    function ownerUpdateRiftTier(uint16 tierSize, uint16 tierIncrease, uint256 ppl) public onlyOwner {
+    function ownerUpdateRiftTier(uint8 tierSize, uint8 tierIncrease, uint64 ppl) public onlyOwner {
         riftTierSize = tierSize;
         riftTierIncrease = tierIncrease;
         riftPowerPerLevel = ppl;
@@ -132,7 +132,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         iMana = IMana(addr);
     }
 
-    function ownerSetXPMultipliers(uint32 tiny, uint32 moderate, uint32 large, uint32 epic) external onlyOwner {
+    function ownerSetXPMultipliers(uint16 tiny, uint16 moderate, uint16 large, uint16 epic) external onlyOwner {
         xpMultTiny = tiny;
         xpMultMod = moderate;
         xpMultLrg = large;
@@ -249,7 +249,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function _sacrificeRiftObject(address burnableAddr, uint256 tokenId, uint256 bagId) internal {
-        uint256 powerIncrease = IRiftBurnable(burnableAddr).riftPower(tokenId);
+        uint64 powerIncrease = IRiftBurnable(burnableAddr).riftPower(tokenId);
         ERC721Burnable(burnableAddr).burn(tokenId);
 
         addRiftPower(powerIncrease);
@@ -268,9 +268,9 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     // Rift Power
-    function addRiftPower(uint256 power) internal {
+    function addRiftPower(uint64 power) internal {
         riftTierPower += power;
-        riftLevel = riftTierPower/riftPowerPerLevel;
+        riftLevel = uint32(riftTierPower/riftPowerPerLevel);
 
         // up a tier
         if (riftLevel > (riftTier * riftTierSize)) {
@@ -280,13 +280,13 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         }
     }
 
-    function removeRiftPower(uint256 power) internal {
+    function removeRiftPower(uint64 power) internal {
         if (power > riftTierPower) {
             riftTierPower = 0;
         } else {
             riftTierPower -= power;
         }
 
-        riftLevel = riftTierPower/riftPowerPerLevel;
+        riftLevel = uint32(riftTierPower/riftPowerPerLevel);
     }
 }

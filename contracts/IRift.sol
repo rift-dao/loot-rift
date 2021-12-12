@@ -11,7 +11,7 @@ struct RiftBag {
     }
 
 interface IRift {
-    function riftLevel() external view returns (uint256);
+    function riftLevel() external view returns (uint32);
     function setupNewBag(uint256 bagId) external;
     function useCharge(uint16 amount, uint256 bagId, address from) external;
     function bags(uint256 bagId) external view returns (RiftBag memory);
@@ -46,7 +46,7 @@ interface IRiftQuest {
 }
 
 interface IRiftBurnable {
-    function riftPower(uint256 tokenId) external view returns (uint256);
+    function riftPower(uint256 tokenId) external view returns (uint64);
 }
 
 interface IMana {

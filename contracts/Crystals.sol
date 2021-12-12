@@ -194,7 +194,7 @@ contract Crystals is
             * attunementBonus(crystalsMap[tokenId].attunement));
     }
 
-    function riftPower(uint256 tokenId) public view override returns (uint256) {
+    function riftPower(uint256 tokenId) public view override returns (uint64) {
         return (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
             1 :
             crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2;
