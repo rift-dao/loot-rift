@@ -10,7 +10,6 @@ struct Bag {
 struct Crystal {
     uint16 attunement;
     uint64 lastClaim;
-    uint64 lastLevelUp;
     uint8 level;
     uint32 levelManaProduced;
     uint32 regNum;
