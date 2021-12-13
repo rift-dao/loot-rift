@@ -43,13 +43,26 @@ contract('Adventure', function ([owner, other]) {
         await this.quests.ownerSetXP(this.enterRift.address, 2, 2);
         await this.quests.ownerSetXP(this.enterRift.address, 3, 2);
 
-        await this.rift.ownerSetXpRequirement(1, 100);
-        await this.rift.ownerSetXpRequirement(2, 100);
-        await this.rift.ownerSetXpRequirement(3, 100);
+        await this.rift.ownerSetXpRequirement(1, 65);
+        await this.rift.ownerSetXpRequirement(2, 130);
+        await this.rift.ownerSetXpRequirement(3, 260);
+        await this.rift.ownerSetXpRequirement(4, 300);
+        await this.rift.ownerSetXpRequirement(5, 345);
+        await this.rift.ownerSetXpRequirement(6, 460);
+        await this.rift.ownerSetXpRequirement(7, 530);
+        await this.rift.ownerSetXpRequirement(8, 600);
+        await this.rift.ownerSetXpRequirement(9, 690);
 
         await this.rift.ownerSetLevelChargeAward(1, 1);
-        await this.rift.ownerSetLevelChargeAward(2, 3);
-        await this.rift.ownerSetLevelChargeAward(3, 1);
+        await this.rift.ownerSetLevelChargeAward(2, 2);
+        await this.rift.ownerSetLevelChargeAward(3, 2);
+        await this.rift.ownerSetLevelChargeAward(4, 1);
+        await this.rift.ownerSetLevelChargeAward(5, 2);
+        await this.rift.ownerSetLevelChargeAward(6, 1);
+        await this.rift.ownerSetLevelChargeAward(7, 1);
+        await this.rift.ownerSetLevelChargeAward(8, 2);
+        await this.rift.ownerSetLevelChargeAward(9, 1);
+        await this.rift.ownerSetLevelChargeAward(10, 3);
 
         await this.loot.mint(1);
     });

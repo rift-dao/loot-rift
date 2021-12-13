@@ -41,10 +41,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     // rift level variables
     uint32 public riftLevel = 3;
     uint32 internal riftTier = 1;
-    uint64 internal riftTierPower = 17500;
+    uint64 internal riftTierPower = 35000;
     uint8 internal riftTierSize = 5;
     uint8 internal riftTierIncrease = 15; // 15% increase
-    uint64 internal riftPowerPerLevel = 5000;
+    uint64 internal riftPowerPerLevel = 10000;
 
     uint64 public riftObjectsSacrificed = 0;
 

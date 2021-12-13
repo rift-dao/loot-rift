@@ -40,17 +40,27 @@ module.exports = function(deployer) {
     // riftQuests.ownerSetXP(enterRift.address, 3, 2);
 
     // starting rift information
-    rift.ownerSetXpRequirement(1, 100);
-    rift.ownerSetXpRequirement(2, 150);
-    rift.ownerSetXpRequirement(3, 225);
-    rift.ownerSetXpRequirement(4, 350);
-    rift.ownerSetXpRequirement(5, 525);
+    rift.ownerSetXpRequirement(1, 65);
+    rift.ownerSetXpRequirement(2, 130);
+    rift.ownerSetXpRequirement(3, 260);
+    rift.ownerSetXpRequirement(4, 300);
+    rift.ownerSetXpRequirement(5, 345);
+    rift.ownerSetXpRequirement(6, 460);
+    rift.ownerSetXpRequirement(7, 530);
+    rift.ownerSetXpRequirement(8, 600);
+    rift.ownerSetXpRequirement(9, 690);
 
-    rift.ownerSetLevelChargeAward(1, 2);
-    rift.ownerSetLevelChargeAward(2, 3);
-    rift.ownerSetLevelChargeAward(3, 1);
+    rift.ownerSetLevelChargeAward(1, 1);
+    rift.ownerSetLevelChargeAward(2, 2);
+    rift.ownerSetLevelChargeAward(3, 2);
     rift.ownerSetLevelChargeAward(4, 1);
     rift.ownerSetLevelChargeAward(5, 2);
+    rift.ownerSetLevelChargeAward(6, 1);
+    rift.ownerSetLevelChargeAward(7, 1);
+    rift.ownerSetLevelChargeAward(8, 2);
+    rift.ownerSetLevelChargeAward(9, 1);
+    rift.ownerSetLevelChargeAward(10, 3);
+
   });
 }
 
