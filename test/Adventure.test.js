@@ -11,11 +11,13 @@ const EnterRift = artifacts.require('EnterTheRift');
 const RiftQuests = artifacts.require('RiftQuests');
 const Calculator = artifacts.require('CrystalManaCalculator');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
+const RiftData = artifacts.require('RiftData');
 
 contract('Adventure', function ([owner, other]) {
 
     beforeEach(async function () {
         this.mana = await Mana.new({ from: owner });
+        this.riftData = await RiftData.new({ from: owner });
         this.crystals = await Crystals.new(this.mana.address, { from : owner });
         this.loot = await Loot.new({ from: owner });
         this.rift = await Rift.new({ from: owner });
@@ -23,6 +25,8 @@ contract('Adventure', function ([owner, other]) {
         this.enterRift = await EnterRift.new(this.quests.address, this.crystals.address, this.mana.address, { from: owner });
         this.calculator = await Calculator.new(this.crystals.address, { from: owner });
         this.metadata = await CrystalsMetadata.new(this.crystals.address, { from: owner });
+
+        await this.riftData.addRiftController(this.rift.address);
 
         await this.mana.addController(this.crystals.address);
         await this.mana.addController(this.rift.address);
@@ -32,6 +36,7 @@ contract('Adventure', function ([owner, other]) {
         await this.crystals.ownerSetRiftAddress(this.rift.address);
         await this.crystals.ownerSetLootAddress(this.loot.address);
         await this.crystals.ownerSetMLootAddress(this.loot.address);
+        await this.rift.ownerSetRiftData(this.riftData.address);
         await this.rift.addRiftObject(this.crystals.address);
         await this.rift.ownerSetLootAddress(this.loot.address);
         await this.rift.ownerSetManaAddress(this.mana.address);
@@ -177,27 +182,27 @@ contract('Adventure', function ([owner, other]) {
     //     assert.equal((await this.rift.riftPower()), 100000, "Rifts power grows");
     // });
 
-    // it ('burning crystal increases mana gain by spin', async function () {
-    //     // // use charge
-    //     await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
+    it ('burning crystal increases mana gain by spin', async function () {
+        // // use charge
+        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.05", "ether") });
 
-    //     const startingMana = await this.mana.balanceOf(owner);
-    //     // const spin = await this.crystals.getSpin(1);
+        const startingMana = await this.mana.balanceOf(owner);
+        // const spin = await this.crystals.getSpin(1);
 
-    //     // // a crystal that doesn't exist should fail
-    //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
-    //     // // can't be burned by other user
-    //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
-    //     // // burning increases power
-    //     await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
+        // // a crystal that doesn't exist should fail
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
+        // // can't be burned by other user
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
+        // // burning increases power
+        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
 
-    //     const endingMana = await this.mana.balanceOf(owner);
-    //     assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
-    // });
+        const endingMana = await this.mana.balanceOf(owner);
+        assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
+    });
 
     it ('crystal minting behaves as expected', async function () {
         // // use charge
-        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
+        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.05", "ether") });
 
         const startingMana = await this.mana.balanceOf(owner);
         await truffleAssert.passes(this.crystals.claimCrystalMana(1));
@@ -206,17 +211,17 @@ contract('Adventure', function ([owner, other]) {
         assert.equal( endingMana - startingMana, (await this.crystals.getResonance(1)), "Gained Mana equal to 1 day * resonance");
     });
 
-    // it ('can buy charge', async function () {
-    //     // this creates and consumes charge
-    //     await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }); 
-    //     const startingMana = await this.mana.balanceOf(owner);
-    //     // buy a charge
-    //     await truffleAssert.passes(this.rift.buyCharge(1));
-    //     assert.equal((await this.rift.bags(1)).charges, 1, "Should have 1 charge");
-    //     // can't buy 2 in a day
-    //     await truffleAssert.fails(this.rift.buyCharge(1));
+    it ('can buy charge', async function () {
+        // this creates and consumes charge
+        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.05", "ether") }); 
+        const startingMana = await this.mana.balanceOf(owner);
+        // buy a charge
+        await truffleAssert.passes(this.rift.buyCharge(1));
+        assert.equal((await this.rift.bags(1)).charges, 1, "Should have 1 charge");
+        // can't buy 2 in a day
+        await truffleAssert.fails(this.rift.buyCharge(1));
 
-    //     const endingMana = await this.mana.balanceOf(owner);
-    //     assert.equal(startingMana - 100, endingMana, "used 100 mana to buy");
-    // });
+        const endingMana = await this.mana.balanceOf(owner);
+        assert.equal(startingMana - 100, endingMana, "used 100 mana to buy");
+    });
 });

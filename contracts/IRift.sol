@@ -2,13 +2,7 @@
 
 pragma solidity ^0.8.9;
 
-struct RiftBag {
-        uint16 charges;
-        uint32 chargesUsed;
-        uint16 level;
-        uint32 xp;
-        uint64 lastChargePurchase;
-    }
+import "./RiftData.sol";
 
 interface IRift {
     function riftLevel() external view returns (uint32);

@@ -18,9 +18,6 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 
 import "./Interfaces.sol";
@@ -35,6 +32,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     ERC721 public iLoot;
     ERC721 public iMLoot;
     IMana public iMana;
+    IRiftData public iRiftData;
 
     string public description = "The Great Unknown";
 
@@ -51,7 +49,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     uint256 internal karmaTotal;
     uint256 internal karmaHolders;
 
-    mapping(uint256 => RiftBag) public bags;
     mapping(address => uint256) public karma;
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
@@ -62,27 +59,31 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     constructor() Ownable() {
     }
 
-    function ownerSetDescription(string memory desc) public onlyOwner {
+    function ownerSetDescription(string memory desc) external onlyOwner {
         description = desc;
     }
 
-    function ownerSetLootAddress(address addr) public onlyOwner {
+    function ownerSetLootAddress(address addr) external onlyOwner {
         iLoot = ERC721(addr);
     }
 
-    function ownerSetMLootAddress(address addr) public onlyOwner {
+    function ownerSetMLootAddress(address addr) external onlyOwner {
         iMLoot = ERC721(addr);
     }
 
-    function addRiftQuest(address addr) public onlyOwner {
+    function ownerSetRiftData(address addr) external onlyOwner {
+        iRiftData = IRiftData(addr);
+    }
+
+    function addRiftQuest(address addr) external onlyOwner {
         riftQuests[addr] = true;
     }
 
-    function removeRiftQuest(address addr) public onlyOwner {
+    function removeRiftQuest(address addr) external onlyOwner {
         riftQuests[addr] = false;
     }
 
-    function ownerUpdateRiftTier(uint8 tierSize, uint8 tierIncrease, uint64 ppl) public onlyOwner {
+    function ownerUpdateRiftTier(uint8 tierSize, uint8 tierIncrease, uint64 ppl) external onlyOwner {
         riftTierSize = tierSize;
         riftTierIncrease = tierIncrease;
         riftPowerPerLevel = ppl;
@@ -123,7 +124,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         levelChargeAward[level] = charges;
     }
 
-    function ownerSetManaAddress(address addr) public onlyOwner {
+    function ownerSetManaAddress(address addr) external onlyOwner {
         iMana = IMana(addr);
     }
 
@@ -145,6 +146,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
             require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }
     }
+
+    function bags(uint256 bagId) external view returns (RiftBag memory) {
+        return iRiftData.bags(bagId);
+    }
     
     // WRITE
 
@@ -154,17 +159,16 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         whenNotPaused 
         nonReentrant {
     
-        require(block.timestamp - bags[bagId].lastChargePurchase > 1 days, "Too soon"); 
+        require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
         
-        //one with the rift
-        if (topKarmaHolder(_msgSender())) {
-            _chargeBag(bagId);
-        } else {
-            iMana.burn(_msgSender(), bags[bagId].level * (bagId < 8001 ? 100 : 10));
-            _chargeBag(bagId);
-        }
-
-        bags[bagId].lastChargePurchase = uint64(block.timestamp);
+        // top karma holders don't pay
+        if (!topKarmaHolder(_msgSender())) {
+            iMana.burn(_msgSender(), iRiftData.bags(bagId).level * (bagId < 8001 ? 100 : 10));
+        } 
+        
+        _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
+        
+        iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
     }
 
     function useCharge(uint16 amount, uint256 bagId, address from) 
@@ -174,25 +178,23 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         nonReentrant 
     {
         require(riftObjects[msg.sender], "Not of the Rift");
-        require(bags[bagId].charges >= amount, "Not enough Rift charges");
 
-        bags[bagId].chargesUsed += amount;
-        bags[bagId].charges -= amount;
+        iRiftData.removeCharges(amount, bagId);
     }
 
-    function awardXP(uint32 bagId, uint16 xp) public nonReentrant {
+    function awardXP(uint32 bagId, uint16 xp) external nonReentrant {
         require(riftQuests[msg.sender], "only the worthy");
         _awardXP(bagId, xp);
     }
 
     function _awardXP(uint32 bagId, uint16 xp) internal {
-        // verify the rift has power
-        if (bags[bagId].level == 0) {
-            bags[bagId].level = 1;
-            _chargeBag(bagId);
-        }
+        RiftBag memory bag = iRiftData.bags(bagId);
+        uint16 newlvl = bag.level;
 
-        bags[bagId].xp += xp;
+        if (bag.level == 0) {
+            newlvl = 1;
+            _chargeBag(bagId, levelChargeAward[newlvl], newlvl);
+        }
         
         /*
  _        _______           _______  _                   _______  _ 
@@ -205,22 +207,28 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 (_______/(_______/   \_/   (_______/(_______/  (_______)|/       (_)                                                    
                                                                  
         */
-        while (bags[bagId].xp >= xpRequired[bags[bagId].level]) {
-            bags[bagId].xp -= xpRequired[bags[bagId].level];
-            bags[bagId].level += 1;
-            _chargeBag(bagId);
+
+        uint32 _xp = xp + bag.xp;
+
+        while (_xp >= xpRequired[newlvl]) {
+            _xp -= xpRequired[newlvl];
+            newlvl += 1;
+            _chargeBag(bagId, levelChargeAward[newlvl], newlvl);
         }
+
+        iRiftData.updateXP(_xp, bagId);
+        iRiftData.updateLevel(newlvl, bagId);
     }
 
-    function _chargeBag(uint256 bagId) internal {
-        bags[bagId].charges += levelChargeAward[bags[bagId].level];
-        removeRiftPower(levelChargeAward[bags[bagId].level] * bags[bagId].level);
+    function _chargeBag(uint256 bagId, uint16 charges, uint16 forLvl) internal {
+        iRiftData.addCharges(charges, bagId);
+        removeRiftPower(charges * forLvl);
     }
 
     function setupNewBag(uint256 bagId) external {
-        require(bags[bagId].level == 0, "bag must be unregistered");
-        bags[bagId].level = 1;
-        _chargeBag(bagId);
+        require(iRiftData.bags(bagId).level == 0, "bag must be unregistered");
+        iRiftData.updateLevel(1, bagId);
+        _chargeBag(bagId,levelChargeAward[1], 1);
     }
 
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {

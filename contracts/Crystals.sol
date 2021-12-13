@@ -19,9 +19,6 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
@@ -62,9 +59,6 @@ contract Crystals is
     uint256 public mintFee = 0.05 ether;
     uint256 public mMintFee = 0.01 ether;
     uint16[] private xpTable = [15,30,50,65,100,115,150,200,400,600];
-
-    // uint256 public lootMintFee = 0;
-    // uint256 public mintLevel = 5;
 
     /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
@@ -118,6 +112,7 @@ contract Crystals is
         crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
         crystalsMap[tokenId].level = 1;
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp - (24 * 60 * 60));
+        crystalsMap[tokenId].regNum = uint32(mintedCrystals);
 
         iRift.awardXP(uint32(bagId), 50 + (15 * (iRift.bags(bagId).level - 1)));
         mintedCrystals += 1;
@@ -199,14 +194,14 @@ contract Crystals is
     }
 
     // rift burnable
-    function burnObject(uint256 tokenId) public view override returns (BurnableObject memory) {
+    function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
         require(diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].level, "not ready");
         return BurnableObject({
             power: (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
                     1 :
                     crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2,
             mana: getSpin(tokenId),
-            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].level]
+            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].level - 1]
         });
     }
 
@@ -218,7 +213,7 @@ contract Crystals is
         return tokenURI(lootId);
     }
 
-    function getNextCrystal(uint256 bagId) public view returns (uint256) {
+    function getNextCrystal(uint256 bagId) internal view returns (uint256) {
         return bags[bagId].mintCount * MAX_CRYSTALS + bagId;
     }
 
