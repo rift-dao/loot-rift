@@ -45,10 +45,10 @@ module.exports = function(deployer) {
     rift.ownerSetXpRequirement(3, 260);
     rift.ownerSetXpRequirement(4, 300);
     rift.ownerSetXpRequirement(5, 345);
-    rift.ownerSetXpRequirement(6, 460);
-    rift.ownerSetXpRequirement(7, 530);
-    rift.ownerSetXpRequirement(8, 600);
-    rift.ownerSetXpRequirement(9, 690);
+    rift.ownerSetXpRequirement(6, 400);
+    rift.ownerSetXpRequirement(7, 460);
+    rift.ownerSetXpRequirement(8, 530);
+    rift.ownerSetXpRequirement(9, 600);
 
     rift.ownerSetLevelChargeAward(1, 1);
     rift.ownerSetLevelChargeAward(2, 2);

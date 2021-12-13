@@ -59,7 +59,7 @@ contract Crystals is
 
     uint64 public mintedCrystals;
 
-    uint256 public mintFee = 0.04 ether;
+    uint256 public mintFee = 0.05 ether;
     uint256 public mMintFee = 0.01 ether;
     uint16[] private xpTable = [15,30,50,65,100,115,150,200,400,600];
 
