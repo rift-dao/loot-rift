@@ -36,7 +36,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
                                 "stand the tremendous force for more than a few moments.",
                                 "You're not ready.", 
                                 "","~~you got a rift charge~~"];
-        steps[1].xp = XP_AMOUNT.MODERATE;
+        steps[1].xp = 50;
 
         steps[2].requirements = "Distill a Crystal";
         steps[2].description =  ["You've returned to camp to make sense of what you",
@@ -45,7 +45,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
         steps[2].result =       ["You peek inside, and see the glowing force crystalize",
                                 "before your eyes. It's glowing with the Rift's power...",
                                 "","~~you made a crystal!~~"];
-        steps[2].xp = XP_AMOUNT.MODERATE;
+        steps[2].xp = 50;
 
         steps[3].requirements = "Claim Mana";
         steps[3].description = ["You take the Crystal out of your bag, it's heavier ",
@@ -53,7 +53,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
         steps[3].result =       ["Its glow intensifies, and you feel a powerful energy",
                                 "move from the Crystal into you.",
                                 "","~~you gained mana~~"];
-        steps[3].xp = XP_AMOUNT.MODERATE;
+        steps[3].xp = 50;
     }
 
     // step logic 
@@ -99,7 +99,7 @@ contract EnterTheRift is Ownable, IRiftQuest {
         return steps[bagsProgress_[bagId].lastCompletedStep + 1];
     }
 
-    function stepAwardXP(uint64 step) external view returns (XP_AMOUNT) {
+    function stepAwardXP(uint64 step) external view returns (uint16) {
         return steps[step].xp;
     }
 

@@ -15,7 +15,7 @@ interface IRift {
     function setupNewBag(uint256 bagId) external;
     function useCharge(uint16 amount, uint256 bagId, address from) external;
     function bags(uint256 bagId) external view returns (RiftBag memory);
-    function awardXP(uint32 bagId, XP_AMOUNT xp) external;
+    function awardXP(uint32 bagId, uint16 xp) external;
     function isBagHolder(uint256 bagId, address owner) external;
 }
 
@@ -23,15 +23,13 @@ struct QuestStep {
     string requirements;
     string[] description;
     string[] result;
-    XP_AMOUNT xp;
+    uint16 xp;
 }
 
 struct BagProgress {
     uint32 lastCompletedStep;
     bool completedQuest;
 }
-
-enum XP_AMOUNT { NONE, TINY, MODERATE, LARGE, EPIC }
 
 interface IRiftQuest {
     function bagsProgress(uint256 bagId) external view returns (BagProgress memory);
@@ -41,13 +39,14 @@ interface IRiftQuest {
     function isCompleted(uint256 bagId) external view returns (bool);
     function currentStep(uint256 bagId) external view returns (QuestStep memory);
     function completeStep(uint32 step, uint256 bagId, address from) external;
-    function stepAwardXP(uint64 step) external view returns (XP_AMOUNT);
+    function stepAwardXP(uint64 step) external view returns (uint16);
     function tokenURI(uint256 bagId) external view returns (string memory);
 }
 
 struct BurnableObject {
     uint64 power;
     uint32 mana;
+    uint16 xp;
 }
 
 interface IRiftBurnable {

@@ -56,7 +56,7 @@ contract RiftQuests is ERC721,
 
     // look up by quest address
     mapping(address => bool) approvedQuests;
-    mapping(address => mapping(uint32 => XP_AMOUNT)) public questXPMap;
+    mapping(address => mapping(uint32 => uint16)) public questXPMap;
 
     uint256 questsBegan;
 
@@ -128,7 +128,7 @@ contract RiftQuests is ERC721,
 
     // owner
 
-    function ownerSetXP(address quest, uint32 step, XP_AMOUNT xp) external onlyOwner {
+    function ownerSetXP(address quest, uint32 step, uint16 xp) external onlyOwner {
         questXPMap[quest][step] = xp;
     }
 

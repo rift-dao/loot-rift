@@ -51,11 +51,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     uint256 internal karmaTotal;
     uint256 internal karmaHolders;
 
-    uint16 internal xpMultTiny = 10;
-    uint16 internal xpMultMod = 50;
-    uint16 internal xpMultLrg = 100;
-    uint16 internal xpMultEpc = 300;
-
     mapping(uint256 => RiftBag) public bags;
     mapping(address => uint256) public karma;
     mapping(uint16 => uint16) public xpRequired;
@@ -132,13 +127,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         iMana = IMana(addr);
     }
 
-    function ownerSetXPMultipliers(uint16 tiny, uint16 moderate, uint16 large, uint16 epic) external onlyOwner {
-        xpMultTiny = tiny;
-        xpMultMod = moderate;
-        xpMultLrg = large;
-        xpMultEpc = epic;
-    }
-
     // READ
 
     modifier _isBagHolder(uint256 bagId, address owner) {
@@ -192,19 +180,19 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         bags[bagId].charges -= amount;
     }
 
-    function awardXP(uint32 bagId, XP_AMOUNT xp) public nonReentrant {
+    function awardXP(uint32 bagId, uint16 xp) public nonReentrant {
         require(riftQuests[msg.sender], "only the worthy");
         _awardXP(bagId, xp);
     }
 
-    function _awardXP(uint32 bagId, XP_AMOUNT xp) internal {
+    function _awardXP(uint32 bagId, uint16 xp) internal {
         // verify the rift has power
         if (bags[bagId].level == 0) {
             bags[bagId].level = 1;
             _chargeBag(bagId);
         }
 
-        bags[bagId].xp += convertXP(xp, bagId);
+        bags[bagId].xp += xp;
         
         /*
  _        _______           _______  _                   _______  _ 
@@ -235,16 +223,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         _chargeBag(bagId);
     }
 
-    function convertXP(XP_AMOUNT xp, uint32 bagId) internal view returns (uint32) {
-        if (xp == XP_AMOUNT.NONE) { return 0; }
-        else if (xp == XP_AMOUNT.TINY) { return bags[bagId].level * xpMultTiny; }
-        else if (xp == XP_AMOUNT.MODERATE) { return bags[bagId].level * xpMultMod; }
-        else if (xp == XP_AMOUNT.LARGE) { return bags[bagId].level * xpMultLrg; }
-        else if (xp == XP_AMOUNT.EPIC) { return bags[bagId].level * xpMultEpc; }
-
-        return 0;
-    }
-
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {
         require(riftObjects[burnableAddr], "Not of the Rift");
         require(ERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
@@ -262,7 +240,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         karma[_msgSender()] += bo.power;
         riftObjectsSacrificed += 1;     
 
-        _awardXP(uint32(bagId), XP_AMOUNT.MODERATE);
+        _awardXP(uint32(bagId), bo.xp);
         iMana.ccMintTo(_msgSender(), bo.mana, 0);
     }
 

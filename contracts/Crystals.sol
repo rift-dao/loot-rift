@@ -61,6 +61,7 @@ contract Crystals is
 
     uint256 public mintFee = 0.04 ether;
     uint256 public mMintFee = 0.01 ether;
+    uint16[] private xpTable = [15,30,50,65,100,115,150,200,400,600];
 
     // uint256 public lootMintFee = 0;
     // uint256 public mintLevel = 5;
@@ -117,7 +118,7 @@ contract Crystals is
         crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
         crystalsMap[tokenId].level = 1;
 
-        iRift.awardXP(uint32(bagId), XP_AMOUNT.MODERATE);
+        iRift.awardXP(uint32(bagId), 50 + (15 * (iRift.bags(bagId).level - 1)));
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
@@ -204,7 +205,8 @@ contract Crystals is
             power: (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
                     1 :
                     crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2,
-            mana: getSpin(tokenId)
+            mana: getSpin(tokenId),
+            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].level]
         });
     }
 

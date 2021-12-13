@@ -176,23 +176,23 @@ contract('Adventure', function ([owner, other]) {
     //     assert.equal((await this.rift.riftPower()), 100000, "Rifts power grows");
     // });
 
-    // it ('burning crystal increases mana gain by spin', async function () {
-    //     // // use charge
-    //     await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
+    it ('burning crystal increases mana gain by spin', async function () {
+        // // use charge
+        await this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") });
 
-    //     const startingMana = await this.mana.balanceOf(owner);
-    //     // const spin = await this.crystals.getSpin(1);
+        const startingMana = await this.mana.balanceOf(owner);
+        // const spin = await this.crystals.getSpin(1);
 
-    //     // // a crystal that doesn't exist should fail
-    //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
-    //     // // can't be burned by other user
-    //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
-    //     // // burning increases power
-    //     await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
+        // // a crystal that doesn't exist should fail
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 2, 1));
+        // // can't be burned by other user
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
+        // // burning increases power
+        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
 
-    //     const endingMana = await this.mana.balanceOf(owner);
-    //     assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
-    // });
+        const endingMana = await this.mana.balanceOf(owner);
+        assert.notEqual(startingMana.valueOf(), endingMana.valueOf(), "Gained Mana equal to spin");
+    });
 
     it ('can buy charge', async function () {
         // this creates and consumes charge
