@@ -55,7 +55,7 @@ contract Crystals is
     
     uint8 public maxLevel = 10;
     uint32 private constant MAX_CRYSTALS = 10000000;
-    uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
+    uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000;
 
     uint64 public mintedCrystals;
 
@@ -66,10 +66,6 @@ contract Crystals is
     /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
     mapping(uint256 => Bag) public bags;
-
-    /// @notice 0 - 9 => collaboration nft contracts
-    /// @notice 0 => Genesis Adventurer
-    mapping(uint8 => Collab) public collabs;
 
     address private openSeaProxyRegistryAddress;
     bool private isOpenSeaProxyActive = true;
@@ -245,22 +241,6 @@ contract Crystals is
     }
 
     // OWNER
-
-    function ownerUpdateCollab(
-        uint8 collabIndex,
-        address contractAddress,
-        uint16 levelBonus,
-        string calldata namePrefix
-    ) external onlyOwner {
-        require(contractAddress != address(0), "ADDR");
-        require(collabIndex >= 0 && collabIndex < 10, "CLB");
-        require(
-            collabs[collabIndex].contractAddress == contractAddress
-                || collabs[collabIndex].contractAddress == address(0),
-            "TAKEN"
-        );
-        collabs[collabIndex] = Collab(contractAddress, namePrefix, MAX_CRYSTALS * levelBonus);
-    }
 
     function ownerUpdateMaxLevel(uint8 maxLevel_) external onlyOwner {
         require(maxLevel_ > maxLevel, "INV");
