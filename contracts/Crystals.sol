@@ -66,7 +66,7 @@ contract Crystals is
     mapping(uint256 => Bag) public bags;
 
     address private openSeaProxyRegistryAddress;
-    bool private isOpenSeaProxyActive = true;
+    bool private isOpenSeaProxyActive = false;
 
     constructor(address manaAddress) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
         iMana = IMana(manaAddress);
@@ -399,15 +399,15 @@ contract Crystals is
     {
         // Get a reference to OpenSea's proxy registry contract by instantiating
         // the contract using the already existing address.
-        // ProxyRegistry proxyRegistry = ProxyRegistry(
-        //     openSeaProxyRegistryAddress
-        // );
-        // if (
-        //     isOpenSeaProxyActive &&
-        //     address(proxyRegistry.proxies(owner)) == operator
-        // ) {
-        //     return true;
-        // }
+        ProxyRegistry proxyRegistry = ProxyRegistry(
+            openSeaProxyRegistryAddress
+        );
+        if (
+            isOpenSeaProxyActive &&
+            address(proxyRegistry.proxies(owner)) == operator
+        ) {
+            return true;
+        }
 
         if (operator == riftAddress) { return true; }
         return super.isApprovedForAll(owner, operator);
