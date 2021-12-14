@@ -39,6 +39,9 @@ interface IRiftData {
     function addKarma(uint64 k, address holder) external;
     function removeKarma(uint64 k, address holder) external;
     function updateLastChargePurchase(uint64 time, uint256 bagId) external;
+    function karma(address holder) external view returns (uint64);
+    function karmaTotal() external view returns (uint256);
+    function karmaHolders() external view returns (uint256);
 }
 
 /*
@@ -51,8 +54,8 @@ interface IRiftData {
 contract RiftData is IRiftData, ReentrancyGuard, Pausable, Ownable {
     mapping(address => bool) public riftControllers;
 
-    uint256 internal karmaTotal;
-    uint256 internal karmaHolders;
+    uint256 public karmaTotal;
+    uint256 public karmaHolders;
 
     mapping(uint256 => RiftBag) internal _bags;
     mapping(address => uint64) public karma;
@@ -93,6 +96,8 @@ contract RiftData is IRiftData, ReentrancyGuard, Pausable, Ownable {
     }
 
     function addKarma(uint64 k, address holder) external override onlyRiftController {
+        if (karma[holder] == 0) { karmaHolders += 1; }
+        karmaTotal += k;
         karma[holder] += k;
     }
 

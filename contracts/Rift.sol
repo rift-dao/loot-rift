@@ -46,10 +46,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     uint64 public riftObjectsSacrificed = 0;
 
-    uint256 internal karmaTotal;
-    uint256 internal karmaHolders;
-
-    mapping(address => uint256) public karma;
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
     mapping(address => bool) public riftObjects;
@@ -130,15 +126,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     // READ
 
-    modifier _isBagHolder(uint256 bagId, address owner) {
-        if (bagId < 8001) {
-            require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
-        } else {
-            require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
-        }
-        _;
-    }
-
     function isBagHolder(uint256 bagId, address owner) external view {
         if (bagId < 8001) {
             require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
@@ -158,16 +145,19 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         _isBagHolder(bagId, _msgSender()) 
         whenNotPaused 
         nonReentrant {
-    
         require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
-        
-        // top karma holders don't pay
-        if (!topKarmaHolder(_msgSender())) {
-            iMana.burn(_msgSender(), iRiftData.bags(bagId).level * (bagId < 8001 ? 100 : 10));
-        } 
-        
+        iMana.burn(_msgSender(), iRiftData.bags(bagId).level * (bagId < 8001 ? 100 : 10));
         _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
-        
+        iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
+    }
+
+    function karmaCharge(uint256 bagId) external
+        _isBagHolder(bagId, _msgSender())
+        topKarmaHolder(_msgSender())
+        whenNotPaused
+        nonReentrant {
+        require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
+        _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
         iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
     }
 
@@ -178,7 +168,6 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         nonReentrant 
     {
         require(riftObjects[msg.sender], "Not of the Rift");
-
         iRiftData.removeCharges(amount, bagId);
     }
 
@@ -243,19 +232,11 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         ERC721Burnable(burnableAddr).burn(tokenId);
 
         addRiftPower(bo.power);
-        if (karma[_msgSender()] == 0) { karmaHolders += 1; }
-        karmaTotal += bo.power;
-        karma[_msgSender()] += bo.power;
+        iRiftData.addKarma(bo.power, msg.sender);
         riftObjectsSacrificed += 1;     
 
         _awardXP(uint32(bagId), bo.xp);
         iMana.ccMintTo(_msgSender(), bo.mana, 0);
-    }
-
-    function topKarmaHolder(address holder) public view returns (bool) {
-        if (karma[holder] == 0) return false;
-        uint256 medianKarma = karmaTotal / karmaHolders;
-        return karma[holder] > (medianKarma * 2);
     }
 
     // Rift Power
@@ -279,5 +260,22 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         }
 
         riftLevel = uint32(riftTierPower/riftPowerPerLevel);
+    }
+
+    // MODIFIERS
+
+    modifier topKarmaHolder(address holder) {
+        uint256 medianKarma = iRiftData.karmaTotal() / iRiftData.karmaHolders();
+        require(iRiftData.karma(holder) > (medianKarma * 2), "Not enough karma");
+        _;
+    }
+
+     modifier _isBagHolder(uint256 bagId, address owner) {
+        if (bagId < 8001) {
+            require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
+        } else {
+            require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
+        }
+        _;
     }
 }
