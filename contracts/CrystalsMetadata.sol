@@ -46,7 +46,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     }
 
     function tokenURI(uint256 tokenId) override external view returns (string memory) {
-        require(iCrystals.crystalsMap(tokenId).level > 0, "INV");
+        require(iCrystals.crystalsMap(tokenId).focus > 0, "INV");
 
         uint256 rows = iCrystals.crystalsMap(tokenId).attunement;
 
@@ -78,8 +78,8 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 toString(iCrystals.getResonance(tokenId)),
                 '</text><text x="10" y="60">Spin: ',
                 toString(iCrystals.getSpin(tokenId)),
-                '</text><text x="10" y="338" style="font-size: 12px;">gen.',
-                toString(tokenId / MAX_CRYSTALS + 1),
+                '</text><text x="10" y="338" style="font-size: 12px;">atun.',
+                toString(iCrystals.crystalsMap(tokenId).attunement),
                 '</text>',
                 getSlabs(tokenId, rows),
                 '</svg>'
@@ -94,8 +94,8 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 toString(tokenId),
                 '", "bagId": ',
                 toString(tokenId % MAX_CRYSTALS),
-                ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Level", "value":',
-                toString(iCrystals.crystalsMap(tokenId).level),
+                ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Focus", "value":',
+                toString(iCrystals.crystalsMap(tokenId).focus),
                 ' }, { "trait_type": "Resonance", "value": ',
                 toString(iCrystals.getResonance(tokenId)),
                 ' }, { "trait_type": "Spin", "value": '
@@ -108,8 +108,8 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 getLootType(tokenId),
                 '" }, { "trait_type": "Surface", "value": "',
                 getSurfaceType(tokenId),
-                '" }, { "trait_type": "Generation", "value": ',
-                toString(tokenId / MAX_CRYSTALS + 1),
+                '" }, { "trait_type": "Attunement", "value": ',
+                toString(iCrystals.crystalsMap(tokenId).attunement),
                 ' }, { "trait_type": "Color", "value": "',
                 getColor(tokenId)
         ));
@@ -133,9 +133,9 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     ) internal view returns (uint256) {
         uint256 index = 1;
         uint256 score = getRoll(tokenId, key, size, times);
-        uint256 level = iCrystals.crystalsMap(tokenId).level;
+        uint256 focus = iCrystals.crystalsMap(tokenId).focus;
 
-        while (index < level) {
+        while (index < focus) {
             score += ((
                 random(string(abi.encodePacked(
                     (index * MAX_CRYSTALS) + tokenId,
@@ -191,11 +191,11 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
             output = getLootName(tokenId);
         }
 
-        return iCrystals.crystalsMap(tokenId).level > 1 ?
+        return iCrystals.crystalsMap(tokenId).focus > 1 ?
             string(abi.encodePacked(
                 output,
                 " +",
-                toString(iCrystals.crystalsMap(tokenId).level - 1)
+                toString(iCrystals.crystalsMap(tokenId).focus - 1)
             )) : output;
     }
 
@@ -286,7 +286,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
     }
 
     function getSlabs(uint256 tokenId) external view returns (string memory output) {
-        uint256 rows = tokenId / MAX_CRYSTALS + 1;
+        uint256 rows = iCrystals.crystalsMap(tokenId).attunement;
 
         if (rows > 10) {
           rows = rows % 10;

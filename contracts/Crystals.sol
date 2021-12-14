@@ -53,7 +53,7 @@ contract Crystals is
     ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
     ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
     
-    uint8 public maxLevel = 10;
+    uint8 public maxFocus = 10;
     uint32 private constant MAX_CRYSTALS = 10000000;
     uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000;
 
@@ -112,7 +112,7 @@ contract Crystals is
 
         bags[tokenId % MAX_CRYSTALS].mintCount += 1;
         crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
-        crystalsMap[tokenId].level = 1;
+        crystalsMap[tokenId].focus = 1;
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp - (24 * 60 * 60));
         crystalsMap[tokenId].regNum = uint32(mintedCrystals);
 
@@ -145,22 +145,22 @@ contract Crystals is
         nonReentrant
     {
         Crystal memory crystal = crystalsMap[tokenId];
-        require(crystal.level < maxLevel, "MAX");
+        require(crystal.focus < maxFocus, "MAX");
         require(
             diffDays(
                 crystal.lastClaim,
                 block.timestamp
-            ) >= crystal.level, "WAIT"
+            ) >= crystal.focus, "WAIT"
         );
         uint256 claimableMana = iCalculator.claimableMana(tokenId);
 
         // mint extra mana
-        if (claimableMana > (crystal.level * getResonance(tokenId))) {
-            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.level * getResonance(tokenId)), 1);
+        if (claimableMana > (crystal.focus * getResonance(tokenId))) {
+            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.focus * getResonance(tokenId)), 1);
         }
 
         crystalsMap[tokenId] = Crystal({
-            level: crystal.level + 1,
+            focus: crystal.focus + 1,
             lastClaim: uint64(block.timestamp),
             levelManaProduced: 0,
             attunement: crystal.attunement,
@@ -168,12 +168,12 @@ contract Crystals is
             lvlClaims: 0
         });
 
-        emit CrystalLeveled(_msgSender(), tokenId, crystal.level);
+        emit CrystalLeveled(_msgSender(), tokenId, crystal.focus);
     }
 
     // READ 
     function getResonance(uint256 tokenId) public view returns (uint32) {
-        // 1 or 2 per level                             loot vs mloot multiplier               generation bonus
+        // 1 or 2 per focus                             loot vs mloot multiplier               generation bonus
         return uint32(getLevelRolls(tokenId, "%RES", 2, 1)
             * (isOGCrystal(tokenId) ? 10 : 1)
             * attunementBonus(crystalsMap[tokenId].attunement));
@@ -191,19 +191,19 @@ contract Crystals is
 
     function getSpin(uint256 tokenId) public view returns (uint32) {
         uint32 multiplier = isOGCrystal(tokenId) ? 10 : 1;
-        return uint32(((88 * (crystalsMap[tokenId].level)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
+        return uint32(((88 * (crystalsMap[tokenId].focus)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
             * attunementBonus(crystalsMap[tokenId].attunement));
     }
 
     // rift burnable
     function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
-        require(diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].level, "not ready");
+        require(diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].focus, "not ready");
         return BurnableObject({
-            power: (crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2) == 0 ?
+            power: (crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2) == 0 ?
                     1 :
-                    crystalsMap[tokenId].level * crystalsMap[tokenId].attunement / 2,
+                    crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2,
             mana: getSpin(tokenId),
-            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].level - 1]
+            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].focus - 1]
         });
     }
 
@@ -242,9 +242,9 @@ contract Crystals is
 
     // OWNER
 
-    function ownerUpdateMaxLevel(uint8 maxLevel_) external onlyOwner {
-        require(maxLevel_ > maxLevel, "INV");
-        maxLevel = maxLevel_;
+    function ownerUpdateMaxLevel(uint8 maxFocus_) external onlyOwner {
+        require(maxFocus > maxFocus, "INV");
+        maxFocus = maxFocus_;
     }
 
     // function to disable gasless listings for security in case
@@ -319,9 +319,9 @@ contract Crystals is
     ) internal view returns (uint256) {
         uint8 index = 1;
         uint256 score = getRoll(tokenId, key, size, times);
-        uint8 level = crystalsMap[tokenId].level;
+        uint8 focus = crystalsMap[tokenId].focus;
 
-        while (index < level) {
+        while (index < focus) {
             score += ((
                 random(string(abi.encodePacked(
                     (index * MAX_CRYSTALS) + tokenId,
