@@ -29,8 +29,12 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
     // event CrystalSacrificed(address owner, uint256 tokenId, uint256 powerIncrease);
 
+    // The Rift supports 8000 Loot bags
+    // 9989460 mLoot Bags (34 years worth)
+    // and 2540 gLoot Bags
     ERC721 public iLoot;
     ERC721 public iMLoot;
+    ERC721 public iGLoot;
     IMana public iMana;
     IRiftData public iRiftData;
 
@@ -52,19 +56,14 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     mapping(address => bool) public riftQuests;
     address[] public riftObjectsArr;
 
-    constructor() Ownable() {
+    constructor(address lootAddr, address mlootAddr, address glootAddr) Ownable() {
+        iLoot = ERC721(lootAddr);
+        iMLoot = ERC721(mlootAddr);
+        iGLoot = ERC721(glootAddr);
     }
 
     function ownerSetDescription(string memory desc) external onlyOwner {
         description = desc;
-    }
-
-    function ownerSetLootAddress(address addr) external onlyOwner {
-        iLoot = ERC721(addr);
-    }
-
-    function ownerSetMLootAddress(address addr) external onlyOwner {
-        iMLoot = ERC721(addr);
     }
 
      function ownerSetManaAddress(address addr) external onlyOwner {

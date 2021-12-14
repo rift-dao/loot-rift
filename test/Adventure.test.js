@@ -20,7 +20,7 @@ contract('Adventure', function ([owner, other]) {
         this.riftData = await RiftData.new({ from: owner });
         this.crystals = await Crystals.new(this.mana.address, { from : owner });
         this.loot = await Loot.new({ from: owner });
-        this.rift = await Rift.new({ from: owner });
+        this.rift = await Rift.new(this.loot.address, this.loot.address, this.loot.address, { from: owner });
         this.quests = await RiftQuests.new(this.rift.address, { from: owner });
         this.enterRift = await EnterRift.new(this.quests.address, this.crystals.address, this.mana.address, { from: owner });
         this.calculator = await Calculator.new(this.crystals.address, { from: owner });
@@ -38,7 +38,6 @@ contract('Adventure', function ([owner, other]) {
         await this.crystals.ownerSetMLootAddress(this.loot.address);
         await this.rift.ownerSetRiftData(this.riftData.address);
         await this.rift.addRiftObject(this.crystals.address);
-        await this.rift.ownerSetLootAddress(this.loot.address);
         await this.rift.ownerSetManaAddress(this.mana.address);
         await this.rift.addRiftQuest(this.crystals.address);
         await this.rift.addRiftQuest(this.rift.address);
