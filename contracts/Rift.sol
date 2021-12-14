@@ -37,6 +37,8 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     ERC721 public iGLoot;
     IMana public iMana;
     IRiftData public iRiftData;
+    // gLoot bags must offset their bagId by adding gLootOffset when interacting
+    uint32 constant glootOffset = 9997460;
 
     string public description = "The Great Unknown";
 
@@ -266,6 +268,8 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
      modifier _isBagHolder(uint256 bagId, address owner) {
         if (bagId < 8001) {
             require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
+        } else if (bagId > glootOffset) {
+            require(iGLoot.ownerOf(bagId - glootOffset) == owner, "UNAUTH");
         } else {
             require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }

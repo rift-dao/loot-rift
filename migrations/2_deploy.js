@@ -27,8 +27,6 @@ module.exports = function(deployer) {
     crystals.ownerSetMetadataAddress(crystalsMeta.address);
     crystals.ownerSetCalculatorAddress(calculator.address);
     crystals.ownerSetRiftAddress(rift.address);
-    crystals.ownerSetLootAddress(notLoot.address);
-    crystals.ownerSetMLootAddress(notLoot.address);
     rift.addRiftObject(crystals.address);
     rift.ownerSetRiftData(riftData.address);
     // rift.ownerSetRiftQuestsAddress(riftQuests.address);

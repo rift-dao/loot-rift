@@ -49,9 +49,6 @@ contract Crystals is
 
     IMana public iMana;
     IRift public iRift;
-
-    ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
-    ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
     
     uint8 public maxFocus = 10;
     uint32 private constant MAX_CRYSTALS = 10000000;
@@ -83,11 +80,11 @@ contract Crystals is
         nonReentrant
     {
         require(iRift.bags(bagId).level == 0, "Use mint crystal");
-        if (bagId > 8000) {
-            require(msg.value == mMintFee, "FEE");
-        } else {
+        if (bagId < 8001 || bagId > 9997460) {
             require(msg.value == mintFee, "FEE");
-        }   
+        } else {
+            require(msg.value == mMintFee, "FEE");
+        }
         // set up bag in rift and give it a charge
         iRift.setupNewBag(bagId);
 
@@ -269,16 +266,8 @@ contract Crystals is
         setApprovalForAll(addr, true);
     }
 
-    function ownerSetLootAddress(address addr) external onlyOwner {
-        iLoot = ERC721(addr);
-    }
-
     function ownerSetManaAddress(address addr) external onlyOwner {
         iMana = IMana(addr);
-    }
-
-    function ownerSetMLootAddress(address addr) external onlyOwner {
-        iMLoot = ERC721(addr);
     }
 
     function ownerSetMetadataAddress(address addr) external onlyOwner {
