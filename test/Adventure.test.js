@@ -36,6 +36,7 @@ contract('Adventure', function ([owner, other]) {
         await this.crystals.ownerSetMetadataAddress(this.metadata.address);
         await this.crystals.ownerSetCalculatorAddress(this.calculator.address);
         await this.crystals.ownerSetRiftAddress(this.rift.address);
+        await this.crystals.ownerSetOpenSeaProxy(this.loot.address); // placeholder
         await this.rift.ownerSetRiftData(this.riftData.address);
         await this.rift.addRiftObject(this.crystals.address);
         await this.rift.ownerSetManaAddress(this.mana.address);
@@ -72,13 +73,26 @@ contract('Adventure', function ([owner, other]) {
         await this.loot.mint(1);
     });
 
-    it ('can interact as gloot', async function () {
+    it ('can interact as gloot and mloot', async function () {
         await this.gloot.mint(2);
+        await this.mloot.mint(90000);
 
         await truffleAssert.fails(this.crystals.firstMint(2, { value: web3.utils.toWei("0.05", "ether") }))
 
         await truffleAssert.passes(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.05", "ether") }))
+        await truffleAssert.passes(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.01", "ether") }))
 
+        await truffleAssert.fails(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.05", "ether") }))
+        await truffleAssert.fails(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.01", "ether") }))
+
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 9997462, 9997462, { from: other }));
+        await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 90000, 90000, { from: other }));
+
+        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 9997462, 9997462, { from: owner }));
+        await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 90000, 90000, { from: owner }));
+
+        await truffleAssert.passes(this.crystals.mintCrystal(9997462, { from: owner }));
+        await truffleAssert.passes(this.crystals.mintCrystal(90000, { from: owner }));
     });
 
     // it ('can mint crystal with unregistered bag', async function () {

@@ -210,9 +210,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function setupNewBag(uint256 bagId) external {
-        require(iRiftData.bags(bagId).level == 0, "bag must be unregistered");
-        iRiftData.updateLevel(1, bagId);
-        _chargeBag(bagId,levelChargeAward[1], 1);
+        if (iRiftData.bags(bagId).level == 0) {
+            iRiftData.updateLevel(1, bagId);    
+            _chargeBag(bagId,levelChargeAward[1], 1);
+        }        
     }
 
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {

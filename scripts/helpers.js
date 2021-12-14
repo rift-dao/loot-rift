@@ -59,6 +59,6 @@ module.exports = {
   getArgs,
   hasFlag,
   setup,
-  MAX_CRYSTALS: 10000000,
+  GEN_THRESH: 10000000,
   RESERVED_OFFSET: 9900000,
 };
