@@ -67,6 +67,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         iMLoot = ERC721(addr);
     }
 
+     function ownerSetManaAddress(address addr) external onlyOwner {
+        iMana = IMana(addr);
+    }
+
     function ownerSetRiftData(address addr) external onlyOwner {
         iRiftData = IRiftData(addr);
     }
@@ -120,19 +124,9 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
         levelChargeAward[level] = charges;
     }
 
-    function ownerSetManaAddress(address addr) external onlyOwner {
-        iMana = IMana(addr);
-    }
-
     // READ
 
-    function isBagHolder(uint256 bagId, address owner) external view {
-        if (bagId < 8001) {
-            require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
-        } else {
-            require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
-        }
-    }
+    function isBagHolder(uint256 bagId, address owner) _isBagHolder(bagId, owner) external view {}
 
     function bags(uint256 bagId) external view returns (RiftBag memory) {
         return iRiftData.bags(bagId);
