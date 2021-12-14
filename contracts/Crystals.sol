@@ -61,7 +61,7 @@ contract Crystals is
 
     uint256 public mintFee = 0.05 ether;
     uint256 public mMintFee = 0.01 ether;
-    uint16[] private xpTable = [15,30,50,65,100,115,150,200,400,600];
+    uint16[] private xpTable = [15,30,50,75,110,155,210,280,500,800];
 
     /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
