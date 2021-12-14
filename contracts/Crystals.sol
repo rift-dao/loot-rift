@@ -11,7 +11,7 @@
     by chris and tony
     
 */
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.9;
 
@@ -19,6 +19,8 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
@@ -26,6 +28,7 @@ import "./IRift.sol";
 /// @title Loot Crystals from the Rift
 contract Crystals is
     ERC721,
+    IERC2981,
     ERC721Enumerable,
     ERC721URIStorage,
     ERC721Burnable,
@@ -67,6 +70,9 @@ contract Crystals is
     /// @notice 0 - 9 => collaboration nft contracts
     /// @notice 0 => Genesis Adventurer
     mapping(uint8 => Collab) public collabs;
+
+    address private openSeaProxyRegistryAddress;
+    bool private isOpenSeaProxyActive = true;
 
     constructor(address manaAddress) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
         iMana = IMana(manaAddress);
@@ -220,10 +226,12 @@ contract Crystals is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable)
+        override(ERC721, ERC721Enumerable, IERC165)
         returns (bool)
     {
-        return super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IERC2981).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
      function tokenURI(uint256 tokenId) 
@@ -235,6 +243,8 @@ contract Crystals is
         require(address(iMetadata) != address(0), "no addr set");
         return iMetadata.tokenURI(tokenId);
     }
+
+    // OWNER
 
     function ownerUpdateCollab(
         uint8 collabIndex,
@@ -257,9 +267,18 @@ contract Crystals is
         maxLevel = maxLevel_;
     }
 
-    // function ownerSetGenMintRequirement(uint256 generation, uint256 manaCost_) external onlyOwner {
-    //     genReq[generation].manaCost = manaCost_;
-    // }
+    // function to disable gasless listings for security in case
+    // opensea ever shuts down or is compromised
+    function setIsOpenSeaProxyActive(bool _isOpenSeaProxyActive)
+        external
+        onlyOwner
+    {
+        isOpenSeaProxyActive = _isOpenSeaProxyActive;
+    }
+
+    function ownerSetOpenSeaProxy(address addr) external onlyOwner {
+        openSeaProxyRegistryAddress = addr;
+    }
 
     function ownerSetCalculatorAddress(address addr) external onlyOwner {
         iCalculator = ICrystalManaCalculator(addr);
@@ -398,4 +417,52 @@ contract Crystals is
         require(ownerOf(tokenId) == _msgSender(), "UNAUTH");
         _;
     }
+
+    /**
+     * @dev Override isApprovedForAll to allowlist user's OpenSea proxy accounts to enable gas-less listings.
+     */
+    function isApprovedForAll(address owner, address operator)
+        public
+        view
+        override
+        returns (bool)
+    {
+        // Get a reference to OpenSea's proxy registry contract by instantiating
+        // the contract using the already existing address.
+        ProxyRegistry proxyRegistry = ProxyRegistry(
+            openSeaProxyRegistryAddress
+        );
+        if (
+            isOpenSeaProxyActive &&
+            address(proxyRegistry.proxies(owner)) == operator
+        ) {
+            return true;
+        }
+
+        return super.isApprovedForAll(owner, operator);
+    }
+
+    /**
+     * @dev See {IERC165-royaltyInfo}.
+     */
+    function royaltyInfo(uint256 tokenId, uint256 salePrice)
+        external
+        view
+        override
+        returns (address receiver, uint256 royaltyAmount)
+    {
+        require(_exists(tokenId), "Nonexistent token");
+
+        return (address(this), SafeMath.div(SafeMath.mul(salePrice, 5), 100));
+    }
+}
+
+// These contract definitions are used to create a reference to the OpenSea
+// ProxyRegistry contract by using the registry's address (see isApprovedForAll).
+contract OwnableDelegateProxy {
+
+}
+
+contract ProxyRegistry {
+    mapping(address => OwnableDelegateProxy) public proxies;
 }

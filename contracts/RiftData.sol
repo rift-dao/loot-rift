@@ -14,7 +14,7 @@
      by chris and tony                                                                                                       
 */
 
-// SPDX-License-Identifier: CC0-1.0
+// SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.9;
 
