@@ -16,11 +16,12 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/security/Pausable.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
@@ -29,8 +30,6 @@ import "./IRift.sol";
 contract Crystals is
     ERC721,
     IERC2981,
-    ERC721Enumerable,
-    ERC721URIStorage,
     ERC721Burnable,
     ReentrancyGuard,
     Ownable,
@@ -220,7 +219,7 @@ contract Crystals is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable, IERC165)
+        override(ERC721, IERC165)
         returns (bool)
     {
         return
@@ -231,7 +230,7 @@ contract Crystals is
      function tokenURI(uint256 tokenId) 
         public
         view
-        override(ERC721, ERC721URIStorage)
+        override
         returns (string memory) 
     {
         require(address(iMetadata) != address(0), "no addr set");
@@ -375,11 +374,11 @@ contract Crystals is
         address from,
         address to,
         uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) {
+    ) internal override(ERC721) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    function _burn(uint256 tokenId) internal override(ERC721, ERC721URIStorage) {
+    function _burn(uint256 tokenId) internal override(ERC721) {
         super._burn(tokenId);
     }
 

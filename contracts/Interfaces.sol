@@ -20,6 +20,10 @@ interface ICrystalManaCalculator {
     function claimableMana(uint256 tokenId) external view returns (uint32);
 }
 
+interface ICrystalsMetadata {
+    function tokenURI(uint256 tokenId) external view returns (string memory);
+}
+
 interface ICrystals {
     function crystalsMap(uint256 tokenID) external view returns (Crystal memory);
     function bags(uint256 tokenID) external view returns (Bag memory);
@@ -30,6 +34,4 @@ interface ICrystals {
     function transferFrom(address from, address to, uint256 tokenId) external;
 }
 
-interface ICrystalsMetadata {
-    function tokenURI(uint256 tokenId) external view returns (string memory);
-}
+

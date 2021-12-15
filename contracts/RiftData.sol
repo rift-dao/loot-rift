@@ -18,9 +18,10 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 struct RiftBag {
         uint16 charges;
@@ -51,7 +52,7 @@ interface IRiftData {
         and this store acts as a failsafe in case a new Rift contract needs to be deployed.
     2. The authors' intent is to grant control of this data to more controllers (a DAO, L2 rollup, etc).
 */
-contract RiftData is IRiftData, ReentrancyGuard, Pausable, Ownable {
+contract RiftData is IRiftData, OwnableUpgradeable {
     mapping(address => bool) public riftControllers;
 
     uint256 public karmaTotal;
@@ -59,6 +60,10 @@ contract RiftData is IRiftData, ReentrancyGuard, Pausable, Ownable {
 
     mapping(uint256 => RiftBag) internal _bags;
     mapping(address => uint64) public karma;
+
+     function initialize() public initializer {
+        __Ownable_init();
+     }
 
     function addRiftController(address addr) external onlyOwner {
         riftControllers[addr] = true;

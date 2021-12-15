@@ -1,14 +1,16 @@
 // const { accounts, contract } = require('@openzeppelin/test-environment');
 const { BN } = require('@openzeppelin/test-helpers');
+const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');
 const truffleAssert = require('truffle-assertions');
 const { expect } = require('chai');
 const { assertion } = require('@openzeppelin/test-helpers/src/expectRevert');
+// const { deploy } = require('@openzeppelin/truffle-upgrades/dist/utils');
 const Mana = artifacts.require('Mana');
 const Crystals = artifacts.require('Crystals');
 const Loot = artifacts.require('NotLoot');
 const Rift = artifacts.require('Rift');
-const EnterRift = artifacts.require('EnterTheRift');
-const RiftQuests = artifacts.require('RiftQuests');
+// const EnterRift = artifacts.require('EnterTheRift');
+// const RiftQuests = artifacts.require('RiftQuests');
 const Calculator = artifacts.require('CrystalManaCalculator');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
 const RiftData = artifacts.require('RiftData');
@@ -17,14 +19,14 @@ contract('Adventure', function ([owner, other]) {
 
     beforeEach(async function () {
         this.mana = await Mana.new({ from: owner });
-        this.riftData = await RiftData.new({ from: owner });
-        this.crystals = await Crystals.new(this.mana.address, { from : owner });
+        this.riftData = await deployProxy(RiftData);
+        this.crystals = await Crystals.new(this.mana.address, { from: owner });
         this.loot = await Loot.new({ from: owner });
         this.mloot = await Loot.new({ from: owner });
         this.gloot = await Loot.new({ from: owner });
-        this.rift = await Rift.new(this.loot.address, this.mloot.address, this.gloot.address, { from: owner });
-        this.quests = await RiftQuests.new(this.rift.address, { from: owner });
-        this.enterRift = await EnterRift.new(this.quests.address, this.crystals.address, this.mana.address, { from: owner });
+        this.rift = await deployProxy(Rift, [this.loot.address, this.mloot.address, this.gloot.address]);
+        // this.quests = await RiftQuests.new(this.rift.address, { from: owner });
+        // this.enterRift = await EnterRift.new(this.quests.address, this.crystals.address, this.mana.address, { from: owner });
         this.calculator = await Calculator.new(this.crystals.address, { from: owner });
         this.metadata = await CrystalsMetadata.new(this.crystals.address, { from: owner });
 
@@ -42,12 +44,12 @@ contract('Adventure', function ([owner, other]) {
         await this.rift.ownerSetManaAddress(this.mana.address);
         await this.rift.addRiftQuest(this.crystals.address);
         await this.rift.addRiftQuest(this.rift.address);
-        await this.rift.addRiftQuest(this.quests.address);
-        await this.quests.addQuest(this.enterRift.address);
+        // await this.rift.addRiftQuest(this.quests.address);
+        // await this.quests.addQuest(this.enterRift.address);
 
-        await this.quests.ownerSetXP(this.enterRift.address, 1, 2);
-        await this.quests.ownerSetXP(this.enterRift.address, 2, 2);
-        await this.quests.ownerSetXP(this.enterRift.address, 3, 2);
+        // await this.quests.ownerSetXP(this.enterRift.address, 1, 2);
+        // await this.quests.ownerSetXP(this.enterRift.address, 2, 2);
+        // await this.quests.ownerSetXP(this.enterRift.address, 3, 2);
 
         await this.rift.ownerSetXpRequirement(1, 65);
         await this.rift.ownerSetXpRequirement(2, 130);

@@ -18,12 +18,13 @@
 pragma solidity ^0.8.9;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
 
-contract Rift is ReentrancyGuard, Pausable, Ownable {
+contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable, OwnableUpgradeable {
 
     event BagCharged(address owner, uint256 tokenId, uint16 amount);
     event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
@@ -40,17 +41,17 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     // gLoot bags must offset their bagId by adding gLootOffset when interacting
     uint32 constant glootOffset = 9997460;
 
-    string public description = "The Great Unknown";
+    string public description;
 
     // rift level variables
-    uint32 public riftLevel = 3;
-    uint32 internal riftTier = 1;
-    uint64 internal riftTierPower = 35000;
-    uint8 internal riftTierSize = 5;
-    uint8 internal riftTierIncrease = 15; // 15% increase
-    uint64 internal riftPowerPerLevel = 10000;
+    uint32 public riftLevel;
+    uint32 internal riftTier;
+    uint64 internal riftTierPower;
+    uint8 internal riftTierSize;
+    uint8 internal riftTierIncrease; // 15% increase
+    uint64 internal riftPowerPerLevel;
 
-    uint64 public riftObjectsSacrificed = 0;
+    uint64 public riftObjectsSacrificed;
 
     mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
@@ -58,10 +59,24 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     mapping(address => bool) public riftQuests;
     address[] public riftObjectsArr;
 
-    constructor(address lootAddr, address mlootAddr, address glootAddr) Ownable() {
+    function initialize(address lootAddr, address mlootAddr, address glootAddr) public initializer {
+        __Ownable_init();
+        __Pausable_init();
+        __ReentrancyGuard_init();
+
         iLoot = ERC721(lootAddr);
         iMLoot = ERC721(mlootAddr);
         iGLoot = ERC721(glootAddr);
+
+        description = "The Great Unknown";
+
+        riftLevel = 3;
+        riftTier = 1;
+        riftTierPower = 35000;
+        riftTierSize = 5;
+        riftTierIncrease = 15;
+        riftPowerPerLevel = 10000;
+        riftObjectsSacrificed = 0;
     }
 
     function ownerSetDescription(string memory desc) external onlyOwner {
@@ -225,7 +240,7 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
 
     function _sacrificeRiftObject(address burnableAddr, uint256 tokenId, uint256 bagId) internal {
         BurnableObject memory bo = IRiftBurnable(burnableAddr).burnObject(tokenId);
-        ERC721Burnable(burnableAddr).burn(tokenId);
+        ERC721BurnableUpgradeable(burnableAddr).burn(tokenId);
 
         addRiftPower(bo.power);
         iRiftData.addKarma(bo.power, msg.sender);

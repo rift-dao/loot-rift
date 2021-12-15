@@ -1,0 +1,682 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x4B47c6425e12F575A636386C06fd14c7b26Bd2C9",
+    "txHash": "0xd5f1bd4ec2e72d442d3f44935ab56a407f8c53bd2fcee3c8f7a9ae8c6c11b41b"
+  },
+  "proxies": [
+    {
+      "address": "0x4Cf0BBd0BD3c6210a3Ed10362bCE09719dF49453",
+      "txHash": "0xc492f04e1a536c514e1ddcc3a843e5b19affaa954f923b84fe9a63b6b1d47e05",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x24832D9600759F64349DD4D9ECB6BD772FD52035",
+      "txHash": "0x03bc625f0b9ac812722d24aff99490bb05a66ba17191b71d2cfd2ea79eadb4c4",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x97acAE0f33dfE1C5e16588AF249AaE9BD84C3292",
+      "txHash": "0xad96b2e35c37ae0e504134ecddeb0c78cdedf28273492250d92dd81358d9991a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x6F70692180aD07fb7dA99770Cc01192a3429facd",
+      "txHash": "0x994b95757f93bcaad4c86d2d5a684fe634c1c58deff07df7a60ce5132c37bdab",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x5f9F435C248A2f44F458fDffFd160280F14D4B70",
+      "txHash": "0xbaa3ea3f9fb3b9f45b160136eddb08ae435bc20fa87d294c1b1fa369c9fd340e",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xb035F07EB0E14a56695292DbDdF78A3BfCCE84d3",
+      "txHash": "0x5d56d1e17bb129d455639764ee2745b2563de43dbc84ffc81b437dca79b0db46",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x1eFC37566b9C0B12c770AB220A53aCE750af1B30",
+      "txHash": "0x30dc7f76fd47291114ef993b0f6b2a7ad3da1c224e02a538f246d9c33b7f9bdb",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xF8211eA26EFFC6875F80Ac6455fBD1B9AE0B7085",
+      "txHash": "0xd853315a51b34d1aabf478cba4f85cf94b516d61db1b64912898077250574c6d",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xD65983b68C2002fAD070527E35615FA4DA86736D",
+      "txHash": "0x715058e9c4e56c131e34b691c822bfe10abc0b14359ded9782e5ad9fbbf5161b",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x3F8246594c87371EAC09d442E6fF75435346c963",
+      "txHash": "0x9c9154634d1c1ec62c64174a2c0c7a7e74df0eb0ac85d6ba43a91338b0f8420a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x515E76717a29A9D735c85043a27aD377Cec57309",
+      "txHash": "0xd2df3c1068c59f3b05d024814441b5dd3b1aa37089afa16c09afc7f2903755ad",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xede30219BbD7c6919c22F0e7feFe0e1CeE199790",
+      "txHash": "0xc4e3abebcb48ccd382df34336cc4774d09300412a327ca3a690dea3d006ff5a8",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xa9126CeA11BD46737851CB1FBE0ff941D11Fe740",
+      "txHash": "0xa3bdd0aec0ec09f13477b8f14c8c78dd6c5a1acee14a7d51dbaa4981920b678b",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xABf4503eE335A1da283bAc0d8567764bDA1d9994",
+      "txHash": "0xd6844df7ac8496b4f24f7aafd773faac1c03c900f13ee5f373ce253bb68a21ee",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x69853F5aDE9A8F6973f38F18c2FeA2f379683e7f",
+      "txHash": "0xc4a0a76f3d977b0bf742c7b21663d42eb3598a0b5e3f68e2c11e1fa1494b4da4",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x95F1249D61ca139edF9e7C4B53291F3bEE6D55D2",
+      "txHash": "0x6cc810a0e0983bf766e05329e205e6a431d33dd84f5470b0c31ee1037b9593d8",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x59815Be5528B620CAc8bA73c597a049b83179D62",
+      "txHash": "0x76adde42d2ec7aca19e7b68ffb84343f0d0e1e61b4ebeb7a41285d765d9d4d2b",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xA88406d8E43306B8183b86e67a4a3EE9D01C8Ce5",
+      "txHash": "0xd9881f6bb54283e5d1d9535169d3a442c20b13fe1ee6a0c6f0d5fc1669fdfb90",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x6cD1Ac115a08d88C1EFA6ab8F2c8dB9e131d985D",
+      "txHash": "0x5c3b0f5cc6471ac1e79b6dd2846c9c25e7e7c5257b22ae168a0286dd960d9f20",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x89c44777392F17D7127aEFF25cDBAaCe9fcA6B44",
+      "txHash": "0x84a13dea755c72ce209cb48650cfbb957f3bf96a9d551c47ccbce87551566816",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x219805319f73442A790e0976cfDAE34B576054c7",
+      "txHash": "0x41130c4057856359ba77d2ff4658a9e3be031f8a50a81ba694601918588ac206",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x76bA7693Deb05a9A14b96ed81Ee7DbCB83663cFB",
+      "txHash": "0xa58e68a5cf198533afede98dcac206d2e417ccbdfcdf6d6e2cbf89c32b8e27d0",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x091C550b7c4D43f046561FfE05A81AD3edc34d6e",
+      "txHash": "0xec0930dd47057e65a205688e1cc93bd321588ddc571a0d485760090cdad588d7",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x1432f67fCc38A879651AaD3a650C0D9aBca0e7dd",
+      "txHash": "0x0243f967e0ea579c7c6600c148e10b6ca291e8effb48ed61c7325f763b98268e",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x6EF5f39fFe61D4669930B3796Ec2D8a39afCfbD8",
+      "txHash": "0x57f3c4c2412a74128d5764d6b7153c677dc9f07b38d611fbee9a0fffe1427aac",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xDE14010926268D1AF64478bF53E4F033D69C2262",
+      "txHash": "0xb92040a20978190098820e5e92fa8580a7f9fff3881e6363f018c2d7e717942b",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xA371D524B79EB507d16417308Cb02FBBB36183A6",
+      "txHash": "0x1ca5bf72096d0fa74c24fbc46f225c266bfe660bd8bf9cd460437f06d7ce4af7",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xddFa0C2706ae5DAe348eEb1e929e62DE8E1B9b63",
+      "txHash": "0x4af5b03f45fe964d46f5992619f95f45675312d8bd06ce16d979fc6205dd68f4",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x1962969e8Bacc9A99900c48b76cA974310286113",
+      "txHash": "0x8e8f8409dc092895769ab16369a04fbb736c3df8be6714df81790c57fe0de559",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x8F790ec5826664d0e6c57d8Bc178231F05780A65",
+      "txHash": "0xa90fe0f6f488618541e6a969900ef716629276ac4161472fddbbd430a3789bd8",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xaD17950606aCdc18B56e45ea79F105A469819FAD",
+      "txHash": "0xcb097fb1f035786549ef5ddbfc331fc251f78fa890751753953181522d54b6ae",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x857D1d46E74D8cd3bD4AF8Fc577510b981594A02",
+      "txHash": "0xa37b677bf3798c6eeb02516ca7f794448248b324714b9f65edeb15bdf6e66c7a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xEbD9b371945eb8dB38b1b7A050e5DE63a9C3f590",
+      "txHash": "0xa5a7e62caa5ab2d5e433e41d532e2e1cb2c0a7d6948efc7dca46884abcf1d147",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xe02d08F04019fb1E9C777AdF01a77071d0D0753b",
+      "txHash": "0x87546e94e64462af9d206ee42f337da4ebb672158907908a504b8331134f5912",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xe131E350d0D21a332C7C8b16340FfB9c5899005D",
+      "txHash": "0x56a651752d6ca61265cb42f7f44e26463113a785170b325a2abca1435b2f19bf",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x67CA27678E949CF70DA967A4B26BaBce9713d916",
+      "txHash": "0x7d0fa59eb0649b8d0ff3ebc34b9e67993313ee70afa170b4c2648655a0fbcc62",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x944cCEabFa3b58d91374A34932D093299D8e936c",
+      "txHash": "0x5c224af4d8452f91ae6f198aca8c48bc99621345ee49a68954b7c65943f7c363",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0a6F3D9EF584f6764Ee0b74c6996C01617df1Fc8",
+      "txHash": "0xfe4afbefe82449bd99656af4dea0df1979dffb31f7e9fd9bc3b69961ce61ab61",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x56e526F7Df88Db1729B81298eF6c233968EaED52",
+      "txHash": "0x1ca7c060a9cbf36cb452138fd33042df6a64ebfd69d32102ab31c60bc200ba3a",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "02a6b3e3750e2bb892f8d3bb6be15cc69530955b148b29755f1adc23fb435ee2": {
+      "address": "0xC27527d731Ea2DCF19c1a2d557D79Ec8274b47b2",
+      "txHash": "0xd633c668526ae9fa6101a64439933bb775fd60117480afd8c6420b47f0a7e0f7",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:82"
+          },
+          {
+            "contract": "RiftData",
+            "label": "riftControllers",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/RiftData.sol:98"
+          },
+          {
+            "contract": "RiftData",
+            "label": "karmaTotal",
+            "type": "t_uint256",
+            "src": "../project:/contracts/RiftData.sol:99"
+          },
+          {
+            "contract": "RiftData",
+            "label": "karmaHolders",
+            "type": "t_uint256",
+            "src": "../project:/contracts/RiftData.sol:99"
+          },
+          {
+            "contract": "RiftData",
+            "label": "_bags",
+            "type": "t_mapping(t_uint256,t_struct(RiftBag)12286_storage)",
+            "src": "../project:/contracts/RiftData.sol:101"
+          },
+          {
+            "contract": "RiftData",
+            "label": "karma",
+            "type": "t_mapping(t_address,t_uint64)",
+            "src": "../project:/contracts/RiftData.sol:104"
+          }
+        ],
+        "types": {
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_struct(RiftBag)12286_storage)": {
+            "label": "mapping(uint256 => struct RiftBag)"
+          },
+          "t_struct(RiftBag)12286_storage": {
+            "label": "struct RiftBag",
+            "members": [
+              {
+                "label": "charges",
+                "type": "t_uint16"
+              },
+              {
+                "label": "chargesUsed",
+                "type": "t_uint32"
+              },
+              {
+                "label": "level",
+                "type": "t_uint16"
+              },
+              {
+                "label": "xp",
+                "type": "t_uint32"
+              },
+              {
+                "label": "lastChargePurchase",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_address,t_uint64)": {
+            "label": "mapping(address => uint64)"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "c3538a96d647e2816a5af4999e2c467e388dbe3692ccd71fa1c42138fc33d7e9": {
+      "address": "0x516dD6e35d4ce2bD13581a075fcD3B9658Da677d",
+      "txHash": "0x18d8f2774ded8346333d2523e44390e74a5452bdaa7cbb99820ad9385b222d4f",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "_status",
+            "type": "t_uint256",
+            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
+          },
+          {
+            "contract": "ReentrancyGuardUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:68"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "_paused",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "contract": "PausableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:97"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:82"
+          },
+          {
+            "contract": "Rift",
+            "label": "iLoot",
+            "type": "t_contract(ERC721)4182",
+            "src": "../project:/contracts/Rift.sol:54"
+          },
+          {
+            "contract": "Rift",
+            "label": "iMLoot",
+            "type": "t_contract(ERC721)4182",
+            "src": "../project:/contracts/Rift.sol:54"
+          },
+          {
+            "contract": "Rift",
+            "label": "iGLoot",
+            "type": "t_contract(ERC721)4182",
+            "src": "../project:/contracts/Rift.sol:56"
+          },
+          {
+            "contract": "Rift",
+            "label": "iMana",
+            "type": "t_contract(IMana)10969",
+            "src": "../project:/contracts/Rift.sol:56"
+          },
+          {
+            "contract": "Rift",
+            "label": "iRiftData",
+            "type": "t_contract(IRiftData)12361",
+            "src": "../project:/contracts/Rift.sol:57"
+          },
+          {
+            "contract": "Rift",
+            "label": "description",
+            "type": "t_string_storage",
+            "src": "../project:/contracts/Rift.sol:60"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftLevel",
+            "type": "t_uint32",
+            "src": "../project:/contracts/Rift.sol:62"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftTier",
+            "type": "t_uint32",
+            "src": "../project:/contracts/Rift.sol:62"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftTierPower",
+            "type": "t_uint64",
+            "src": "../project:/contracts/Rift.sol:63"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftTierSize",
+            "type": "t_uint8",
+            "src": "../project:/contracts/Rift.sol:64"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftTierIncrease",
+            "type": "t_uint8",
+            "src": "../project:/contracts/Rift.sol:65"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftPowerPerLevel",
+            "type": "t_uint64",
+            "src": "../project:/contracts/Rift.sol:68"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftObjectsSacrificed",
+            "type": "t_uint64",
+            "src": "../project:/contracts/Rift.sol:69"
+          },
+          {
+            "contract": "Rift",
+            "label": "xpRequired",
+            "type": "t_mapping(t_uint16,t_uint16)",
+            "src": "../project:/contracts/Rift.sol:71"
+          },
+          {
+            "contract": "Rift",
+            "label": "levelChargeAward",
+            "type": "t_mapping(t_uint16,t_uint16)",
+            "src": "../project:/contracts/Rift.sol:73"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftObjects",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/Rift.sol:75"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftQuests",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/Rift.sol:77"
+          },
+          {
+            "contract": "Rift",
+            "label": "riftObjectsArr",
+            "type": "t_array(t_address)dyn_storage",
+            "src": "../project:/contracts/Rift.sol:78"
+          }
+        ],
+        "types": {
+          "t_contract(ERC721)4182": {
+            "label": "contract ERC721"
+          },
+          "t_contract(IMana)10969": {
+            "label": "contract IMana"
+          },
+          "t_contract(IRiftData)12361": {
+            "label": "contract IRiftData"
+          },
+          "t_string_storage": {
+            "label": "string"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_uint8": {
+            "label": "uint8"
+          },
+          "t_mapping(t_uint16,t_uint16)": {
+            "label": "mapping(uint16 => uint16)"
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_array(t_address)dyn_storage": {
+            "label": "address[]"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    },
+    "d1221b0340e1d4da1e6f113be0ea7996559ed35f761ece8f91106ea8ab29886a": {
+      "address": "0x8d25d30819bD7ECe085287aBe36613D2467c2554",
+      "txHash": "0xcb99e24e3dcd2eaa21eb205ba227a4e3a8c8798ec23e5b78c6dcb4c4a94c3e1c",
+      "layout": {
+        "storage": [
+          {
+            "contract": "Initializable",
+            "label": "_initialized",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
+          },
+          {
+            "contract": "Initializable",
+            "label": "_initializing",
+            "type": "t_bool",
+            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
+          },
+          {
+            "contract": "ContextUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)50_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "_owner",
+            "type": "t_address",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "contract": "OwnableUpgradeable",
+            "label": "__gap",
+            "type": "t_array(t_uint256)49_storage",
+            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:82"
+          },
+          {
+            "contract": "RiftData",
+            "label": "riftControllers",
+            "type": "t_mapping(t_address,t_bool)",
+            "src": "../project:/contracts/RiftData.sol:100"
+          },
+          {
+            "contract": "RiftData",
+            "label": "karmaTotal",
+            "type": "t_uint256",
+            "src": "../project:/contracts/RiftData.sol:103"
+          },
+          {
+            "contract": "RiftData",
+            "label": "karmaHolders",
+            "type": "t_uint256",
+            "src": "../project:/contracts/RiftData.sol:103"
+          },
+          {
+            "contract": "RiftData",
+            "label": "_bags",
+            "type": "t_mapping(t_uint256,t_struct(RiftBag)11868_storage)",
+            "src": "../project:/contracts/RiftData.sol:104"
+          },
+          {
+            "contract": "RiftData",
+            "label": "karma",
+            "type": "t_mapping(t_address,t_uint64)",
+            "src": "../project:/contracts/RiftData.sol:104"
+          }
+        ],
+        "types": {
+          "t_mapping(t_address,t_bool)": {
+            "label": "mapping(address => bool)"
+          },
+          "t_address": {
+            "label": "address"
+          },
+          "t_bool": {
+            "label": "bool"
+          },
+          "t_uint256": {
+            "label": "uint256"
+          },
+          "t_mapping(t_uint256,t_struct(RiftBag)11868_storage)": {
+            "label": "mapping(uint256 => struct RiftBag)"
+          },
+          "t_struct(RiftBag)11868_storage": {
+            "label": "struct RiftBag",
+            "members": [
+              {
+                "label": "charges",
+                "type": "t_uint16"
+              },
+              {
+                "label": "chargesUsed",
+                "type": "t_uint32"
+              },
+              {
+                "label": "level",
+                "type": "t_uint16"
+              },
+              {
+                "label": "xp",
+                "type": "t_uint32"
+              },
+              {
+                "label": "lastChargePurchase",
+                "type": "t_uint64"
+              }
+            ]
+          },
+          "t_uint16": {
+            "label": "uint16"
+          },
+          "t_uint32": {
+            "label": "uint32"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          },
+          "t_mapping(t_address,t_uint64)": {
+            "label": "mapping(address => uint64)"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]"
+          }
+        }
+      }
+    }
+  }
+}
