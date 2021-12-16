@@ -82,6 +82,14 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         return _bags[bagId];
     }
 
+    function getBags(uint256[] calldata bagIds) external view returns (RiftBag[] memory output) {
+        for(uint256 i = 0; i < bagIds.length; i++) {
+            output[i] = _bags[bagIds[i]];
+        }
+
+        return output;
+    }
+
     function addCharges(uint16 charges, uint256 bagId) external override onlyRiftController {
         _bags[bagId].charges += charges;
     }

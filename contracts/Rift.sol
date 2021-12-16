@@ -26,8 +26,9 @@ import "./IRift.sol";
 
 contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable, OwnableUpgradeable {
 
-    event BagCharged(address owner, uint256 tokenId, uint16 amount);
-    event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
+    event AddCharge(address owner, uint256 tokenId, uint16 amount, uint16 forLvl);
+    event AwardXP(uint256 tokenId, uint256 amount);
+    event UseCharge(address owner, address riftObject, uint256 tokenId, uint16 amount);
     // event CrystalSacrificed(address owner, uint256 tokenId, uint256 powerIncrease);
 
     // The Rift supports 8000 Loot bags
@@ -179,6 +180,8 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     {
         require(riftObjects[msg.sender], "Not of the Rift");
         iRiftData.removeCharges(amount, bagId);
+        
+        emit UseCharge(from, _msgSender(), bagId, amount);
     }
 
     function awardXP(uint32 bagId, uint16 xp) external nonReentrant {
@@ -217,11 +220,13 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
         iRiftData.updateXP(_xp, bagId);
         iRiftData.updateLevel(newlvl, bagId);
+        emit AwardXP(bagId, xp);
     }
 
     function _chargeBag(uint256 bagId, uint16 charges, uint16 forLvl) internal {
         iRiftData.addCharges(charges, bagId);
         removeRiftPower(charges * forLvl);
+        emit AddCharge(_msgSender(), bagId, charges, forLvl);
     }
 
     function setupNewBag(uint256 bagId) external {

@@ -40,8 +40,8 @@ contract Crystals is
         uint256 manaCost;
     }
 
-    event ManaClaimed(address owner, uint256 tokenId, uint256 amount);
     event CrystalLeveled(address owner, uint256 tokenId, uint256 level);
+    event ManaClaimed(address owner, uint256 tokenId, uint256 amount);
 
     ICrystalsMetadata public iMetadata;
     ICrystalManaCalculator public iCalculator;
