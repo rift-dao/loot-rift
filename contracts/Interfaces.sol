@@ -30,6 +30,7 @@ interface ICrystals {
     function getResonance(uint256 tokenId) external view returns (uint32);
     function getSpin(uint256 tokenId) external view returns (uint32);
     function claimableMana(uint256 tokenID) external view returns (uint32);
+    function availableClaims(uint256 tokenId) external view returns (uint8);
     function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
     function transferFrom(address from, address to, uint256 tokenId) external;
 }
