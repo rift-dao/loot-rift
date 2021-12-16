@@ -20,7 +20,7 @@ contract('Adventure', function ([owner, other]) {
     beforeEach(async function () {
         this.mana = await Mana.new({ from: owner });
         this.riftData = await deployProxy(RiftData);
-        this.crystals = await Crystals.new(this.mana.address, { from: owner });
+        this.crystals = await deployProxy(Crystals, [this.mana.address]);
         this.loot = await Loot.new({ from: owner });
         this.mloot = await Loot.new({ from: owner });
         this.gloot = await Loot.new({ from: owner });
@@ -38,7 +38,7 @@ contract('Adventure', function ([owner, other]) {
         await this.crystals.ownerSetMetadataAddress(this.metadata.address);
         await this.crystals.ownerSetCalculatorAddress(this.calculator.address);
         await this.crystals.ownerSetRiftAddress(this.rift.address);
-        await this.crystals.ownerSetOpenSeaProxy(this.loot.address); // placeholder
+        // await this.crystals.ownerSetOpenSeaProxy(this.loot.address); // placeholder
         await this.rift.ownerSetRiftData(this.riftData.address);
         await this.rift.addRiftObject(this.crystals.address);
         await this.rift.ownerSetManaAddress(this.mana.address);
@@ -79,12 +79,12 @@ contract('Adventure', function ([owner, other]) {
         await this.gloot.mint(2);
         await this.mloot.mint(90000);
 
-        await truffleAssert.fails(this.crystals.firstMint(2, { value: web3.utils.toWei("0.05", "ether") }))
+        await truffleAssert.fails(this.crystals.firstMint(2, { value: web3.utils.toWei("0.04", "ether") }))
 
-        await truffleAssert.passes(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.05", "ether") }))
+        await truffleAssert.passes(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.04", "ether") }))
         await truffleAssert.passes(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.01", "ether") }))
 
-        await truffleAssert.fails(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.05", "ether") }))
+        await truffleAssert.fails(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.04", "ether") }))
         await truffleAssert.fails(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.01", "ether") }))
 
         await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 9997462, 9997462, { from: other }));

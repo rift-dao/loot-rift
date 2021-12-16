@@ -15,25 +15,22 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
-import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import "@openzeppelin/contracts/interfaces/IERC2981.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721EnumerableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
 
 /// @title Loot Crystals from the Rift
 contract Crystals is
-    ERC721Enumerable,
-    IERC2981,
-    ERC721Burnable,
-    ReentrancyGuard,
-    Ownable,
-    Pausable,
+    ERC721EnumerableUpgradeable,
+    ERC721BurnableUpgradeable,
+    ReentrancyGuardUpgradeable,
+    OwnableUpgradeable,
+    PausableUpgradeable,
     IRiftBurnable
 {
     struct GenerationMintRequirement {
@@ -50,25 +47,33 @@ contract Crystals is
     IRift public iRift;
     address internal riftAddress;
     
-    uint8 public maxFocus = 10;
+    uint8 public maxFocus;
     uint32 private constant GEN_THRESH = 10000000;
     uint32 private constant glootOffset = 9997460;
 
     uint64 public mintedCrystals;
 
-    uint256 public mintFee = 0.04 ether;
-    uint256 public mMintFee = 0.01 ether;
-    uint16[] private xpTable = [15,30,50,75,110,155,210,280,500,800];
+    uint256 public mintFee;
+    uint256 public mMintFee;
+    uint16[] private xpTable;
 
     /// @dev indexed by bagId + (GEN_THRESH * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
     mapping(uint256 => Bag) public bags;
 
-    address private openSeaProxyRegistryAddress;
-    bool private isOpenSeaProxyActive = false;
+    function initialize(address manaAddress) public initializer {
+        __ERC721_init("Mana Crystals", "MCRYSTAL");
+        __ERC721Enumerable_init();
+        __ERC721Burnable_init();
+        __ReentrancyGuard_init();
+        __Ownable_init();
+        __Pausable_init();
 
-    constructor(address manaAddress) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
         iMana = IMana(manaAddress);
+        maxFocus = 10;
+        mintFee = 0.04 ether;
+        mMintFee = 0.01 ether;
+        xpTable = [15,30,50,75,110,155,210,280,500,800];
     }
 
     //WRITE
@@ -223,11 +228,10 @@ contract Crystals is
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, ERC721Enumerable, IERC165)
+        override(ERC721Upgradeable, ERC721EnumerableUpgradeable)
         returns (bool)
     {
         return
-            interfaceId == type(IERC2981).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 
@@ -246,19 +250,6 @@ contract Crystals is
     function ownerUpdateMaxLevel(uint8 maxFocus_) external onlyOwner {
         require(maxFocus > maxFocus, "INV");
         maxFocus = maxFocus_;
-    }
-
-    // function to disable gasless listings for security in case
-    // opensea ever shuts down or is compromised
-    function setIsOpenSeaProxyActive(bool _isOpenSeaProxyActive)
-        external
-        onlyOwner
-    {
-        isOpenSeaProxyActive = _isOpenSeaProxyActive;
-    }
-
-    function ownerSetOpenSeaProxy(address addr) external onlyOwner {
-        openSeaProxyRegistryAddress = addr;
     }
 
     function ownerSetCalculatorAddress(address addr) external onlyOwner {
@@ -378,11 +369,11 @@ contract Crystals is
         address from,
         address to,
         uint256 tokenId
-    ) internal override(ERC721, ERC721Enumerable) {
+    ) internal override(ERC721Upgradeable, ERC721EnumerableUpgradeable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
-    function _burn(uint256 tokenId) internal override(ERC721) {
+    function _burn(uint256 tokenId) internal override(ERC721Upgradeable) {
         super._burn(tokenId);
     }
 
@@ -400,43 +391,7 @@ contract Crystals is
         override
         returns (bool)
     {
-        // Get a reference to OpenSea's proxy registry contract by instantiating
-        // the contract using the already existing address.
-        ProxyRegistry proxyRegistry = ProxyRegistry(
-            openSeaProxyRegistryAddress
-        );
-        if (
-            isOpenSeaProxyActive &&
-            address(proxyRegistry.proxies(owner)) == operator
-        ) {
-            return true;
-        }
-
         if (operator == riftAddress) { return true; }
         return super.isApprovedForAll(owner, operator);
     }
-
-    /**
-     * @dev See {IERC165-royaltyInfo}.
-     */
-    function royaltyInfo(uint256 tokenId, uint256 salePrice)
-        external
-        view
-        override
-        returns (address receiver, uint256 royaltyAmount)
-    {
-        require(_exists(tokenId), "Nonexistent token");
-
-        return (address(this), SafeMath.div(SafeMath.mul(salePrice, 5), 100));
-    }
-}
-
-// These contract definitions are used to create a reference to the OpenSea
-// ProxyRegistry contract by using the registry's address (see isApprovedForAll).
-contract OwnableDelegateProxy {
-
-}
-
-contract ProxyRegistry {
-    mapping(address => OwnableDelegateProxy) public proxies;
 }

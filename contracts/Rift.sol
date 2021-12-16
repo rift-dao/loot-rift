@@ -17,9 +17,8 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
-import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
 import "./Interfaces.sol";
 import "./IRift.sol";
@@ -34,9 +33,9 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     // The Rift supports 8000 Loot bags
     // 9989460 mLoot Bags (34 years worth)
     // and 2540 gLoot Bags
-    ERC721 public iLoot;
-    ERC721 public iMLoot;
-    ERC721 public iGLoot;
+    IERC721 public iLoot;
+    IERC721 public iMLoot;
+    IERC721 public iGLoot;
     IMana public iMana;
     IRiftData public iRiftData;
     // gLoot bags must offset their bagId by adding gLootOffset when interacting
@@ -65,11 +64,11 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         __Pausable_init();
         __ReentrancyGuard_init();
 
-        iLoot = ERC721(lootAddr);
-        iMLoot = ERC721(mlootAddr);
-        iGLoot = ERC721(glootAddr);
+        iLoot = IERC721(lootAddr);
+        iMLoot = IERC721(mlootAddr);
+        iGLoot = IERC721(glootAddr);
 
-        description = "The Great Unknown";
+        description = "The Rift inbetween";
 
         riftLevel = 3;
         riftTier = 1;
@@ -238,7 +237,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {
         require(riftObjects[burnableAddr], "Not of the Rift");
-        require(ERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
+        require(IERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
         
         _sacrificeRiftObject(burnableAddr, tokenId, bagId);
     }
