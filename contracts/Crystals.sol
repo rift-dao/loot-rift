@@ -61,6 +61,9 @@ contract Crystals is
     mapping(uint256 => Crystal) public crystalsMap;
     mapping(uint256 => Bag) public bags;
 
+    address private openSeaProxyRegistryAddress;
+    bool private isOpenSeaProxyActive;
+
     function initialize(address manaAddress) public initializer {
         __ERC721_init("Mana Crystals", "MCRYSTAL");
         __ERC721Enumerable_init();
@@ -74,6 +77,7 @@ contract Crystals is
         mintFee = 0.04 ether;
         mMintFee = 0.01 ether;
         xpTable = [15,30,50,75,110,155,210,280,500,800];
+        isOpenSeaProxyActive = false;
     }
 
     //WRITE
@@ -247,6 +251,19 @@ contract Crystals is
 
     // OWNER
 
+    // function to disable gasless listings for security in case
+    // opensea ever shuts down or is compromised
+    function setIsOpenSeaProxyActive(bool _isOpenSeaProxyActive)
+        external
+        onlyOwner
+    {
+        isOpenSeaProxyActive = _isOpenSeaProxyActive;
+    }
+
+    function ownerSetOpenSeaProxy(address addr) external onlyOwner {
+        openSeaProxyRegistryAddress = addr;
+    }
+
     function ownerUpdateMaxLevel(uint8 maxFocus_) external onlyOwner {
         require(maxFocus > maxFocus, "INV");
         maxFocus = maxFocus_;
@@ -391,7 +408,29 @@ contract Crystals is
         override
         returns (bool)
     {
+         // Get a reference to OpenSea's proxy registry contract by instantiating
+        // the contract using the already existing address.
+        ProxyRegistry proxyRegistry = ProxyRegistry(
+            openSeaProxyRegistryAddress
+        );
+        if (
+            isOpenSeaProxyActive &&
+            address(proxyRegistry.proxies(owner)) == operator
+        ) {
+            return true;
+        }
+
         if (operator == riftAddress) { return true; }
         return super.isApprovedForAll(owner, operator);
     }
+}
+
+// These contract definitions are used to create a reference to the OpenSea
+// ProxyRegistry contract by using the registry's address (see isApprovedForAll).
+contract OwnableDelegateProxy {
+
+}
+
+contract ProxyRegistry {
+    mapping(address => OwnableDelegateProxy) public proxies;
 }
