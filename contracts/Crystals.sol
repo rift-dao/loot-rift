@@ -131,7 +131,7 @@ contract Crystals is
         crystalsMap[tokenId].levelManaProduced += manaToProduce;
         crystalsMap[tokenId].lvlClaims += 1;
         bags[tokenId % GEN_THRESH].totalManaProduced += manaToProduce;
-        iMana.ccMintTo(_msgSender(), manaToProduce, 1);
+        iMana.ccMintTo(_msgSender(), manaToProduce);
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
     }
 
@@ -153,7 +153,7 @@ contract Crystals is
 
         // mint extra mana
         if (claimableMana > (crystal.focus * getResonance(tokenId))) {
-            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.focus * getResonance(tokenId)), 1);
+            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.focus * getResonance(tokenId)));
         }
 
         crystalsMap[tokenId] = Crystal({

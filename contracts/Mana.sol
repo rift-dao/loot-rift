@@ -16,7 +16,6 @@ contract Mana is Context, Ownable, ERC20 {
     mapping(address => bool) controllers;
     IERC721Enumerable public crystalsContract;
     IRift public iRift;
-    uint256 public supplyMultiplier = 10000000;
 
     constructor() Ownable() ERC20("Adventure Mana", "AMNA") {
         _mint(_msgSender(), 1000000);
@@ -26,23 +25,12 @@ contract Mana is Context, Ownable, ERC20 {
         iRift = IRift(rift);
     }
 
-    function ownerSetSupplyMultiplier(uint256 mult) public onlyOwner {
-        supplyMultiplier = mult;
-    }
-
-    function availableSupply() internal view returns (uint256) {
-        return iRift.riftLevel() * supplyMultiplier;
-    }
-
     /// @notice function for Crystals contract to mint on behalf of to
     /// @param recipient address to send mana to
     /// @param amount number of mana to mint
-    function ccMintTo(address recipient, uint256 amount, uint8 considerSupply) external {
+    function ccMintTo(address recipient, uint256 amount) external {
         // Check that the msgSender is from Crystals
         require(controllers[msg.sender], "Only controllers can mint");
-        if (considerSupply > 0) {
-            require((totalSupply() + amount) < availableSupply(), "The rift's power is low");
-        }
 
         _mint(recipient, amount);
     }

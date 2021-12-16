@@ -247,7 +247,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         riftObjectsSacrificed += 1;     
 
         _awardXP(uint32(bagId), bo.xp);
-        iMana.ccMintTo(_msgSender(), bo.mana, 0);
+        iMana.ccMintTo(_msgSender(), bo.mana);
     }
 
     // Rift Power

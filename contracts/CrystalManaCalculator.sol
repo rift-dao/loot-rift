@@ -1,19 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
-
 import "./Interfaces.sol";
 
-contract CrystalManaCalculator is Ownable, ICrystalManaCalculator {
+contract CrystalManaCalculator is ICrystalManaCalculator {
     ICrystals public iCrystals;
 
-    constructor(address crystalsAddress) Ownable() { 
+    constructor(address crystalsAddress) { 
         iCrystals = ICrystals(crystalsAddress);
-    }
-
-    function ownerSetCrystalsAddress(address addr) public onlyOwner {
-        iCrystals = ICrystals(addr);
     }
 
     function claimableMana(uint256 crystalId) override public view returns (uint32) {

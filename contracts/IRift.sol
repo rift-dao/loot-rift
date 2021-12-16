@@ -48,6 +48,6 @@ interface IRiftBurnable {
 }
 
 interface IMana {
-    function ccMintTo(address recipient, uint256 amount, uint8 considerSupply) external;
+    function ccMintTo(address recipient, uint256 amount) external;
     function burn(address from, uint256 amount) external;
 }
