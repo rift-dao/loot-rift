@@ -14,9 +14,8 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
 
     ICrystals public iCrystals;
 
-    uint32 private constant MAX_CRYSTALS = 10000000;
-    uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000; // reserved for collabs
-
+    uint32 private constant GEN_THRESH = 10000000;
+    uint32 private constant glootOffset = 9997460;
     string private constant cursedSuffixes =
         "of Nightmares,of Darkness,of Death,of Doom,of Madness,of Temptation,of the Underworld,of Corruption,of Revelation";
     string private constant suffixes =
@@ -93,7 +92,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
                 ', "name": "#',
                 toString(tokenId),
                 '", "bagId": ',
-                toString(tokenId % MAX_CRYSTALS),
+                toString(tokenId % GEN_THRESH),
                 ', "description": "This crystal vibrates with energy from the Rift!", "background_color": "000000", "attributes": [{ "trait_type": "Focus", "value":',
                 toString(iCrystals.crystalsMap(tokenId).focus),
                 ' }, { "trait_type": "Resonance", "value": ',
@@ -138,7 +137,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         while (index < focus) {
             score += ((
                 random(string(abi.encodePacked(
-                    (index * MAX_CRYSTALS) + tokenId,
+                    (index * GEN_THRESH) + tokenId,
                     key
                 ))) % size
             ) + 1) * times;
@@ -185,7 +184,7 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
 
     function getName(uint256 tokenId) public view returns (string memory output) {
         // check original seed to determine name type
-        if ((tokenId % MAX_CRYSTALS) > 8000 && (tokenId % MAX_CRYSTALS) <= RESERVED_OFFSET) {
+        if ((tokenId % GEN_THRESH) > 8000 && (tokenId % GEN_THRESH) <= glootOffset) {
             output = getBasicName(tokenId);
         } else {
             output = getLootName(tokenId);
@@ -238,15 +237,6 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         string memory surface = getSurfaceType(tokenId);
         string memory suffix = "";
         string memory prefix = "";
-        string memory baseName = "Crystal";
-
-        if (tokenId % MAX_CRYSTALS > RESERVED_OFFSET) {
-            baseName = string(abi.encodePacked(
-                iCrystals.collabMap(uint8(((tokenId % MAX_CRYSTALS) - RESERVED_OFFSET) / 10000)).namePrefix,
-                ' ',
-                baseName
-            ));
-        }
         
         if (
             alignment == 10
@@ -342,14 +332,14 @@ contract CrystalsMetadata is Ownable, ICrystalsMetadata {
         return output;
     }
 
-    function getLootType(uint256 tokenId) public view returns (string memory) {
-        uint256 oSeed = tokenId % MAX_CRYSTALS;
+    function getLootType(uint256 tokenId) public pure returns (string memory) {
+        uint256 oSeed = tokenId % GEN_THRESH;
         if (oSeed > 0 && oSeed < 8001) {
             return 'Loot';
         }
 
-        if (oSeed > RESERVED_OFFSET) {
-            return iCrystals.collabMap(uint8((oSeed - RESERVED_OFFSET) / 10000)).namePrefix;
+        if (oSeed > glootOffset) {
+            return 'gLoot';
         }
 
         return 'mLoot';

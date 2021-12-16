@@ -13,7 +13,7 @@ module.exports = function(deployer) {
     const notLoot = await deployer.deploy(NotLoot);
     const riftData = await deployer.deploy(RiftData);
     const mana = await deployer.deploy(Mana);
-    const rift = await deployer.deploy(Rift);
+    const rift = await deployer.deploy(Rift, notLoot.address, notLoot.address, notLoot.address);
     const crystals = await deployer.deploy(Crystals, mana.address);
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
     const calculator = await deployer.deploy(ManaCalculator, crystals.address);
@@ -27,10 +27,7 @@ module.exports = function(deployer) {
     crystals.ownerSetMetadataAddress(crystalsMeta.address);
     crystals.ownerSetCalculatorAddress(calculator.address);
     crystals.ownerSetRiftAddress(rift.address);
-    crystals.ownerSetLootAddress(notLoot.address);
-    crystals.ownerSetMLootAddress(notLoot.address);
     rift.addRiftObject(crystals.address);
-    rift.ownerSetLootAddress(notLoot.address);
     rift.ownerSetRiftData(riftData.address);
     // rift.ownerSetRiftQuestsAddress(riftQuests.address);
     rift.addRiftQuest(crystals.address);

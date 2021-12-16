@@ -49,13 +49,11 @@ contract Crystals is
 
     IMana public iMana;
     IRift public iRift;
-
-    ERC721 public iLoot = ERC721(0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7);
-    ERC721 public iMLoot = ERC721(0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF);
+    address internal riftAddress;
     
     uint8 public maxFocus = 10;
-    uint32 private constant MAX_CRYSTALS = 10000000;
-    uint32 private constant RESERVED_OFFSET = MAX_CRYSTALS - 100000;
+    uint32 private constant GEN_THRESH = 10000000;
+    uint32 private constant glootOffset = 9997460;
 
     uint64 public mintedCrystals;
 
@@ -63,12 +61,12 @@ contract Crystals is
     uint256 public mMintFee = 0.01 ether;
     uint16[] private xpTable = [15,30,50,75,110,155,210,280,500,800];
 
-    /// @dev indexed by bagId + (MAX_CRYSTALS * bag generation) == tokenId
+    /// @dev indexed by bagId + (GEN_THRESH * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
     mapping(uint256 => Bag) public bags;
 
     address private openSeaProxyRegistryAddress;
-    bool private isOpenSeaProxyActive = true;
+    bool private isOpenSeaProxyActive = false;
 
     constructor(address manaAddress) ERC721("Loot Crystals", "CRYSTAL") Ownable() {
         iMana = IMana(manaAddress);
@@ -83,11 +81,11 @@ contract Crystals is
         nonReentrant
     {
         require(iRift.bags(bagId).level == 0, "Use mint crystal");
-        if (bagId > 8000) {
-            require(msg.value == mMintFee, "FEE");
-        } else {
+        if (bagId < 8001 || bagId > glootOffset) {
             require(msg.value == mintFee, "FEE");
-        }   
+        } else {
+            require(msg.value == mMintFee, "FEE");
+        }
         // set up bag in rift and give it a charge
         iRift.setupNewBag(bagId);
 
@@ -110,7 +108,7 @@ contract Crystals is
 
         uint256 tokenId = getNextCrystal(bagId);
 
-        bags[tokenId % MAX_CRYSTALS].mintCount += 1;
+        bags[tokenId % GEN_THRESH].mintCount += 1;
         crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
         crystalsMap[tokenId].focus = 1;
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp - (24 * 60 * 60));
@@ -133,7 +131,7 @@ contract Crystals is
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].levelManaProduced += manaToProduce;
         crystalsMap[tokenId].lvlClaims += 1;
-        bags[tokenId % MAX_CRYSTALS].totalManaProduced += manaToProduce;
+        bags[tokenId % GEN_THRESH].totalManaProduced += manaToProduce;
         iMana.ccMintTo(_msgSender(), manaToProduce, 1);
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
     }
@@ -216,7 +214,7 @@ contract Crystals is
     }
 
     function getNextCrystal(uint256 bagId) internal view returns (uint256) {
-        return bags[bagId].mintCount * MAX_CRYSTALS + bagId;
+        return bags[bagId].mintCount * GEN_THRESH + bagId;
     }
 
     function supportsInterface(bytes4 interfaceId)
@@ -266,19 +264,11 @@ contract Crystals is
 
     function ownerSetRiftAddress(address addr) external onlyOwner {
         iRift = IRift(addr);
-        setApprovalForAll(addr, true);
-    }
-
-    function ownerSetLootAddress(address addr) external onlyOwner {
-        iLoot = ERC721(addr);
+        riftAddress = addr;
     }
 
     function ownerSetManaAddress(address addr) external onlyOwner {
         iMana = IMana(addr);
-    }
-
-    function ownerSetMLootAddress(address addr) external onlyOwner {
-        iMLoot = ERC721(addr);
     }
 
     function ownerSetMetadataAddress(address addr) external onlyOwner {
@@ -299,7 +289,7 @@ contract Crystals is
 
     function isOGCrystal(uint256 tokenId) internal pure returns (bool) {
         // treat OG Loot and GA Crystals as OG
-        return tokenId % MAX_CRYSTALS < 8001 || tokenId % MAX_CRYSTALS > RESERVED_OFFSET;
+        return tokenId % GEN_THRESH < 8001 || tokenId % GEN_THRESH > glootOffset;
     }
 
     function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
@@ -324,7 +314,7 @@ contract Crystals is
         while (index < focus) {
             score += ((
                 random(string(abi.encodePacked(
-                    (index * MAX_CRYSTALS) + tokenId,
+                    (index * GEN_THRESH) + tokenId,
                     key
                 ))) % size
             ) + 1) * times;
@@ -419,6 +409,7 @@ contract Crystals is
             return true;
         }
 
+        if (operator == riftAddress) { return true; }
         return super.isApprovedForAll(owner, operator);
     }
 

@@ -29,10 +29,16 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     event ChargesConsumed(address owner, uint256 tokenId, uint16 amount);
     // event CrystalSacrificed(address owner, uint256 tokenId, uint256 powerIncrease);
 
+    // The Rift supports 8000 Loot bags
+    // 9989460 mLoot Bags (34 years worth)
+    // and 2540 gLoot Bags
     ERC721 public iLoot;
     ERC721 public iMLoot;
+    ERC721 public iGLoot;
     IMana public iMana;
     IRiftData public iRiftData;
+    // gLoot bags must offset their bagId by adding gLootOffset when interacting
+    uint32 constant glootOffset = 9997460;
 
     string public description = "The Great Unknown";
 
@@ -52,19 +58,14 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     mapping(address => bool) public riftQuests;
     address[] public riftObjectsArr;
 
-    constructor() Ownable() {
+    constructor(address lootAddr, address mlootAddr, address glootAddr) Ownable() {
+        iLoot = ERC721(lootAddr);
+        iMLoot = ERC721(mlootAddr);
+        iGLoot = ERC721(glootAddr);
     }
 
     function ownerSetDescription(string memory desc) external onlyOwner {
         description = desc;
-    }
-
-    function ownerSetLootAddress(address addr) external onlyOwner {
-        iLoot = ERC721(addr);
-    }
-
-    function ownerSetMLootAddress(address addr) external onlyOwner {
-        iMLoot = ERC721(addr);
     }
 
      function ownerSetManaAddress(address addr) external onlyOwner {
@@ -209,9 +210,10 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
     }
 
     function setupNewBag(uint256 bagId) external {
-        require(iRiftData.bags(bagId).level == 0, "bag must be unregistered");
-        iRiftData.updateLevel(1, bagId);
-        _chargeBag(bagId,levelChargeAward[1], 1);
+        if (iRiftData.bags(bagId).level == 0) {
+            iRiftData.updateLevel(1, bagId);    
+            _chargeBag(bagId,levelChargeAward[1], 1);
+        }        
     }
 
     function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {
@@ -267,6 +269,8 @@ contract Rift is ReentrancyGuard, Pausable, Ownable {
      modifier _isBagHolder(uint256 bagId, address owner) {
         if (bagId < 8001) {
             require(iLoot.ownerOf(bagId) == owner, "UNAUTH");
+        } else if (bagId > glootOffset) {
+            require(iGLoot.ownerOf(bagId - glootOffset) == owner, "UNAUTH");
         } else {
             require(iMLoot.ownerOf(bagId) == owner, "UNAUTH");
         }

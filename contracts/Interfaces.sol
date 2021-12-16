@@ -16,12 +16,6 @@ struct Crystal {
     uint16 lvlClaims;
 }
 
-struct Collab {
-    address contractAddress;
-    string namePrefix;
-    uint256 levelBonus;
-}
-
 interface ICrystalManaCalculator {
     function claimableMana(uint256 tokenId) external view returns (uint32);
 }
@@ -29,7 +23,6 @@ interface ICrystalManaCalculator {
 interface ICrystals {
     function crystalsMap(uint256 tokenID) external view returns (Crystal memory);
     function bags(uint256 tokenID) external view returns (Bag memory);
-    function collabMap(uint256 tokenID) external view returns (Collab memory);
     function getResonance(uint256 tokenId) external view returns (uint32);
     function getSpin(uint256 tokenId) external view returns (uint32);
     function claimableMana(uint256 tokenID) external view returns (uint32);

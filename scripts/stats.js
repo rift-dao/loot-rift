@@ -1,6 +1,6 @@
 const { contract } = require('@openzeppelin/test-environment');
 
-const { getArgs, hasFlag, MAX_CRYSTALS } = require('./helpers');
+const { getArgs, hasFlag, GEN_THRESH } = require('./helpers');
 
 const Crystals = contract.fromArtifact('Crystals');
 const Mana = contract.fromArtifact('Mana');
@@ -56,7 +56,7 @@ const args = getArgs();
     const tokens = [];
 
     for (let i = from; i <= to; i++) {
-      tokens.push(printStatsForId(tokenId + (MAX_CRYSTALS * (i - 1))));
+      tokens.push(printStatsForId(tokenId + (GEN_THRESH * (i - 1))));
     }
 
     await Promise.all(tokens);
