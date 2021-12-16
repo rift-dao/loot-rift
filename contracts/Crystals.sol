@@ -15,8 +15,8 @@
 
 pragma solidity ^0.8.9;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Burnable.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/interfaces/IERC2981.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -28,7 +28,7 @@ import "./IRift.sol";
 
 /// @title Loot Crystals from the Rift
 contract Crystals is
-    ERC721,
+    ERC721Enumerable,
     IERC2981,
     ERC721Burnable,
     ReentrancyGuard,
@@ -56,7 +56,7 @@ contract Crystals is
 
     uint64 public mintedCrystals;
 
-    uint256 public mintFee = 0.05 ether;
+    uint256 public mintFee = 0.04 ether;
     uint256 public mMintFee = 0.01 ether;
     uint16[] private xpTable = [15,30,50,75,110,155,210,280,500,800];
 
@@ -216,10 +216,14 @@ contract Crystals is
         return bags[bagId].mintCount * GEN_THRESH + bagId;
     }
 
+    function availableClaims(uint256 tokenId) external view returns (uint8) {
+        return crystalsMap[tokenId].lvlClaims > iRift.riftLevel() ? 0 : uint8(iRift.riftLevel() - crystalsMap[tokenId].lvlClaims);
+    }
+
     function supportsInterface(bytes4 interfaceId)
         public
         view
-        override(ERC721, IERC165)
+        override(ERC721, ERC721Enumerable, IERC165)
         returns (bool)
     {
         return
@@ -374,7 +378,7 @@ contract Crystals is
         address from,
         address to,
         uint256 tokenId
-    ) internal override(ERC721) {
+    ) internal override(ERC721, ERC721Enumerable) {
         super._beforeTokenTransfer(from, to, tokenId);
     }
 
