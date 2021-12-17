@@ -88,7 +88,7 @@ contract Crystals is
         whenNotPaused
         nonReentrant
     {
-        require(iRift.bags(bagId).level == 0, "Use mint crystal");
+        require(bags[bagId].mintCount == 0, "Use mint crystal");
         if (bagId < 8001 || bagId > glootOffset) {
             require(msg.value == mintFee, "FEE");
         } else {
@@ -106,7 +106,7 @@ contract Crystals is
         whenNotPaused
         nonReentrant
     {
-        require(iRift.bags(bagId).level > 0, "Use first mint");
+        require(bags[bagId].mintCount > 0, "Use first mint");
 
         _mintCrystal(bagId);
     }
@@ -116,7 +116,7 @@ contract Crystals is
 
         uint256 tokenId = getNextCrystal(bagId);
 
-        bags[tokenId % GEN_THRESH].mintCount += 1;
+        bags[bagId].mintCount += 1;
         crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
         crystalsMap[tokenId].focus = 1;
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp - (24 * 60 * 60));
