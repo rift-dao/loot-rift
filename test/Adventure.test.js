@@ -11,7 +11,6 @@ const Loot = artifacts.require('NotLoot');
 const Rift = artifacts.require('Rift');
 // const EnterRift = artifacts.require('EnterTheRift');
 // const RiftQuests = artifacts.require('RiftQuests');
-const Calculator = artifacts.require('CrystalManaCalculator');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
 const RiftData = artifacts.require('RiftData');
 
@@ -27,7 +26,6 @@ contract('Adventure', function ([owner, other]) {
         this.rift = await deployProxy(Rift, [this.loot.address, this.mloot.address, this.gloot.address]);
         // this.quests = await RiftQuests.new(this.rift.address, { from: owner });
         // this.enterRift = await EnterRift.new(this.quests.address, this.crystals.address, this.mana.address, { from: owner });
-        this.calculator = await Calculator.new(this.crystals.address, { from: owner });
         this.metadata = await CrystalsMetadata.new(this.crystals.address, { from: owner });
 
         await this.riftData.addRiftController(this.rift.address);
@@ -36,7 +34,6 @@ contract('Adventure', function ([owner, other]) {
         await this.mana.addController(this.rift.address);
         await this.mana.ownerSetRift(this.rift.address);
         await this.crystals.ownerSetMetadataAddress(this.metadata.address);
-        await this.crystals.ownerSetCalculatorAddress(this.calculator.address);
         await this.crystals.ownerSetRiftAddress(this.rift.address);
         // await this.crystals.ownerSetOpenSeaProxy(this.loot.address); // placeholder
         await this.rift.ownerSetRiftData(this.riftData.address);

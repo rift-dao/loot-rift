@@ -10,14 +10,10 @@ struct Bag {
 struct Crystal {
     uint16 attunement;
     uint64 lastClaim;
-    uint8 focus;
+    uint16 focus;
     uint32 levelManaProduced;
     uint32 regNum;
     uint16 lvlClaims;
-}
-
-interface ICrystalManaCalculator {
-    function claimableMana(uint256 tokenId) external view returns (uint32);
 }
 
 interface ICrystalsMetadata {

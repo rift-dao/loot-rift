@@ -8,29 +8,20 @@ const Mana = contract.fromArtifact('Mana');
     const manaInstance = await Mana.new();
 
     output.push('----------');
-    const estimatedGas = await Crystals.new.estimateGas();
+    const estimatedGas = await Crystals.new.estimateGas(manaInstance.address);
     output.push(`⛽ Estimations`);
 
     output.push(`\t${estimatedGas}\t-\tDeployment`);
-    const crystalsInstance = await Crystals.new();
-
+    const crystalsInstance = await Crystals.new(manaInstance.address);
+    await crystalsInstance.setCrystal(10);
     
 
-    const estimatedInit = await crystalsInstance.ownerInit.estimateGas(
-        manaInstance.address,
-        '0x0000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000'
-    );
-    await crystalsInstance.ownerInit(
-        manaInstance.address,
-        '0x0000000000000000000000000000000000000000',
-        '0x0000000000000000000000000000000000000000'
-    );
 
     // TODO: Figure out how to test claim, claimWithLoot, ownerClaim
     // const functionsToEstimate = [];
-    const functionsToEstimate = ['tokenURI', 'getName', 'getLevel', 'getResonance', 'getSpin'];
-    const functionEstimateMap = { deploy: estimatedGas, init: estimatedInit };
+    const functionsToEstimate = ['getResonance', 'getSpin', 'claimCrystalMana'];
+    const functionEstimateMap = { deploy: estimatedGas };
+
 
     // const fnEstimatedGas = await crystalsInstance.tokenURI.estimateGas(1);
     // output.push(`\t${fnEstimatedGas}\t-\ttokenURI`);

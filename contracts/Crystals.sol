@@ -41,7 +41,6 @@ contract Crystals is
     event ManaClaimed(address owner, uint256 tokenId, uint256 amount);
 
     ICrystalsMetadata public iMetadata;
-    ICrystalManaCalculator public iCalculator;
 
     IMana public iMana;
     IRift public iRift;
@@ -134,7 +133,7 @@ contract Crystals is
         nonReentrant
     {
         require(crystalsMap[tokenId].lvlClaims < iRift.riftLevel(), "Rift not powerful enough for this action");
-        uint32 manaToProduce = iCalculator.claimableMana(tokenId);
+        uint32 manaToProduce = claimableMana(tokenId);
         require(manaToProduce > 0, "NONE");
         crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
         crystalsMap[tokenId].levelManaProduced += manaToProduce;
@@ -158,11 +157,11 @@ contract Crystals is
                 block.timestamp
             ) >= crystal.focus, "WAIT"
         );
-        uint256 claimableMana = iCalculator.claimableMana(tokenId);
+        uint32 mana = claimableMana(tokenId);
 
         // mint extra mana
-        if (claimableMana > (crystal.focus * getResonance(tokenId))) {
-            iMana.ccMintTo(_msgSender(), claimableMana - (crystal.focus * getResonance(tokenId)));
+        if (mana > (crystal.focus * getResonance(tokenId))) {
+            iMana.ccMintTo(_msgSender(), mana - (crystal.focus * getResonance(tokenId)));
         }
 
         crystalsMap[tokenId] = Crystal({
@@ -179,26 +178,41 @@ contract Crystals is
 
     // READ 
     function getResonance(uint256 tokenId) public view returns (uint32) {
-        // 1 or 2 per focus                             loot vs mloot multiplier               generation bonus
-        return uint32(getLevelRolls(tokenId, "%RES", 2, 1)
+        // 2 x Focus x OG Bonus * attunement bonus
+        return uint32(crystalsMap[tokenId].focus * 2
             * (isOGCrystal(tokenId) ? 10 : 1)
-            * attunementBonus(crystalsMap[tokenId].attunement));
-    }
-
-    // 10% increase per generation
-    function attunementBonus(uint16 genNum) internal pure returns (uint32) {
-        // first gen
-        if (genNum == 0) {
-            return 1;
-        } else {
-            return (attunementBonus(genNum - 1) * 110) / 100;
-        }
+            * attunementBonus(crystalsMap[tokenId].attunement) / 100);
     }
 
     function getSpin(uint256 tokenId) public view returns (uint32) {
-        uint32 multiplier = isOGCrystal(tokenId) ? 10 : 1;
-        return uint32(((88 * (crystalsMap[tokenId].focus)) + (getLevelRolls(tokenId, "%SPIN", 4, 1) * multiplier))
-            * attunementBonus(crystalsMap[tokenId].attunement));
+        return uint32((3 * (crystalsMap[tokenId].focus) * getResonance(tokenId)));
+    }
+
+    // 10% increase per generation
+    function attunementBonus(uint16 attunement) internal pure returns (uint32) {
+        // first gen
+        if (attunement == 1) { return 100; }
+        return uint32(11**uint256(attunement) / 10**(attunement-2));
+    }
+
+    function claimableMana(uint256 crystalId) public view returns (uint32) {
+        uint256 daysSinceClaim = diffDays(
+            crystalsMap[crystalId].lastClaim,
+            block.timestamp
+        );
+
+        if (block.timestamp - crystalsMap[crystalId].lastClaim < 1 days) {
+            return 0;
+        }
+
+        uint32 manaToProduce = uint32(daysSinceClaim) * getResonance(crystalId);
+
+        // if capacity is reached, limit mana to capacity, ie Spin
+        if (manaToProduce > getSpin(crystalId)) {
+            manaToProduce = getSpin(crystalId);
+        }
+
+        return manaToProduce;
     }
 
     // rift burnable
@@ -269,10 +283,6 @@ contract Crystals is
         maxFocus = maxFocus_;
     }
 
-    function ownerSetCalculatorAddress(address addr) external onlyOwner {
-        iCalculator = ICrystalManaCalculator(addr);
-    }
-
     function ownerSetRiftAddress(address addr) external onlyOwner {
         iRift = IRift(addr);
         riftAddress = addr;
@@ -320,7 +330,7 @@ contract Crystals is
     ) internal view returns (uint256) {
         uint8 index = 1;
         uint256 score = getRoll(tokenId, key, size, times);
-        uint8 focus = crystalsMap[tokenId].focus;
+        uint16 focus = crystalsMap[tokenId].focus;
 
         while (index < focus) {
             score += ((

@@ -3,7 +3,6 @@ const NotLoot = artifacts.require('NotLoot');
 const Mana = artifacts.require('Mana');
 const Crystals = artifacts.require('Crystals');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
-const ManaCalculator = artifacts.require('CrystalManaCalculator');
 const Rift = artifacts.require('Rift');
 const RiftData = artifacts.require('RiftData');
 // const RiftQuests = artifacts.require('RiftQuests');
@@ -17,7 +16,6 @@ module.exports = function(deployer) {
     const crystals = await deployProxy(Crystals, [mana.address], { deployer });
     const rift = await deployProxy(Rift, [notLoot.address, notLoot.address, notLoot.address], { deployer });
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
-    const calculator = await deployer.deploy(ManaCalculator, crystals.address);
     // const riftQuests = await deployer.deploy(RiftQuests, rift.address);
     // const enterRift = await deployer.deploy(EnterRift, riftQuests.address, crystals.address, mana.address);
 
@@ -26,7 +24,6 @@ module.exports = function(deployer) {
     mana.ownerSetRift(rift.address);
     riftData.addRiftController(rift.address);
     crystals.ownerSetMetadataAddress(crystalsMeta.address);
-    crystals.ownerSetCalculatorAddress(calculator.address);
     crystals.ownerSetRiftAddress(rift.address);
     rift.addRiftObject(crystals.address);
     rift.ownerSetRiftData(riftData.address);
