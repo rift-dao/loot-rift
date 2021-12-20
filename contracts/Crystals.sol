@@ -116,10 +116,14 @@ contract Crystals is
         uint256 tokenId = getNextCrystal(bagId);
 
         bags[bagId].mintCount += 1;
-        crystalsMap[tokenId].attunement = iRift.bags(bagId).level;
-        crystalsMap[tokenId].focus = 1;
-        crystalsMap[tokenId].lastClaim = uint64(block.timestamp - (24 * 60 * 60));
-        crystalsMap[tokenId].regNum = uint32(mintedCrystals);
+        crystalsMap[tokenId] = Crystal({
+            focus: 1,
+            lastClaim: uint64(block.timestamp) - 1 days,
+            levelManaProduced: 0,
+            attunement: iRift.bags(bagId).level,
+            regNum: uint32(mintedCrystals),
+            lvlClaims: 0
+        });
 
         iRift.awardXP(uint32(bagId), 50 + (15 * (iRift.bags(bagId).level - 1)));
         mintedCrystals += 1;
