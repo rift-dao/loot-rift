@@ -135,9 +135,15 @@ contract Crystals is
         require(crystalsMap[tokenId].lvlClaims < iRift.riftLevel(), "Rift not powerful enough for this action");
         uint32 manaToProduce = claimableMana(tokenId);
         require(manaToProduce > 0, "NONE");
-        crystalsMap[tokenId].lastClaim = uint64(block.timestamp);
-        crystalsMap[tokenId].levelManaProduced += manaToProduce;
-        crystalsMap[tokenId].lvlClaims += 1;
+        Crystal memory c = crystalsMap[tokenId];
+        crystalsMap[tokenId] = Crystal({
+            focus: c.focus,
+            lastClaim: uint64(block.timestamp),
+            levelManaProduced: c.levelManaProduced + manaToProduce,
+            attunement: c.attunement,
+            regNum: c.regNum,
+            lvlClaims: c.lvlClaims + 1
+        });
         bags[tokenId % GEN_THRESH].totalManaProduced += manaToProduce;
         iMana.ccMintTo(_msgSender(), manaToProduce);
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
