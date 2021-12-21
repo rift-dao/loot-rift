@@ -130,6 +130,10 @@ contract Crystals is
         _safeMint(_msgSender(), tokenId);
     }
 
+    function mintXP(uint256 bagId) external view returns (uint32) {
+        return 50 + (15 * (iRift.bags(bagId).level == 0 ? 0 : iRift.bags(bagId).level - 1));
+    }
+
     function multiClaimCrystalMana(uint256[] memory tokenIds) 
         external 
         whenNotPaused

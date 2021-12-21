@@ -23,12 +23,20 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721Burnab
 import "./Interfaces.sol";
 import "./IRift.sol";
 
+/*
+    You've heard it calling... 
+    Now it's time to level up your Adventure!
+    Enter The Rift, and gain its power. 
+    Take too much, and all suffer.
+    Return what you've gained, and all benefit.. especially you!
+*/
+
 contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable, OwnableUpgradeable {
 
     event AddCharge(address owner, uint256 tokenId, uint16 amount, uint16 forLvl);
     event AwardXP(uint256 tokenId, uint256 amount);
     event UseCharge(address owner, address riftObject, uint256 tokenId, uint16 amount);
-    // event CrystalSacrificed(address owner, uint256 tokenId, uint256 powerIncrease);
+    event ObjectSacrificed(address owner, address object, uint256 tokenId, uint256 bagId, uint256 powerIncrease);
 
     // The Rift supports 8000 Loot bags
     // 9989460 mLoot Bags (34 years worth)
@@ -43,13 +51,17 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
     string public description;
 
-    // rift level variables
+    /*
+     Rift power will decrease as bags level up and gain charges.
+     Charges will create Rift Objects.
+     Rift Objects can be burned into the Rift to amplify its power.
+    */
     uint32 public riftLevel;
     uint32 internal riftTier;
-    uint64 internal riftTierPower;
+    uint64 public riftTierPower;
     uint8 internal riftTierSize;
-    uint8 internal riftTierIncrease; // 15% increase
-    uint64 internal riftPowerPerLevel;
+    uint8 internal riftTierIncrease; 
+    uint64 public riftPowerPerLevel;
 
     uint64 public riftObjectsSacrificed;
 
@@ -74,7 +86,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         riftTier = 1;
         riftTierPower = 35000;
         riftTierSize = 5;
-        riftTierIncrease = 15;
+        riftTierIncrease = 15; // 15% increase
         riftPowerPerLevel = 10000;
         riftObjectsSacrificed = 0;
     }
@@ -242,6 +254,10 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         _sacrificeRiftObject(burnableAddr, tokenId, bagId);
     }
 
+    function growTheRiftRewards(address burnableAddr, uint256 tokenId) external view returns (BurnableObject memory) {
+        return IRiftBurnable(burnableAddr).burnObject(tokenId);
+    }
+
     function _sacrificeRiftObject(address burnableAddr, uint256 tokenId, uint256 bagId) internal {
         BurnableObject memory bo = IRiftBurnable(burnableAddr).burnObject(tokenId);
         ERC721BurnableUpgradeable(burnableAddr).burn(tokenId);
@@ -252,6 +268,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
         _awardXP(uint32(bagId), bo.xp);
         iMana.ccMintTo(_msgSender(), bo.mana);
+        emit ObjectSacrificed(_msgSender(), burnableAddr, tokenId, bagId, bo.power);
     }
 
     // Rift Power

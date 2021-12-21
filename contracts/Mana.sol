@@ -12,6 +12,8 @@ import "./IRift.sol";
 /// @notice This contract mints Mana for Crystals
 /// @custom:unaudited This contract has not been audited. Use at your own risk.
 contract Mana is Context, Ownable, ERC20 {
+    event MintMana(address recipient, uint256 amount);
+
     // a mapping from an address to whether or not it can mint / burn
     mapping(address => bool) controllers;
     IERC721Enumerable public crystalsContract;
@@ -33,6 +35,7 @@ contract Mana is Context, Ownable, ERC20 {
         require(controllers[msg.sender], "Only controllers can mint");
 
         _mint(recipient, amount);
+        emit MintMana(recipient, amount);
     }
 
     function burn(address from, uint256 amount) external {
