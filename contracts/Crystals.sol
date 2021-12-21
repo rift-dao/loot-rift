@@ -130,12 +130,25 @@ contract Crystals is
         _safeMint(_msgSender(), tokenId);
     }
 
+    function multiClaimCrystalMana(uint256[] memory tokenIds) 
+        external 
+        whenNotPaused
+        nonReentrant
+    {
+        for (uint i=0; i < tokenIds.length; i++) {
+            _claimCrystalMana(tokenIds[i]);
+        }
+    }
+
     function claimCrystalMana(uint256 tokenId)
         external
         whenNotPaused
-        ownsCrystal(tokenId)
         nonReentrant
     {
+        _claimCrystalMana(tokenId);
+    }
+
+    function _claimCrystalMana(uint256 tokenId) internal ownsCrystal(tokenId) {
         require(crystalsMap[tokenId].lvlClaims < iRift.riftLevel(), "Rift not powerful enough for this action");
         uint32 manaToProduce = claimableMana(tokenId);
         require(manaToProduce > 0, "NONE");
@@ -153,12 +166,25 @@ contract Crystals is
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
     }
 
+    function multiLevelUpCrystal(uint256[] memory tokenIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        for (uint i=0; i < tokenIds.length; i++) {
+            _levelUpCrystal(tokenIds[i]);
+        }
+    }
+
     function levelUpCrystal(uint256 tokenId)
         external
         whenNotPaused
-        ownsCrystal(tokenId)
         nonReentrant
     {
+        _levelUpCrystal(tokenId);
+    }
+
+    function _levelUpCrystal(uint256 tokenId) internal ownsCrystal(tokenId) {
         Crystal memory crystal = crystalsMap[tokenId];
         require(crystal.focus < maxFocus, "MAX");
         require(

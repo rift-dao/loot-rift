@@ -23,3 +23,9 @@
 | test:watch | compile and run js tests while watching for test.js changes |
 
 > *Note:* `yarn test:watch` only watches test.js files for changes, any Contract.sol changes will require re-compiling, meaning you have to re-run the test script to compile the contract
+
+## Upgrading
+
+1. include `const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');` in 2_deploy
+2. first deploy in format: `await deployProxy(Crystals, [mana.address], { deployer });`
+3. upgrade format: `await upgradeProxy('<proxy address>', Crystals, { deployer });` 
