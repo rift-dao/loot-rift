@@ -216,6 +216,20 @@ contract Crystals is
         emit CrystalLeveled(_msgSender(), tokenId, crystal.focus);
     }
 
+    function levelUpMana(uint256 tokenId) external view returns (uint32) {
+        Crystal memory crystal = crystalsMap[tokenId];
+
+        if (diffDays(crystal.lastClaim, block.timestamp) < crystal.focus || crystal.focus == maxFocus) {
+            return 0;
+        }
+        uint32 mana = claimableMana(tokenId);
+        if (mana > (crystal.focus * getResonance(tokenId))) {
+            return mana - (crystal.focus * getResonance(tokenId));
+        } else {
+            return 0;
+        }
+    }
+
     // READ 
     function getResonance(uint256 tokenId) public view returns (uint32) {
         // 2 x Focus x OG Bonus * attunement bonus
