@@ -37,8 +37,8 @@ contract Crystals is
         uint256 manaCost;
     }
 
-    event CrystalLeveled(address owner, uint256 tokenId, uint256 level);
-    event ManaClaimed(address owner, uint256 tokenId, uint256 amount);
+    event CrystalLeveled(address indexed owner, uint256 indexed tokenId, uint256 level);
+    event ManaClaimed(address indexed owner, uint256 indexed tokenId, uint256 amount);
 
     ICrystalsMetadata public iMetadata;
 
@@ -74,7 +74,7 @@ contract Crystals is
         iMana = IMana(manaAddress);
         maxFocus = 10;
         mintFee = 0.04 ether;
-        mMintFee = 0.01 ether;
+        mMintFee = 0.004 ether;
         xpTable = [15,30,50,75,110,155,210,280,500,800];
         isOpenSeaProxyActive = false;
     }

@@ -33,10 +33,10 @@ import "./IRift.sol";
 
 contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable, OwnableUpgradeable {
 
-    event AddCharge(address owner, uint256 tokenId, uint16 amount, uint16 forLvl);
-    event AwardXP(uint256 tokenId, uint256 amount);
-    event UseCharge(address owner, address riftObject, uint256 tokenId, uint16 amount);
-    event ObjectSacrificed(address owner, address object, uint256 tokenId, uint256 bagId, uint256 powerIncrease);
+    event AddCharge(address indexed owner, uint256 indexed tokenId, uint16 amount, uint16 forLvl);
+    event AwardXP(uint256 indexed tokenId, uint256 amount);
+    event UseCharge(address indexed owner, address indexed riftObject, uint256 indexed tokenId, uint16 amount);
+    event ObjectSacrificed(address indexed owner, address indexed object, uint256 tokenId, uint256 indexed bagId, uint256 powerIncrease);
 
     // The Rift supports 8000 Loot bags
     // 9989460 mLoot Bags (34 years worth)
@@ -65,7 +65,6 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
     uint64 public riftObjectsSacrificed;
 
-    mapping(uint16 => uint16) public xpRequired;
     mapping(uint16 => uint16) public levelChargeAward;
     mapping(address => bool) public riftObjects;
     mapping(address => bool) public riftQuests;
@@ -144,10 +143,6 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         payable(msg.sender).transfer(balance);
     }
 
-    function ownerSetXpRequirement(uint16 level, uint16 xp) external onlyOwner {
-        xpRequired[level] = xp;
-    }
-
     function ownerSetLevelChargeAward(uint16 level, uint16 charges) external onlyOwner {
         levelChargeAward[level] = charges;
     }
@@ -221,10 +216,10 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
                                                                  
         */
 
-        uint32 _xp = xp + bag.xp;
+        uint64 _xp = uint64(xp + bag.xp);
 
-        while (_xp >= xpRequired[newlvl]) {
-            _xp -= xpRequired[newlvl];
+        while (_xp >= xpRequired(newlvl)) {
+            _xp -= xpRequired(newlvl);
             newlvl += 1;
             _chargeBag(bagId, levelChargeAward[newlvl], newlvl);
         }
@@ -234,9 +229,22 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         emit AwardXP(bagId, xp);
     }
 
+    function xpRequired(uint32 level) public pure returns (uint64) {
+        if (level == 1) { return 65; }
+        else if (level == 2) { return 130; }
+        else if (level == 3) { return 260; }
+        
+        return uint64(260*(115**(level-3))/(100**(level-3)));
+    }
+
     function _chargeBag(uint256 bagId, uint16 charges, uint16 forLvl) internal {
-        iRiftData.addCharges(charges, bagId);
+        if (charges == 0) {
+            charges = forLvl/10;
+            charges += forLvl%5 == 0 ? 1 : 0; // bonus on every fifth lvl
+            charges += forLvl%10 == 0 ? 1 : 0; // bonus bonus on every tenth
+        }
         removeRiftPower(charges * forLvl);
+        iRiftData.addCharges(charges, bagId);
         emit AddCharge(_msgSender(), bagId, charges, forLvl);
     }
 

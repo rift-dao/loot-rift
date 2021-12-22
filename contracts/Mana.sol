@@ -12,7 +12,7 @@ import "./IRift.sol";
 /// @notice This contract mints Mana for Crystals
 /// @custom:unaudited This contract has not been audited. Use at your own risk.
 contract Mana is Context, Ownable, ERC20 {
-    event MintMana(address recipient, uint256 amount);
+    event MintMana(address indexed recipient, uint256 amount);
 
     // a mapping from an address to whether or not it can mint / burn
     mapping(address => bool) controllers;

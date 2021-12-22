@@ -39,16 +39,6 @@ module.exports = function(deployer) {
     // riftQuests.ownerSetXP(enterRift.address, 3, 2);
 
     // starting rift information
-    rift.ownerSetXpRequirement(1, 65);
-    rift.ownerSetXpRequirement(2, 130);
-    rift.ownerSetXpRequirement(3, 260);
-    rift.ownerSetXpRequirement(4, 300);
-    rift.ownerSetXpRequirement(5, 345);
-    rift.ownerSetXpRequirement(6, 400);
-    rift.ownerSetXpRequirement(7, 460);
-    rift.ownerSetXpRequirement(8, 530);
-    rift.ownerSetXpRequirement(9, 600);
-
     rift.ownerSetLevelChargeAward(1, 1);
     rift.ownerSetLevelChargeAward(2, 2);
     rift.ownerSetLevelChargeAward(3, 2);

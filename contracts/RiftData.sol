@@ -27,7 +27,7 @@ struct RiftBag {
         uint16 charges;
         uint32 chargesUsed;
         uint16 level;
-        uint32 xp;
+        uint64 xp;
         uint64 lastChargePurchase;
     }
 
@@ -36,7 +36,7 @@ interface IRiftData {
     function addCharges(uint16 charges, uint256 bagId) external;
     function removeCharges(uint16 charges, uint256 bagId) external;
     function updateLevel(uint16 level, uint256 bagId) external;
-    function updateXP(uint32 xp, uint256 bagId) external;
+    function updateXP(uint64 xp, uint256 bagId) external;
     function addKarma(uint64 k, address holder) external;
     function removeKarma(uint64 k, address holder) external;
     function updateLastChargePurchase(uint64 time, uint256 bagId) external;
@@ -104,7 +104,7 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         _bags[bagId].level = level;
     }
 
-    function updateXP(uint32 xp, uint256 bagId) external override onlyRiftController {
+    function updateXP(uint64 xp, uint256 bagId) external override onlyRiftController {
         _bags[bagId].xp = xp;
     }
 
