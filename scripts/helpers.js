@@ -33,16 +33,12 @@ const setup = async () => {
   const Crystals = contract.fromArtifact('Crystals');
   const CrystalsMetadata = contract.fromArtifact('CrystalsMetadata');
   const Mana = contract.fromArtifact('Mana');
-  const Rift = contract.fromArtifact('Rift');
-  const Quest = contract.fromArtifact('RiftQuests');
-  const EnterRift = contract.fromArtifact('EnterTheRift');
+  // const Rift = contract.fromArtifact('Rift');
 
   const mana = await Mana.new();
   const crystals = await Crystals.new(mana.address);
   const crystalsMeta = await CrystalsMetadata.new(crystals.address);
-  const rift = await Rift.new();
-  const quest = await Quest.new(rift.address);
-  const enterRift = await EnterRift.new(quest.address, crystals.address, mana.address);
+  // const rift = await Rift.new();
   
   const promises = [
     crystals.ownerSetMetadataAddress(crystalsMeta.address),
@@ -51,7 +47,7 @@ const setup = async () => {
 
   await Promise.all(promises);
 
-  return { crystals, crystalsMeta, mana, enterRift };
+  return { crystals, crystalsMeta, mana };
 }
 
 module.exports = {

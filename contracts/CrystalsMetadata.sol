@@ -56,7 +56,9 @@ contract CrystalsMetadata is ICrystalsMetadata {
                 getColor(tokenId),
                 ";font-family:serif;font-size:14px}.slab{transform:rotate(180deg)translate(75px, 79px);transform-origin:bottom right;font-size:",
                 toString(160 / rows),
-                'px;}</style><rect width="100%" height="100%" fill="black" /><text x="10" y="20">',
+                'px;}</style><rect width="100%" height="100%" fill="',
+                getBG(tokenId),
+                '" /><text x="10" y="20">',
                 getName(tokenId)
             )
         );
@@ -139,6 +141,28 @@ contract CrystalsMetadata is ICrystalsMetadata {
         }
 
         return score;
+    }
+
+    function getBG(uint256 tokenId) internal view returns (string memory) {
+        uint256 r = 100 / uint256(iCrystals.crystalsMap(tokenId).focus);
+        uint256 d = r * diffDays(iCrystals.crystalsMap(tokenId).lastClaim, block.timestamp);
+        if (d < 10) {
+            return "#000000";
+        }
+        if (d < 40) {
+            return "#2C2C2C";
+        }
+        if (d < 60) {
+            return "#686868";
+        }
+        if (d < 80 ) {
+            return "#9F9F9F";
+        }
+        if (d < 95) {
+            return "#DEDEDE";
+        }
+
+        return "#FFFFFF";
     }
 
     /// @dev returns random number based on the tokenId
@@ -350,6 +374,15 @@ contract CrystalsMetadata is ICrystalsMetadata {
 
     function random(string memory input) internal pure returns (uint256) {
         return uint256(keccak256(abi.encodePacked(input, "%RIFT-OPEN")));
+    }
+
+    function diffDays(uint256 fromTimestamp, uint256 toTimestamp)
+        internal
+        pure
+        returns (uint256)
+    {
+        require(fromTimestamp <= toTimestamp);
+        return (toTimestamp - fromTimestamp) / (24 * 60 * 60);
     }
 
     function toString(uint256 value) internal pure returns (string memory) {

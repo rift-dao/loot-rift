@@ -88,6 +88,7 @@ contract Crystals is
         nonReentrant
     {
         require(bags[bagId].mintCount == 0, "Use mint crystal");
+        require(bagId <= GEN_THRESH, "Bag unrecognized");
         if (bagId < 8001 || bagId > glootOffset) {
             require(msg.value == mintFee, "FEE");
         } else {
@@ -95,17 +96,19 @@ contract Crystals is
         }
         // set up bag in rift and give it a charge
         iRift.setupNewBag(bagId);
-
         _mintCrystal(bagId);
+        iMana.ccMintTo(_msgSender(), (bagId < 8001 || bagId > glootOffset) ? 1000 : 100);
     }
 
-    // lock to level 2 or higher
+    // lock to second mint or more
     function mintCrystal(uint256 bagId)
         external
         whenNotPaused
         nonReentrant
     {
+        require(bagId <= GEN_THRESH, "Bag unrecognized");
         require(bags[bagId].mintCount > 0, "Use first mint");
+        iMana.burn(_msgSender(), iRift.bags(bagId).level * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
 
         _mintCrystal(bagId);
     }

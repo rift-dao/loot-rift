@@ -163,7 +163,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         whenNotPaused 
         nonReentrant {
         require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
-        iMana.burn(_msgSender(), iRiftData.bags(bagId).level * (bagId < 8001 ? 100 : 10));
+        iMana.burn(_msgSender(), iRiftData.bags(bagId).level * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
         _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
         iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
     }
