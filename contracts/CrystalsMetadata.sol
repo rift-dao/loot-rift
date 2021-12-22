@@ -4,6 +4,7 @@ pragma solidity ^0.8.9;
 
 import "./Interfaces.sol";
 
+// takes crystal data and shapes it for our eyes
 contract CrystalsMetadata is ICrystalsMetadata {
     using strings for string;
     using strings for strings.slice;
@@ -63,12 +64,14 @@ contract CrystalsMetadata is ICrystalsMetadata {
         output = string(
             abi.encodePacked(
                 output,
-                '</text><text x="10" y="40">Resonance: ',
-                toString(iCrystals.getResonance(tokenId)),
-                '</text><text x="10" y="60">Spin: ',
-                toString(iCrystals.getSpin(tokenId)),
-                '</text><text x="10" y="338" style="font-size: 12px;">atun.',
+                '</text><text x="10" y="40">Attunement: ',
                 toString(iCrystals.crystalsMap(tokenId).attunement),
+                '</text><text x="10" y="60">Focus: ',
+                toString(iCrystals.crystalsMap(tokenId).focus),
+                '</text><text x="10" y="80">Resonance: ',
+                toString(iCrystals.getResonance(tokenId)),
+                '</text><text x="10" y="100">Spin: ',
+                toString(iCrystals.getSpin(tokenId)),
                 '</text>',
                 getSlabs(tokenId, rows),
                 '</svg>'
@@ -180,12 +183,7 @@ contract CrystalsMetadata is ICrystalsMetadata {
             output = getLootName(tokenId);
         }
 
-        return iCrystals.crystalsMap(tokenId).focus > 1 ?
-            string(abi.encodePacked(
-                output,
-                " +",
-                toString(iCrystals.crystalsMap(tokenId).focus - 1)
-            )) : output;
+        return output;
     }
 
     function getBasicName(uint256 tokenId)
