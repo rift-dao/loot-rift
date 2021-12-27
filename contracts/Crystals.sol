@@ -279,7 +279,7 @@ contract Crystals is
             power: (crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2) == 0 ?
                     1 :
                     crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2,
-            mana: getSpin(tokenId),
+            mana: crystalsMap[tokenId].focus * (isOGCrystal(tokenId) ? 100 : 10),
             xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].focus - 1]
         });
     }
