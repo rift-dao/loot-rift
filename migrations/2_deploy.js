@@ -19,8 +19,10 @@ module.exports = function(deployer) {
     // const riftQuests = await deployer.deploy(RiftQuests, rift.address);
     // const enterRift = await deployer.deploy(EnterRift, riftQuests.address, crystals.address, mana.address);
 
-    mana.addController(crystals.address);
-    mana.addController(rift.address);
+    mana.addMintController(crystals.address);
+    mana.addMintController(rift.address);
+    mana.addBurnController(crystals.address);
+    mana.addBurnController(rift.address);
     mana.ownerSetRift(rift.address);
     riftData.addRiftController(rift.address);
     crystals.ownerSetMetadataAddress(crystalsMeta.address);

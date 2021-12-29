@@ -24,7 +24,11 @@ import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 import "./Interfaces.sol";
 import "./IRift.sol";
 
-/// @title Loot Crystals from the Rift
+/*
+  This is a Loot derivative & resource management game. 
+*/
+
+/// @title Mana Crystals from the Rift
 contract Crystals is
     ERC721EnumerableUpgradeable,
     ERC721BurnableUpgradeable,
@@ -33,10 +37,6 @@ contract Crystals is
     PausableUpgradeable,
     IRiftBurnable
 {
-    struct GenerationMintRequirement {
-        uint256 manaCost;
-    }
-
     event CrystalLeveled(address indexed owner, uint256 indexed tokenId, uint256 level);
     event ManaClaimed(address indexed owner, uint256 indexed tokenId, uint256 amount);
 

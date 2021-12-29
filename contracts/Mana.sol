@@ -15,7 +15,8 @@ contract Mana is Context, Ownable, ERC20 {
     event MintMana(address indexed recipient, uint256 amount);
 
     // a mapping from an address to whether or not it can mint / burn
-    mapping(address => bool) controllers;
+    mapping(address => bool) mintControllers;
+    mapping(address => bool) burnControllers;
     IERC721Enumerable public crystalsContract;
     IRift public iRift;
 
@@ -32,31 +33,47 @@ contract Mana is Context, Ownable, ERC20 {
     /// @param amount number of mana to mint
     function ccMintTo(address recipient, uint256 amount) external {
         // Check that the msgSender is from Crystals
-        require(controllers[msg.sender], "Only controllers can mint");
+        require(mintControllers[msg.sender], "Only controllers can mint");
 
         _mint(recipient, amount);
         emit MintMana(recipient, amount);
     }
 
     function burn(address from, uint256 amount) external {
-        require(controllers[msg.sender], "Only controllers can burn");
+        require(burnControllers[msg.sender], "Only controllers can burn");
         _burn(from, amount);
     }
 
     /**
-    * enables an address to mint / burn
+    * enables an address to mint
     * @param controller the address to enable
     */
-    function addController(address controller) external onlyOwner {
-        controllers[controller] = true;
+    function addMintController(address controller) external onlyOwner {
+        mintControllers[controller] = true;
     }
 
     /**
-    * disables an address from minting / burning
+    * disables an address from minting
     * @param controller the address to disbale
     */
-    function removeController(address controller) external onlyOwner {
-        controllers[controller] = false;
+    function removeMintController(address controller) external onlyOwner {
+        mintControllers[controller] = false;
+    }
+
+    /**
+    * enables an address to burn
+    * @param controller the address to enable
+    */
+    function addBurnController(address controller) external onlyOwner {
+        burnControllers[controller] = true;
+    }
+
+    /**
+    * disables an address from burning
+    * @param controller the address to disbale
+    */
+    function removeBurnController(address controller) external onlyOwner {
+        burnControllers[controller] = false;
     }
 
     function decimals() public pure override returns (uint8) {
