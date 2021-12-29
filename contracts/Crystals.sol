@@ -25,7 +25,11 @@ import "./Interfaces.sol";
 import "./IRift.sol";
 
 /*
-  This is a Loot derivative & resource management game. 
+  "...you notice the Rift’s force emanating from your bag. You peek inside, 
+  and see the glowing force crystalize before your eyes. It’s glowing with the Rift’s power..."
+  - Crystal Codex
+
+  This is a Loot derivative & resource management game. Powered by the Rift.
 
   You need a Loot, gLoot, or mLoot bag to enter the game. 
   Cost to enter the game is 0.04 for Loot & gLoot, or 0.004 for mLoot.
@@ -35,11 +39,15 @@ import "./IRift.sol";
   The game uses your bag's Rift level to determine the Mana production of your Crystal.
   Minting and Burning Crystals gives your Bag XP.
 
+  Crystals generate Mana every day. 
+
   Available actions:
-  - Mint
-  - Claim Mana
-  - Refocus (level up)
-  - Burn (done at the Rift)
+  - Mint -> Create a new Mana Crystal. Costs Mana + a Rift Charge
+  - Claim Mana -> Extracts the generated Mana from the Crystal, resetting the stored Mana to 0.
+  - Refocus* (level up) -> Increases Mana production. 
+  - Burn* (done at the Rift) -> Burns the Crystal into the Rift. Rewards some Mana and XP.
+
+  *some actions require the Crystal to be Synced i.e., left untouched for some # of days equal to focus.
 */
 
 /// @title Mana Crystals from the Rift
@@ -60,12 +68,12 @@ contract Crystals is
     IRift public iRift;
     address internal riftAddress;
     
-    uint8 public maxFocus;
     uint32 private constant GEN_THRESH = 10000000;
     uint32 private constant glootOffset = 9997460;
 
     uint64 public mintedCrystals;
 
+    uint8 public maxFocus;
     uint256 public mintFee;
     uint256 public mMintFee;
     uint16[] private xpTable;
@@ -208,12 +216,7 @@ contract Crystals is
     function _refocusCrystal(uint256 tokenId) internal ownsCrystal(tokenId) {
         Crystal memory crystal = crystalsMap[tokenId];
         require(crystal.focus < maxFocus, "MAX");
-        require(
-            diffDays(
-                crystal.lastClaim,
-                block.timestamp
-            ) >= crystal.focus, "WAIT"
-        );
+        isSynced(crystal.lastClaim, crystal.focus);
         uint32 mana = claimableMana(tokenId);
 
         // mint extra mana
@@ -286,9 +289,18 @@ contract Crystals is
         return manaToProduce;
     }
 
+    function isSynced(uint64 lastClaim, uint16 focus) internal view {
+        require(
+            diffDays(
+                lastClaim,
+                block.timestamp
+            ) >= focus, "Not Synced"
+        );
+    }
+
     // rift burnable
     function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
-        require(diffDays(crystalsMap[tokenId].lastClaim, block.timestamp) >= crystalsMap[tokenId].focus, "not ready");
+        isSynced(crystalsMap[tokenId].lastClaim, crystalsMap[tokenId].focus);
         return BurnableObject({
             power: (crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2) == 0 ?
                     1 :
