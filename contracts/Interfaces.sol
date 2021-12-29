@@ -11,7 +11,7 @@ struct Crystal {
     uint16 attunement;
     uint64 lastClaim;
     uint16 focus;
-    uint32 levelManaProduced;
+    uint32 focusManaProduced;
     uint32 regNum;
     uint16 lvlClaims;
 }
