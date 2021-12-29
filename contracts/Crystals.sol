@@ -26,6 +26,20 @@ import "./IRift.sol";
 
 /*
   This is a Loot derivative & resource management game. 
+
+  You need a Loot, gLoot, or mLoot bag to enter the game. 
+  Cost to enter the game is 0.04 for Loot & gLoot, or 0.004 for mLoot.
+  Mana yields are 10x for Loot and gLoot compared to mLoot.
+  You will get 1000 Mana for entering the game. (100 for mLoot)
+
+  The game uses your bag's Rift level to determine the Mana production of your Crystal.
+  Minting and Burning Crystals gives your Bag XP.
+
+  Available actions:
+  - Mint
+  - Claim Mana
+  - Refocus (level up)
+  - Burn (done at the Rift)
 */
 
 /// @title Mana Crystals from the Rift
@@ -37,7 +51,7 @@ contract Crystals is
     PausableUpgradeable,
     IRiftBurnable
 {
-    event CrystalLeveled(address indexed owner, uint256 indexed tokenId, uint256 level);
+    event CrystalRefocused(address indexed owner, uint256 indexed tokenId, uint256 focus);
     event ManaClaimed(address indexed owner, uint256 indexed tokenId, uint256 amount);
 
     ICrystalsMetadata public iMetadata;
@@ -122,7 +136,7 @@ contract Crystals is
         crystalsMap[tokenId] = Crystal({
             focus: 1,
             lastClaim: uint64(block.timestamp) - 1 days,
-            levelManaProduced: 0,
+            focusManaProduced: 0,
             attunement: iRift.bags(bagId).level,
             regNum: uint32(mintedCrystals),
             lvlClaims: 0
@@ -163,7 +177,7 @@ contract Crystals is
         crystalsMap[tokenId] = Crystal({
             focus: c.focus,
             lastClaim: uint64(block.timestamp),
-            levelManaProduced: c.levelManaProduced + manaToProduce,
+            focusManaProduced: c.focusManaProduced + manaToProduce,
             attunement: c.attunement,
             regNum: c.regNum,
             lvlClaims: c.lvlClaims + 1
@@ -173,25 +187,25 @@ contract Crystals is
         emit ManaClaimed(_msgSender(), tokenId, manaToProduce);
     }
 
-    function multiLevelUpCrystal(uint256[] memory tokenIds)
+    function multiRefocusCrystal(uint256[] memory tokenIds)
         external
         whenNotPaused
         nonReentrant
     {
         for (uint i=0; i < tokenIds.length; i++) {
-            _levelUpCrystal(tokenIds[i]);
+            _refocusCrystal(tokenIds[i]);
         }
     }
 
-    function levelUpCrystal(uint256 tokenId)
+    function refocusCrystal(uint256 tokenId)
         external
         whenNotPaused
         nonReentrant
     {
-        _levelUpCrystal(tokenId);
+        _refocusCrystal(tokenId);
     }
 
-    function _levelUpCrystal(uint256 tokenId) internal ownsCrystal(tokenId) {
+    function _refocusCrystal(uint256 tokenId) internal ownsCrystal(tokenId) {
         Crystal memory crystal = crystalsMap[tokenId];
         require(crystal.focus < maxFocus, "MAX");
         require(
@@ -210,16 +224,16 @@ contract Crystals is
         crystalsMap[tokenId] = Crystal({
             focus: crystal.focus + 1,
             lastClaim: uint64(block.timestamp),
-            levelManaProduced: 0,
+            focusManaProduced: 0,
             attunement: crystal.attunement,
             regNum: crystal.regNum,
             lvlClaims: 0
         });
 
-        emit CrystalLeveled(_msgSender(), tokenId, crystal.focus);
+        emit CrystalRefocused(_msgSender(), tokenId, crystal.focus);
     }
 
-    function levelUpMana(uint256 tokenId) external view returns (uint32) {
+    function refocusMana(uint256 tokenId) external view returns (uint32) {
         Crystal memory crystal = crystalsMap[tokenId];
 
         if (diffDays(crystal.lastClaim, block.timestamp) < crystal.focus || crystal.focus == maxFocus) {
@@ -335,7 +349,7 @@ contract Crystals is
         openSeaProxyRegistryAddress = addr;
     }
 
-    function ownerUpdateMaxLevel(uint8 maxFocus_) external onlyOwner {
+    function ownerUpdateMaxFocus(uint8 maxFocus_) external onlyOwner {
         require(maxFocus > maxFocus, "INV");
         maxFocus = maxFocus_;
     }
@@ -377,75 +391,6 @@ contract Crystals is
     {
         require(fromTimestamp <= toTimestamp);
         return (toTimestamp - fromTimestamp) / (24 * 60 * 60);
-    }
-
-    function getLevelRolls(
-        uint256 tokenId,
-        string memory key,
-        uint256 size,
-        uint256 times
-    ) internal view returns (uint256) {
-        uint8 index = 1;
-        uint256 score = getRoll(tokenId, key, size, times);
-        uint16 focus = crystalsMap[tokenId].focus;
-
-        while (index < focus) {
-            score += ((
-                random(string(abi.encodePacked(
-                    (index * GEN_THRESH) + tokenId,
-                    key
-                ))) % size
-            ) + 1) * times;
-
-            index++;
-        }
-
-        return score;
-    }
-
-    /// @dev returns random number based on the tokenId
-    function getRandom(uint256 tokenId, string memory key)
-        internal
-        view
-        returns (uint256)
-    {
-        return random(string(abi.encodePacked(tokenId, key, crystalsMap[tokenId].regNum)));
-    }
-
-    /// @dev returns random roll based on the tokenId
-    function getRoll(
-        uint256 tokenId,
-        string memory key,
-        uint256 size,
-        uint256 times
-    ) internal view returns (uint256) {
-        return ((getRandom(tokenId, key) % size) + 1) * times;
-    }
-
-    function random(string memory input) internal pure returns (uint256) {
-        return uint256(keccak256(abi.encodePacked(input, "%RIFT-OPEN")));
-    }
-
-    function toString(uint256 value) internal pure returns (string memory) {
-        // Inspired by OraclizeAPI's implementation - MIT license
-        // https://github.com/oraclize/ethereum-api/blob/b42146b063c7d6ee1358846c198246239e9360e8/oraclizeAPI_0.4.25.sol
-
-        if (value == 0) {
-            return "0";
-        }
-        uint256 temp = value;
-        uint256 digits;
-        while (temp != 0) {
-            digits++;
-            temp /= 10;
-        }
-        bytes memory buffer = new bytes(digits);
-        while (value != 0) {
-            digits -= 1;
-            buffer[digits] = bytes1(uint8(48 + uint256(value % 10)));
-            value /= 10;
-        }
-        return string(buffer);
     }
 
     // The following functions are overrides required by Solidity.

@@ -99,7 +99,7 @@ describe('Mana X Crystals With Claimed', () => {
     const balance = (await manaInstance.balanceOf(accounts[0])).toNumber();
 
     await expectRevert(
-      crystalsInstance.levelUpCrystal(8996, { from: accounts[0] }),
+      crystalsInstance.refocusCrystal(8996, { from: accounts[0] }),
       "This crystal is not ready to be leveled up"
     );
   });
@@ -115,7 +115,7 @@ describe('Mana X Crystals With Claimed', () => {
     time.increase(((24 * daysRequired) - 1) * 60 * 60);
 
     await expectRevert(
-      crystalsInstance.levelUpCrystal(8995, { from: accounts[0] }),
+      crystalsInstance.refocusCrystal(8995, { from: accounts[0] }),
       "This crystal is not ready to be leveled up"
     );
     
@@ -125,7 +125,7 @@ describe('Mana X Crystals With Claimed', () => {
     const manaBefore = (await manaInstance.balanceOf(accounts[0])).toNumber();
     console.log('manaBefore', manaBefore);
     console.log('crystalsInstance.getSpin(8995)', (await crystalsInstance.getSpin(8995)).toNumber());
-    await crystalsInstance.levelUpCrystal(8995, { from: accounts[0] });
+    await crystalsInstance.refocusCrystal(8995, { from: accounts[0] });
     const manaAfter = await manaInstance.balanceOf(accounts[0]);
 
     expect(manaAfter).to.be.bignumber.equal(1 + manaBefore - Math.floor(spin / 2) + '');

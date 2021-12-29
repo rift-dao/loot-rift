@@ -119,30 +119,6 @@ contract CrystalsMetadata is ICrystalsMetadata {
         )))));
     }
 
-    function getLevelRolls(
-        uint256 tokenId,
-        string memory key,
-        uint256 size,
-        uint256 times
-    ) internal view returns (uint256) {
-        uint256 index = 1;
-        uint256 score = getRoll(tokenId, key, size, times);
-        uint256 focus = iCrystals.crystalsMap(tokenId).focus;
-
-        while (index < focus) {
-            score += ((
-                random(string(abi.encodePacked(
-                    (index * GEN_THRESH) + tokenId,
-                    key
-                ))) % size
-            ) + 1) * times;
-
-            index++;
-        }
-
-        return score;
-    }
-
     function getBG(uint256 tokenId) internal view returns (string memory) {
         uint256 r = 100 / uint256(iCrystals.crystalsMap(tokenId).focus);
         uint256 d = r * diffDays(iCrystals.crystalsMap(tokenId).lastClaim, block.timestamp);

@@ -154,7 +154,7 @@ contract('Adventure', function ([owner, other]) {
     //     await this.quests.completeStep(this.enterRift.address, 1, 1)
     //     await this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") });
     //     assert.equal((await this.crystals.crystalsMap(1)).level, 1, "Starts at level 1");
-    //     await this.crystals.levelUpCrystal(1);
+    //     await this.crystals.refocusCrystal(1);
     //     assert.equal((await this.crystals.crystalsMap(1)).level, 2, "Leveled up");
     // });
 
@@ -188,7 +188,7 @@ contract('Adventure', function ([owner, other]) {
     //     // // use charge
     //     await this.crystals.mintCrystal(1, { value: web3.utils.toWei("0.02", "ether") });
     //     assert.equal((await this.crystals.riftPower(1)), 1, "Potential Rift Power of Crystal");
-    //     await this.crystals.levelUpCrystal(1);
+    //     await this.crystals.refocusCrystal(1);
     //     assert.equal((await this.crystals.riftPower(1)), 1, "Potential Rift Power of Crystal");
 
     //     assert.equal((await this.rift.riftPower()), 99999, "Charges reduce power");
