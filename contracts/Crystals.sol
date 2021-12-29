@@ -54,7 +54,7 @@ contract Crystals is
 
     uint256 public mintFee;
     uint256 public mMintFee;
-    uint16[] private xpTable;
+    uint16[10] private xpTable;
 
     /// @dev indexed by bagId + (GEN_THRESH * bag generation) == tokenId
     mapping(uint256 => Crystal) public crystalsMap;
@@ -81,7 +81,7 @@ contract Crystals is
 
     //WRITE
 
-    function firstMint(uint256 bagId) 
+    function firstMint(uint256 bagId)
         external
         payable
         whenNotPaused

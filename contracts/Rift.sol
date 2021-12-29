@@ -168,16 +168,6 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
     }
 
-    function karmaCharge(uint256 bagId) external
-        _isBagHolder(bagId, _msgSender())
-        topKarmaHolder(_msgSender())
-        whenNotPaused
-        nonReentrant {
-        require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
-        _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
-        iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
-    }
-
     function useCharge(uint16 amount, uint256 bagId, address from) 
         _isBagHolder(bagId, from) 
         external 
@@ -303,12 +293,6 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     }
 
     // MODIFIERS
-
-    modifier topKarmaHolder(address holder) {
-        uint256 medianKarma = iRiftData.karmaTotal() / iRiftData.karmaHolders();
-        require(iRiftData.karma(holder) > (medianKarma * 2), "Not enough karma");
-        _;
-    }
 
      modifier _isBagHolder(uint256 bagId, address owner) {
         if (bagId < 8001) {
