@@ -91,6 +91,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         riftLevelMaxThreshold = 33100;
         riftPower = 35000;
         riftObjectsSacrificed = 0;
+        riftCallibratedTime = block.timestamp;
     }
 
     function ownerSetDescription(string memory desc) external onlyOwner {
