@@ -28,7 +28,7 @@ import "./IRift.sol";
     Now it's time to level up your Adventure!
     Enter The Rift, and gain its power. 
     Take too much, and all suffer.
-    Return what you've gained, and all benefit.. especially you!
+    Return what you've gained, and all benefit.. 
 */
 
 contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable, OwnableUpgradeable {
@@ -55,13 +55,16 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
      Rift power will decrease as bags level up and gain charges.
      Charges will create Rift Objects.
      Rift Objects can be burned into the Rift to amplify its power.
+     If Rift Level reaches 0, no more charges are created.
     */
     uint32 public riftLevel;
-    uint32 internal riftTier;
-    uint64 public riftTierPower;
-    uint8 internal riftTierSize;
-    uint8 internal riftTierIncrease; 
-    uint64 public riftPowerPerLevel;
+    uint256 public riftPower;
+
+    uint8 internal riftLevelIncreasePercentage; 
+    uint8 internal riftLevelDecreasePercentage; 
+    uint256 internal riftLevelMinThreshold;
+    uint256 internal riftLevelMaxThreshold;
+    uint256 internal riftCallibratedTime; 
 
     uint64 public riftObjectsSacrificed;
 
@@ -81,12 +84,12 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
         description = "The Rift inbetween";
 
-        riftLevel = 3;
-        riftTier = 1;
-        riftTierPower = 35000;
-        riftTierSize = 5;
-        riftTierIncrease = 15; // 15% increase
-        riftPowerPerLevel = 10000;
+        riftLevel = 2;
+        riftLevelIncreasePercentage = 10; 
+        riftLevelDecreasePercentage = 9;
+        riftLevelMinThreshold = 21000;
+        riftLevelMaxThreshold = 33100;
+        riftPower = 35000;
         riftObjectsSacrificed = 0;
     }
 
@@ -108,12 +111,6 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
     function removeRiftQuest(address addr) external onlyOwner {
         riftQuests[addr] = false;
-    }
-
-    function ownerUpdateRiftTier(uint8 tierSize, uint8 tierIncrease, uint64 ppl) external onlyOwner {
-        riftTierSize = tierSize;
-        riftTierIncrease = tierIncrease;
-        riftPowerPerLevel = ppl;
     }
 
     /**
@@ -163,6 +160,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         whenNotPaused 
         nonReentrant {
         require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
+        require(riftLevel > 0, "rift has no power");
         iMana.burn(_msgSender(), iRiftData.bags(bagId).level * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
         _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
         iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
@@ -228,12 +226,19 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     }
 
     function _chargeBag(uint256 bagId, uint16 charges, uint16 forLvl) internal {
+        if (riftLevel == 0) {
+            return; // no power in the rift
+        }
         if (charges == 0) {
             charges = forLvl/10;
             charges += forLvl%5 == 0 ? 1 : 0; // bonus on every fifth lvl
             charges += forLvl%10 == 0 ? 1 : 0; // bonus bonus on every tenth
         }
-        removeRiftPower(charges * forLvl);
+        if ((charges * forLvl) > riftPower) {
+            riftPower = 0;
+        } else {
+            riftPower -= (charges * forLvl);
+        }
         iRiftData.addCharges(charges, bagId);
         emit AddCharge(_msgSender(), bagId, charges, forLvl);
     }
@@ -260,7 +265,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         BurnableObject memory bo = IRiftBurnable(burnableAddr).burnObject(tokenId);
         ERC721BurnableUpgradeable(burnableAddr).burn(tokenId);
 
-        addRiftPower(bo.power);
+        riftPower += bo.power;
         iRiftData.addKarma(bo.power, msg.sender);
         riftObjectsSacrificed += 1;     
 
@@ -270,26 +275,31 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     }
 
     // Rift Power
-    function addRiftPower(uint64 power) internal {
-        riftTierPower += power;
-        riftLevel = uint32(riftTierPower/riftPowerPerLevel);
 
-        // up a tier
-        if (riftLevel > (riftTier * riftTierSize)) {
-            riftTierPower -= riftTierSize * riftPowerPerLevel;
-            riftTier += 1;
-            riftPowerPerLevel += (riftPowerPerLevel * riftTierIncrease)/100; // add increase as a percentage
+    function recalibrateRift() external {
+        require(block.timestamp - riftCallibratedTime >= 1 hours, "wait");
+        if (riftPower >= riftLevelMaxThreshold) {
+            // up a level
+            riftLevel += 1;
+            uint256 riftLevelPower = riftLevelMaxThreshold - riftLevelMinThreshold;
+            riftLevelMinThreshold = riftLevelMaxThreshold;
+            riftLevelMaxThreshold += riftLevelPower + (riftLevelPower * riftLevelIncreasePercentage)/100;
+        } else if (riftPower < riftLevelMinThreshold) {
+            // down a level
+            if (riftLevel == 1) {
+                riftLevel = 0;
+                riftLevelMinThreshold = 0;
+                riftLevelMaxThreshold = 10000;
+            } else {
+                riftLevel -= 1;
+                uint256 riftLevelPower = riftLevelMaxThreshold - riftLevelMinThreshold;
+                riftLevelMaxThreshold = riftLevelMinThreshold;
+                riftLevelMinThreshold -= riftLevelPower + (riftLevelPower * riftLevelDecreasePercentage)/100;
+            }
         }
-    }
 
-    function removeRiftPower(uint64 power) internal {
-        if (power > riftTierPower) {
-            riftTierPower = 0;
-        } else {
-            riftTierPower -= power;
-        }
-
-        riftLevel = uint32(riftTierPower/riftPowerPerLevel);
+        iMana.ccMintTo(msg.sender, (block.timestamp - riftCallibratedTime) / (3600) * 10 * riftLevel);
+        riftCallibratedTime = block.timestamp;
     }
 
     // MODIFIERS

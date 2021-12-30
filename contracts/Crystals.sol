@@ -302,9 +302,7 @@ contract Crystals is
     function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
         isSynced(crystalsMap[tokenId].lastClaim, crystalsMap[tokenId].focus);
         return BurnableObject({
-            power: (crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2) == 0 ?
-                    1 :
-                    crystalsMap[tokenId].focus * crystalsMap[tokenId].attunement / 2,
+            power: crystalsMap[tokenId].focus + crystalsMap[tokenId].attunement - 1,
             mana: crystalsMap[tokenId].focus * (isOGCrystal(tokenId) ? 100 : 10),
             xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].focus - 1]
         });
