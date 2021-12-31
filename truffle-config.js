@@ -69,7 +69,7 @@ module.exports = {
       gasPrice: 90000000000, // 80 gwei
     },
     ropsten: {
-      provider: () => new HDWalletProvider(process.env.MNEMONIC, process.env.INFURIA),
+      provider: () => new HDWalletProvider(process.env.MNEMONIC, process.env.INFURA_ROP),
       network_id: 3,       // Ropsten's id
       gas: 5500000,        // Ropsten has a lower block limit than mainnet
       confirmations: 2,    // # of confs to wait between deployments. (default: 0)

@@ -292,7 +292,8 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         require(riftObjects[burnableAddr], "Not of the Rift");
         require(IERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
         
-        _sacrificeRiftObject(burnableAddr, tokenId, bagId, IRiftBurnable(burnableAddr).burnObject(tokenId));
+        ERC721BurnableUpgradeable(burnableAddr).burn(tokenId);
+        _rewardBurn(burnableAddr, tokenId, bagId, IRiftBurnable(burnableAddr).burnObject(tokenId));
     }
 
     /**
@@ -302,18 +303,17 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
      * @param bagId id of bag that will get XP
      */
     function growTheRiftStatic(address burnableAddr, uint256 tokenId, uint256 bagId) _isBagHolder(bagId, _msgSender()) external whenNotPaused {
-        require(riftObjects[burnableAddr], "Not of the Rift");
         require(IERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
 
-        _sacrificeRiftObject(burnableAddr, tokenId, bagId, staticBurnObjects[burnableAddr]);
+        IERC721(burnableAddr).transferFrom(_msgSender(), 0x000000000000000000000000000000000000dEaD, tokenId);
+        _rewardBurn(burnableAddr, tokenId, bagId, staticBurnObjects[burnableAddr]);
     }
 
     function growTheRiftRewards(address burnableAddr, uint256 tokenId) external view returns (BurnableObject memory) {
         return IRiftBurnable(burnableAddr).burnObject(tokenId);
     }
 
-    function _sacrificeRiftObject(address burnableAddr, uint256 tokenId, uint256 bagId, BurnableObject memory bo) internal {
-        ERC721BurnableUpgradeable(burnableAddr).burn(tokenId);
+    function _rewardBurn(address burnableAddr, uint256 tokenId, uint256 bagId, BurnableObject memory bo) internal {
 
         riftPower += bo.power;
         iRiftData.addKarma(bo.power, _msgSender());
