@@ -104,6 +104,10 @@ contract Crystals is
 
     //WRITE
 
+    /**
+     * @dev Must be used to create the first Crystal with any bag. 
+     * @param bagId The id of Loot or mLoot bag, or the id of a gLoot bag + 9997460
+     */
     function firstMint(uint256 bagId)
         external
         payable
@@ -117,13 +121,16 @@ contract Crystals is
         } else {
             require(msg.value == mMintFee, "FEE");
         }
-        // set up bag in rift and give it a charge
+        // set up bag in rift and give it a charge. does nothing for existing bags in rift
         iRift.setupNewBag(bagId);
         _mintCrystal(bagId);
         iMana.ccMintTo(_msgSender(), (bagId < 8001 || bagId > glootOffset) ? 1000 : 100);
     }
 
-    // lock to second mint or more
+    /**
+     * @dev Create a Crystal with a Rift Charge and Mana.
+     * @param bagId The id of Loot or mLoot bag, or offset gloot
+     */
     function mintCrystal(uint256 bagId)
         external
         whenNotPaused
@@ -156,10 +163,6 @@ contract Crystals is
         _safeMint(_msgSender(), tokenId);
     }
 
-    function mintXP(uint256 bagId) external view returns (uint32) {
-        return 50 + (15 * (iRift.bags(bagId).level == 0 ? 0 : iRift.bags(bagId).level - 1));
-    }
-
     function multiClaimCrystalMana(uint256[] memory tokenIds) 
         external 
         whenNotPaused
@@ -170,6 +173,10 @@ contract Crystals is
         }
     }
 
+    /**
+     * @dev Mints Mana from Crystal. Can be called once per day.
+     * @param tokenId The id of Crystal
+     */
     function claimCrystalMana(uint256 tokenId)
         external
         whenNotPaused
@@ -206,6 +213,10 @@ contract Crystals is
         }
     }
 
+    /**
+     * @dev Levels up a Crystal. Increasing its Focus by 1. 
+     * @param tokenId The id of a synced Crystal
+     */
     function refocusCrystal(uint256 tokenId)
         external
         whenNotPaused
@@ -237,6 +248,12 @@ contract Crystals is
         emit CrystalRefocused(_msgSender(), tokenId, crystal.focus);
     }
 
+    // READ 
+
+    /**
+     * @dev Amount of Mana rewarded for refocusing a Crystal
+     * @param tokenId The id of a synced Crystal
+     */
     function refocusMana(uint256 tokenId) external view returns (uint32) {
         Crystal memory crystal = crystalsMap[tokenId];
 
@@ -251,7 +268,14 @@ contract Crystals is
         }
     }
 
-    // READ 
+    /**
+     * @dev Amount of XP rewarded for minting a Crystal with given bag
+     * @param bagId The id of Loot or mLoot bag, or offset gloot
+     */
+    function mintXP(uint256 bagId) external view returns (uint32) {
+        return 50 + (15 * (iRift.bags(bagId).level == 0 ? 0 : iRift.bags(bagId).level - 1));
+    }
+
     function getResonance(uint256 tokenId) public view returns (uint32) {
         // 2 x Focus x OG Bonus * attunement bonus
         return uint32(crystalsMap[tokenId].focus * 2
@@ -263,7 +287,7 @@ contract Crystals is
         return uint32((3 * (crystalsMap[tokenId].focus) * getResonance(tokenId)));
     }
 
-    // 10% increase per generation
+    /** @dev increases by 10% each attunement level */
     function attunementBonus(uint16 attunement) internal pure returns (uint32) {
         // first gen
         if (attunement == 1) { return 100; }
@@ -290,6 +314,7 @@ contract Crystals is
         return manaToProduce;
     }
 
+    /** @dev Crystal is synced if it hasn't been claimed or refocused in days equal to current focus */
     function isSynced(uint64 lastClaim, uint16 focus) internal view {
         require(
             diffDays(
@@ -299,7 +324,7 @@ contract Crystals is
         );
     }
 
-    // rift burnable
+    /** @dev The rewards the Crystal will give if it's burned */
     function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
         isSynced(crystalsMap[tokenId].lastClaim, crystalsMap[tokenId].focus);
         return BurnableObject({

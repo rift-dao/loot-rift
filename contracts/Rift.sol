@@ -29,6 +29,17 @@ import "./IRift.sol";
     Enter The Rift, and gain its power. 
     Take too much, and all suffer.
     Return what you've gained, and all benefit.. 
+
+    --------------------------------------------
+    The Rift creates a bridge between Loot derivatives and the bags that play and interact with them. 
+     Bags that interact with derivatives are rewarded with XP, Levels, and Rift Charges. 
+
+    Any derivative can read a bag's XP & Level from the Rift. This enables support for things like:
+     - Dynamic items that scale with bag levels
+     - Level-based Dungeon difficulties 
+     - Experienced-based Lore
+
+     more @ https://rift.live
 */
 
 contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable, OwnableUpgradeable {
@@ -155,7 +166,10 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     
     // WRITE
 
-    // pay to charge. only once per day
+    /**
+     * @dev purchase a Rift Charge with Mana
+     * @param bagId bag that will be given the charge
+     */
     function buyCharge(uint256 bagId) external
         _isBagHolder(bagId, _msgSender()) 
         whenNotPaused 
@@ -179,7 +193,10 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         emit UseCharge(from, _msgSender(), bagId, amount);
     }
 
-    function awardXP(uint32 bagId, uint16 xp) external nonReentrant {
+    /**
+     * @dev grants XP, levels up bags, and rewards rift charges.
+     */
+    function awardXP(uint32 bagId, uint16 xp) external nonReentrant whenNotPaused {
         require(riftQuests[msg.sender], "only the worthy");
         _awardXP(bagId, xp);
     }
@@ -244,14 +261,23 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         emit AddCharge(_msgSender(), bagId, charges, forLvl);
     }
 
-    function setupNewBag(uint256 bagId) external {
+    /**
+     * @dev sets up any bag in the rift. does nothing if bag is already set up.
+     */
+    function setupNewBag(uint256 bagId) external whenNotPaused {
         if (iRiftData.bags(bagId).level == 0) {
             iRiftData.updateLevel(1, bagId);    
             _chargeBag(bagId,levelChargeAward[1], 1);
         }        
     }
 
-    function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external {
+    /**
+     * @dev increases the rift's power by burning an object into it. rewards XP and karma.
+     * @param burnableAddr address of the object that is getting burned
+     * @param tokenId id of object getting burned
+     * @param bagId id of bag that will get XP
+     */
+    function growTheRift(address burnableAddr, uint256 tokenId , uint256 bagId) _isBagHolder(bagId, msg.sender) external whenNotPaused {
         require(riftObjects[burnableAddr], "Not of the Rift");
         require(IERC721(burnableAddr).ownerOf(tokenId) == _msgSender(), "Must be yours");
         
@@ -277,7 +303,10 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
     // Rift Power
 
-    function recalibrateRift() external {
+    /**
+     * @dev rewards mana for recalibrating the Rift
+     */
+    function recalibrateRift() external whenNotPaused {
         require(block.timestamp - riftCallibratedTime >= 1 hours, "wait");
         if (riftPower >= riftLevelMaxThreshold) {
             // up a level
