@@ -29,17 +29,18 @@ import "./IRift.sol";
   and see the glowing force crystalize before your eyes. It’s glowing with the Rift’s power..."
   - Crystal Codex
 
-  This is a Loot derivative & resource management game. Powered by the Rift.
+  Mana Crystals are a Loot derivative & resource management game. Powered by the Rift.
 
-  You need a Loot, gLoot, or mLoot bag to enter the game. 
-  Cost to enter the game is 0.04 for Loot & gLoot, or 0.004 for mLoot.
+  You need a Loot, gLoot, or mLoot bag to create Mana Crystals. 
+  Cost to create your bag's first Crystal is 0.04 for Loot & gLoot, or 0.004 for mLoot.
   Mana yields are 10x for Loot and gLoot compared to mLoot.
-  You will get 1000 Mana for entering the game. (100 for mLoot)
+  You will get 1000 Mana for creating your first Crystal. (100 for mLoot)
 
-  The game uses your bag's Rift level to determine the Mana production of your Crystal.
+  The Mana Crystals use your bag's Rift level to determine their Mana production.
   Minting and Burning Crystals gives your Bag XP.
 
   Crystals generate Mana every day. 
+  Mana is used to generate more Crystals, purchase Rift Charges, and Questing.
 
   Available actions:
   - Mint -> Create a new Mana Crystal. Costs Mana + a Rift Charge

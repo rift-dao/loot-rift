@@ -1,5 +1,4 @@
 const { deployProxy } = require('@openzeppelin/truffle-upgrades');
-const NotLoot = artifacts.require('NotLoot');
 const Mana = artifacts.require('Mana');
 const Crystals = artifacts.require('Crystals');
 const CrystalsMetadata = artifacts.require('CrystalsMetadata');
@@ -10,11 +9,10 @@ const RiftData = artifacts.require('RiftData');
 
 module.exports = function(deployer) {
   deployer.then(async () => {
-    const notLoot = await deployer.deploy(NotLoot);
     const riftData = await deployProxy(RiftData, { deployer });
     const mana = await deployer.deploy(Mana);
     const crystals = await deployProxy(Crystals, [mana.address], { deployer });
-    const rift = await deployProxy(Rift, [notLoot.address, notLoot.address, notLoot.address], { deployer });
+    const rift = await deployProxy(Rift, ['0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7', '0x1dfe7Ca09e99d10835Bf73044a23B73Fc20623DF', '0x8dB687aCEb92c66f013e1D614137238Cc698fEdb'], { deployer });
     const crystalsMeta = await deployer.deploy(CrystalsMetadata, crystals.address);
     // const riftQuests = await deployer.deploy(RiftQuests, rift.address);
     // const enterRift = await deployer.deploy(EnterRift, riftQuests.address, crystals.address, mana.address);

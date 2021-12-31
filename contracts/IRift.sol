@@ -13,28 +13,9 @@ interface IRift {
     function isBagHolder(uint256 bagId, address owner) external;
 }
 
-struct QuestStep {
-    string requirements;
-    string[] description;
-    string[] result;
-    uint16 xp;
-}
-
 struct BagProgress {
     uint32 lastCompletedStep;
     bool completedQuest;
-}
-
-interface IRiftQuest {
-    function bagsProgress(uint256 bagId) external view returns (BagProgress memory);
-    function title() external view returns (string memory);
-    function numSteps() external view returns (uint64);
-    function canStartQuest(uint256 bagId) external view returns (bool);
-    function isCompleted(uint256 bagId) external view returns (bool);
-    function currentStep(uint256 bagId) external view returns (QuestStep memory);
-    function completeStep(uint32 step, uint256 bagId, address from) external;
-    function stepAwardXP(uint64 step) external view returns (uint16);
-    function tokenURI(uint256 bagId) external view returns (string memory);
 }
 
 struct BurnableObject {
