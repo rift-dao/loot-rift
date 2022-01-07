@@ -1,8 +1,8 @@
 {
   "manifestVersion": "3.2",
   "admin": {
-    "address": "0xE5f9e07c25564e985B35077F81f61B78Ac11D258",
-    "txHash": "0x0eb2702aaf2bb5f2b1f8768d7111b62fc481ea83ed8a854461039c04c8c301dc"
+    "address": "0x7d8286C6FaB698dae52C92C607b63a5F61496A49",
+    "txHash": "0x0dfd0268b247a74907ec0c191ef5f2dd4fed311f1f7c0b2b497e37fde850cbdf"
   },
   "proxies": [
     {
@@ -621,21 +621,6 @@
       "kind": "transparent"
     },
     {
-      "address": "0x632678bBa8a4DD16255F164e9d74853BeA9856E7",
-      "txHash": "0x1e381d46a1460e5cbb2f7297561831582828fc40d03b05f78b3ff7f3db6d3826",
-      "kind": "transparent"
-    },
-    {
-      "address": "0x3051162ED7DeF8Af730Aaf4C7cB8a10Ee19b8303",
-      "txHash": "0x8f45ec007053009287309e5c30cb90dbde6aecda7610f8edd9b0158297978947",
-      "kind": "transparent"
-    },
-    {
-      "address": "0x290a1a360F64758D1b46F994E541ac9b7aE5c830",
-      "txHash": "0xe9f3892ae2f0d630d20990e260b4ca405ba0cbba567423943df20e56d54e9895",
-      "kind": "transparent"
-    },
-    {
       "address": "0xe4018a8d0a10Ed53B43151Afb7e11e4e35d974dE",
       "txHash": "0x00850c3468a608ed7562e9b3988d6a16483788d10b64f455677a461ec5cdd0dc",
       "kind": "transparent"
@@ -1083,6 +1068,21 @@
     {
       "address": "0x420A20DC146614eAd13E4100a0f800B413501599",
       "txHash": "0x54446c878820062957caaa00f75c2e0b945b3fc16a4454579ed1528d080f0480",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x632678bBa8a4DD16255F164e9d74853BeA9856E7",
+      "txHash": "0x5b9a5888a474c19869d385ffc3a8e9533bd3193056b2eb70953f5795607870bd",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x3051162ED7DeF8Af730Aaf4C7cB8a10Ee19b8303",
+      "txHash": "0x377aae34288bb10238f41e4625ec42063185f14c339fc4561f2f89eb5668dae3",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x290a1a360F64758D1b46F994E541ac9b7aE5c830",
+      "txHash": "0xe4226a2a80087b83638a769098116326103385173b606c10fc30682ea23c8ba3",
       "kind": "transparent"
     }
   ],
@@ -3639,8 +3639,8 @@
       }
     },
     "d950a081a8b04f019fa1361d374e64dd0741dbbc26b25cfb42527bfab4dcf702": {
-      "address": "0xfEE83C6E1D346770c6f374919512A1B6865A84C4",
-      "txHash": "0x11e657e257112bb1a2d7d6f022aa8204ab29cbd92ceea7bc95b0d860686a9259",
+      "address": "0x61D28c24d852Ba047a5cf15CA8a1D4E65fF0D2d2",
+      "txHash": "0xd239fc4335eb5efafd3efeb4473b6f0896bc96f638021dff604312d31232b46d",
       "layout": {
         "storage": [
           {
@@ -3694,7 +3694,7 @@
           {
             "contract": "RiftData",
             "label": "_bags",
-            "type": "t_mapping(t_uint256,t_struct(RiftBag)10675_storage)",
+            "type": "t_mapping(t_uint256,t_struct(RiftBag)10685_storage)",
             "src": "../project:/contracts/RiftData.sol:104"
           },
           {
@@ -3717,10 +3717,10 @@
           "t_uint256": {
             "label": "uint256"
           },
-          "t_mapping(t_uint256,t_struct(RiftBag)10675_storage)": {
+          "t_mapping(t_uint256,t_struct(RiftBag)10685_storage)": {
             "label": "mapping(uint256 => struct RiftBag)"
           },
-          "t_struct(RiftBag)10675_storage": {
+          "t_struct(RiftBag)10685_storage": {
             "label": "struct RiftBag",
             "members": [
               {
@@ -3767,8 +3767,8 @@
       }
     },
     "81df4100c3acfa280dde64ec4fd32afba187be1d2b9bbbeaca4371934d20fb3d": {
-      "address": "0xdABAE15599376e5dC54fb4ccC8a6031877E5FA61",
-      "txHash": "0xd9701a2da049c489148ea44e5e5e4a5719eb8238b2dccc562039321a1f0850df",
+      "address": "0x62bE6B88e667eAD73Ea4a41d35FA6DBd268D53BD",
+      "txHash": "0x19d0ed5478fda69f0c183df61e756605679ef7ec276ebf229ae948337e9d6fef",
       "layout": {
         "storage": [
           {
@@ -4105,226 +4105,6 @@
           },
           "t_array(t_uint256)44_storage": {
             "label": "uint256[44]"
-          }
-        }
-      }
-    },
-    "9d81c93e998e17bbf61445e275e081e291f40a3c475fe505b0211af188165b69": {
-      "address": "0x68d686CD8C27bf83e7Bb0EB0EfB2322d21c4dC03",
-      "txHash": "0x4aa46f0879f1147e476714ce71d3b97ba91c4c3fd95a177265fe75587317a067",
-      "layout": {
-        "storage": [
-          {
-            "contract": "Initializable",
-            "label": "_initialized",
-            "type": "t_bool",
-            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:39"
-          },
-          {
-            "contract": "Initializable",
-            "label": "_initializing",
-            "type": "t_bool",
-            "src": "../@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:44"
-          },
-          {
-            "contract": "ReentrancyGuardUpgradeable",
-            "label": "_status",
-            "type": "t_uint256",
-            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:38"
-          },
-          {
-            "contract": "ReentrancyGuardUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "../@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.sol:68"
-          },
-          {
-            "contract": "ContextUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)50_storage",
-            "src": "../@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:31"
-          },
-          {
-            "contract": "PausableUpgradeable",
-            "label": "_paused",
-            "type": "t_bool",
-            "src": "../@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
-          },
-          {
-            "contract": "PausableUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "../@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:97"
-          },
-          {
-            "contract": "OwnableUpgradeable",
-            "label": "_owner",
-            "type": "t_address",
-            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
-          },
-          {
-            "contract": "OwnableUpgradeable",
-            "label": "__gap",
-            "type": "t_array(t_uint256)49_storage",
-            "src": "../@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:82"
-          },
-          {
-            "contract": "Rift",
-            "label": "iLoot",
-            "type": "t_contract(IERC721)4298",
-            "src": "../project:/contracts/Rift.sol:60"
-          },
-          {
-            "contract": "Rift",
-            "label": "iMLoot",
-            "type": "t_contract(IERC721)4298",
-            "src": "../project:/contracts/Rift.sol:61"
-          },
-          {
-            "contract": "Rift",
-            "label": "iGLoot",
-            "type": "t_contract(IERC721)4298",
-            "src": "../project:/contracts/Rift.sol:62"
-          },
-          {
-            "contract": "Rift",
-            "label": "iMana",
-            "type": "t_contract(IMana)9083",
-            "src": "../project:/contracts/Rift.sol:63"
-          },
-          {
-            "contract": "Rift",
-            "label": "iRiftData",
-            "type": "t_contract(IRiftData)10726",
-            "src": "../project:/contracts/Rift.sol:64"
-          },
-          {
-            "contract": "Rift",
-            "label": "description",
-            "type": "t_string_storage",
-            "src": "../project:/contracts/Rift.sol:67"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftLevel",
-            "type": "t_uint32",
-            "src": "../project:/contracts/Rift.sol:76"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftPower",
-            "type": "t_uint256",
-            "src": "../project:/contracts/Rift.sol:76"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftLevelIncreasePercentage",
-            "type": "t_uint8",
-            "src": "../project:/contracts/Rift.sol:76"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftLevelDecreasePercentage",
-            "type": "t_uint8",
-            "src": "../project:/contracts/Rift.sol:78"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftLevelMinThreshold",
-            "type": "t_uint256",
-            "src": "../project:/contracts/Rift.sol:79"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftLevelMaxThreshold",
-            "type": "t_uint256",
-            "src": "../project:/contracts/Rift.sol:82"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftCallibratedTime",
-            "type": "t_uint256",
-            "src": "../project:/contracts/Rift.sol:83"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftObjectsSacrificed",
-            "type": "t_uint64",
-            "src": "../project:/contracts/Rift.sol:85"
-          },
-          {
-            "contract": "Rift",
-            "label": "levelChargeAward",
-            "type": "t_mapping(t_uint16,t_uint16)",
-            "src": "../project:/contracts/Rift.sol:87"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftObjects",
-            "type": "t_mapping(t_address,t_bool)",
-            "src": "../project:/contracts/Rift.sol:88"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftQuests",
-            "type": "t_mapping(t_address,t_bool)",
-            "src": "../project:/contracts/Rift.sol:90"
-          },
-          {
-            "contract": "Rift",
-            "label": "riftObjectsArr",
-            "type": "t_array(t_address)dyn_storage",
-            "src": "../project:/contracts/Rift.sol:91"
-          }
-        ],
-        "types": {
-          "t_contract(IERC721)4298": {
-            "label": "contract IERC721"
-          },
-          "t_contract(IMana)9083": {
-            "label": "contract IMana"
-          },
-          "t_contract(IRiftData)10726": {
-            "label": "contract IRiftData"
-          },
-          "t_string_storage": {
-            "label": "string"
-          },
-          "t_uint32": {
-            "label": "uint32"
-          },
-          "t_uint256": {
-            "label": "uint256"
-          },
-          "t_uint8": {
-            "label": "uint8"
-          },
-          "t_uint64": {
-            "label": "uint64"
-          },
-          "t_mapping(t_uint16,t_uint16)": {
-            "label": "mapping(uint16 => uint16)"
-          },
-          "t_uint16": {
-            "label": "uint16"
-          },
-          "t_mapping(t_address,t_bool)": {
-            "label": "mapping(address => bool)"
-          },
-          "t_address": {
-            "label": "address"
-          },
-          "t_bool": {
-            "label": "bool"
-          },
-          "t_array(t_address)dyn_storage": {
-            "label": "address[]"
-          },
-          "t_array(t_uint256)49_storage": {
-            "label": "uint256[49]"
-          },
-          "t_array(t_uint256)50_storage": {
-            "label": "uint256[50]"
           }
         }
       }
@@ -5590,8 +5370,8 @@
       }
     },
     "b47f1ba709c11d7202dfd39d388542bf92e86b9436540c98d23b7ea176d7ae83": {
-      "address": "0xE51F4F3eA4084469d556bF2004603F1a725ED4D2",
-      "txHash": "0x555a9ab0aa93c14dd125763a57e984884d83a4c8048d0b580c253c9cbf64c603",
+      "address": "0x68d686CD8C27bf83e7Bb0EB0EfB2322d21c4dC03",
+      "txHash": "0x51b2d50f8ec2f7f8aed5946ade577bfe73a54e42bcc7bc60050d2dd2b292dfd3",
       "layout": {
         "storage": [
           {
