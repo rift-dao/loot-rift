@@ -145,6 +145,7 @@ contract Crystals is
 
     function _mintCrystal(uint256 bagId) internal {
         iRift.useCharge(1, bagId, _msgSender());
+        RiftBag memory bag = iRift.bags(bagId);
 
         uint256 tokenId = getNextCrystal(bagId);
 
@@ -153,12 +154,12 @@ contract Crystals is
             focus: 1,
             lastClaim: uint64(block.timestamp) - 1 days,
             focusManaProduced: 0,
-            attunement: iRift.bags(bagId).level,
+            attunement: bag.level,
             regNum: uint32(mintedCrystals),
             lvlClaims: 0
         });
 
-        iRift.awardXP(uint32(bagId), 50 + (15 * (iRift.bags(bagId).level - 1)));
+        iRift.awardXP(uint32(bagId), 50 + (15 * (bag.level - 1)));
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
