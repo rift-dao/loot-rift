@@ -43,6 +43,8 @@ interface IRiftData {
     function karma(address holder) external view returns (uint64);
     function karmaTotal() external view returns (uint256);
     function karmaHolders() external view returns (uint256);
+    function addXP(uint64 xp, uint256 bagId) external;
+    function getLevel(uint256 bagId) external view returns (uint16);
 }
 
 /*
@@ -60,6 +62,7 @@ contract RiftData is IRiftData, OwnableUpgradeable {
 
     mapping(uint256 => RiftBag) internal _bags;
     mapping(address => uint64) public karma;
+    mapping(address => bool) public xpControllers;
 
      function initialize() public initializer {
         __Ownable_init();
@@ -73,8 +76,21 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         riftControllers[addr] = false;
     }
 
+    function addXPController(address addr) external onlyOwner {
+        xpControllers[addr] = true;
+    }
+
+    function removeXPController(address addr) external onlyOwner {
+        xpControllers[addr] = false;
+    }
+
     modifier onlyRiftController() {
-        require(riftControllers[msg.sender], "NO!");
+        require(riftControllers[msg.sender], "NOT RIFTCONTROLLER!");
+        _;
+    }
+
+    modifier onlyXPController() {
+        require(xpControllers[msg.sender], "NOT XPCONTROLLER!");
         _;
     }
 
@@ -108,6 +124,10 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         _bags[bagId].xp = xp;
     }
 
+    function addXP(uint64 xp, uint256 bagId) external override onlyXPController {
+        _bags[bagId].xp += xp;
+    }
+
     function addKarma(uint64 k, address holder) external override onlyRiftController {
         if (karma[holder] == 0) { karmaHolders += 1; }
         karmaTotal += k;
@@ -120,5 +140,68 @@ contract RiftData is IRiftData, OwnableUpgradeable {
 
     function updateLastChargePurchase(uint64 time, uint256 bagId) external override onlyRiftController {
         _bags[bagId].lastChargePurchase = time;
+    }
+
+    function getLevel(uint256 bagId) external override view returns (uint16) {
+        uint64 _xp = _bags[bagId].xp;
+        if (_xp < 65) return 1;
+        else if (_xp < 70) return 2;
+        else {
+            return uint16(1 + (sqrt(625+75*_xp)-25)/50); // roughly 15% increase xp per level
+        }
+    }
+}
+
+/// @notice Calculates the square root of x, rounding down.
+/// @dev Uses the Babylonian method https://en.wikipedia.org/wiki/Methods_of_computing_square_roots#Babylonian_method.
+/// @param x The uint256 number for which to calculate the square root.
+/// @return result The result as an uint256.
+function sqrt(uint256 x) pure returns (uint256 result) {
+    if (x == 0) {
+        return 0;
+    }
+
+    // Calculate the square root of the perfect square of a power of two that is the closest to x.
+    uint256 xAux = uint256(x);
+    result = 1;
+    if (xAux >= 0x100000000000000000000000000000000) {
+        xAux >>= 128;
+        result <<= 64;
+    }
+    if (xAux >= 0x10000000000000000) {
+        xAux >>= 64;
+        result <<= 32;
+    }
+    if (xAux >= 0x100000000) {
+        xAux >>= 32;
+        result <<= 16;
+    }
+    if (xAux >= 0x10000) {
+        xAux >>= 16;
+        result <<= 8;
+    }
+    if (xAux >= 0x100) {
+        xAux >>= 8;
+        result <<= 4;
+    }
+    if (xAux >= 0x10) {
+        xAux >>= 4;
+        result <<= 2;
+    }
+    if (xAux >= 0x8) {
+        result <<= 1;
+    }
+
+    // The operations can never overflow because the result is max 2^127 when it enters this block.
+    unchecked {
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1;
+        result = (result + x / result) >> 1; // Seven iterations should be enough
+        uint256 roundedDownResult = x / result;
+        return result >= roundedDownResult ? roundedDownResult : result;
     }
 }

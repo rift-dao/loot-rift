@@ -85,8 +85,9 @@ contract Crystals is
 
     address private openSeaProxyRegistryAddress;
     bool private isOpenSeaProxyActive;
+    IRiftData public iRiftData;
 
-    function initialize(address manaAddress) public initializer {
+    function initialize(address manaAddress, address riftdataAddr) public initializer {
         __ERC721_init("Mana Crystals", "MCRYSTAL");
         __ERC721Enumerable_init();
         __ERC721Burnable_init();
@@ -100,6 +101,7 @@ contract Crystals is
         mMintFee = 0.004 ether;
         xpTable = [15,30,50,75,110,155,210,280,500,800];
         isOpenSeaProxyActive = false;
+        iRiftData = IRiftData(riftdataAddr);
     }
 
     //WRITE
@@ -145,7 +147,6 @@ contract Crystals is
 
     function _mintCrystal(uint256 bagId) internal {
         iRift.useCharge(1, bagId, _msgSender());
-        RiftBag memory bag = iRift.bags(bagId);
 
         uint256 tokenId = getNextCrystal(bagId);
 
@@ -154,12 +155,12 @@ contract Crystals is
             focus: 1,
             lastClaim: uint64(block.timestamp) - 1 days,
             focusManaProduced: 0,
-            attunement: bag.level,
+            attunement: iRiftData.getLevel(bagId),
             regNum: uint32(mintedCrystals),
             lvlClaims: 0
         });
 
-        iRift.awardXP(uint32(bagId), 50 + (15 * (bag.level - 1)));
+        iRiftData.addXP(50 + (15 * (iRiftData.getLevel(bagId) - 1)), bagId);
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
