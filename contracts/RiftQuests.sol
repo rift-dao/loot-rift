@@ -79,15 +79,15 @@ contract RiftQuests is ERC721,
 
     uint256 questsBegan;
 
-    IRift public iRift;
+    IRiftData public iRiftData;
 
-    constructor(address rift) ERC721("Rift Quests", "RFTQST") Ownable() {
-        iRift = IRift(rift);
+    constructor(address riftData) ERC721("Rift Quests", "RFTQST") Ownable() {
+        iRiftData = IRiftData(riftData);
      }
 
     function completeStep(address quest, uint32 step, uint256 bagId) external whenNotPaused nonReentrant {
         require(approvedQuests[quest], "Only complete step on approved quests");
-        iRift.isBagHolder(bagId, _msgSender());
+        // iRift.isBagHolder(bagId, _msgSender());
         IRiftQuest(quest).completeStep(step, bagId, _msgSender());
         
         uint256 questId = bagQuestIds[bagId][quest];
@@ -108,7 +108,7 @@ contract RiftQuests is ERC721,
         }
 
         questLog[questId].stepsCompleted = step;
-        iRift.awardXP(uint32(bagId), questXPMap[quest][step]);
+        iRiftData.addXP(questXPMap[quest][step], bagId);
     }
 
     // todo: what sort of payment should this function support? 

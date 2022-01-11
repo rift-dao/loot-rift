@@ -32,19 +32,14 @@ struct RiftBag {
     }
 
 interface IRiftData {
-    function bags(uint256 bagId) external view returns (RiftBag memory);
-    function addCharges(uint16 charges, uint256 bagId) external;
-    function removeCharges(uint16 charges, uint256 bagId) external;
-    function updateLevel(uint16 level, uint256 bagId) external;
-    function updateXP(uint64 xp, uint256 bagId) external;
+    function updateXP(uint256 xp, uint256 bagId) external;
     function addKarma(uint64 k, address holder) external;
     function removeKarma(uint64 k, address holder) external;
-    function updateLastChargePurchase(uint64 time, uint256 bagId) external;
     function karma(address holder) external view returns (uint64);
     function karmaTotal() external view returns (uint256);
     function karmaHolders() external view returns (uint256);
-    function addXP(uint64 xp, uint256 bagId) external;
-    function getLevel(uint256 bagId) external view returns (uint16);
+    function addXP(uint256 xp, uint256 bagId) external;
+    function getLevel(uint256 bagId) external view returns (uint256);
 }
 
 /*
@@ -63,6 +58,7 @@ contract RiftData is IRiftData, OwnableUpgradeable {
     mapping(uint256 => RiftBag) internal _bags;
     mapping(address => uint64) public karma;
     mapping(address => bool) public xpControllers;
+    mapping(uint256 => uint256) public xpMap;
 
      function initialize() public initializer {
         __Ownable_init();
@@ -94,38 +90,12 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         _;
     }
 
-    function bags(uint256 bagId) external view override returns (RiftBag memory) {
-        return _bags[bagId];
+    function updateXP(uint256 xp, uint256 bagId) external override onlyRiftController {
+        xpMap[bagId] = xp;
     }
 
-    function getBags(uint256[] calldata bagIds) external view returns (RiftBag[] memory output) {
-        for(uint256 i = 0; i < bagIds.length; i++) {
-            output[i] = _bags[bagIds[i]];
-        }
-
-        return output;
-    }
-
-    function addCharges(uint16 charges, uint256 bagId) external override onlyRiftController {
-        _bags[bagId].charges += charges;
-    }
-
-    function removeCharges(uint16 charges, uint256 bagId) external override onlyRiftController {
-        require(_bags[bagId].charges >= charges, "Not enough charges");
-        _bags[bagId].charges -= charges;
-        _bags[bagId].chargesUsed += charges;
-    }
-
-    function updateLevel(uint16 level, uint256 bagId) external override onlyRiftController {
-        _bags[bagId].level = level;
-    }
-
-    function updateXP(uint64 xp, uint256 bagId) external override onlyRiftController {
-        _bags[bagId].xp = xp;
-    }
-
-    function addXP(uint64 xp, uint256 bagId) external override onlyXPController {
-        _bags[bagId].xp += xp;
+    function addXP(uint256 xp, uint256 bagId) external override onlyXPController {
+        xpMap[bagId] += xp;
     }
 
     function addKarma(uint64 k, address holder) external override onlyRiftController {
@@ -138,16 +108,12 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         k > karma[holder] ? karma[holder] = 0 : karma[holder] -= k;
     }
 
-    function updateLastChargePurchase(uint64 time, uint256 bagId) external override onlyRiftController {
-        _bags[bagId].lastChargePurchase = time;
-    }
-
-    function getLevel(uint256 bagId) external override view returns (uint16) {
-        uint64 _xp = _bags[bagId].xp;
+    function getLevel(uint256 bagId) external override view returns (uint256) {
+        uint256 _xp = xpMap[bagId];
         if (_xp < 65) return 1;
         else if (_xp < 70) return 2;
         else {
-            return uint16(1 + (sqrt(625+75*_xp)-25)/50); // roughly 15% increase xp per level
+            return 1 + (sqrt(625+75*_xp)-25)/50; // roughly 15% increase xp per level
         }
     }
 }

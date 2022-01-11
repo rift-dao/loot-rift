@@ -123,8 +123,7 @@ contract Crystals is
         } else {
             require(msg.value == mMintFee, "FEE");
         }
-        // set up bag in rift and give it a charge. does nothing for existing bags in rift
-        iRift.setupNewBag(bagId);
+        
         _mintCrystal(bagId);
         iMana.ccMintTo(_msgSender(), (bagId < 8001 || bagId > glootOffset) ? 1000 : 100);
     }
@@ -140,7 +139,7 @@ contract Crystals is
     {
         require(bagId <= GEN_THRESH, "Bag unrecognized");
         require(bags[bagId].mintCount > 0, "Use first mint");
-        iMana.burn(_msgSender(), iRift.bags(bagId).level * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
+        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
 
         _mintCrystal(bagId);
     }
@@ -149,18 +148,18 @@ contract Crystals is
         iRift.useCharge(1, bagId, _msgSender());
 
         uint256 tokenId = getNextCrystal(bagId);
-
+        uint256 level = iRiftData.getLevel(bagId);
         bags[bagId].mintCount += 1;
         crystalsMap[tokenId] = Crystal({
             focus: 1,
             lastClaim: uint64(block.timestamp) - 1 days,
             focusManaProduced: 0,
-            attunement: iRiftData.getLevel(bagId),
+            attunement: uint16(level),
             regNum: uint32(mintedCrystals),
             lvlClaims: 0
         });
 
-        iRiftData.addXP(50 + (15 * (iRiftData.getLevel(bagId) - 1)), bagId);
+        iRiftData.addXP(50 + (15 * (level - 1)), bagId);
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
@@ -274,8 +273,8 @@ contract Crystals is
      * @dev Amount of XP rewarded for minting a Crystal with given bag
      * @param bagId The id of Loot or mLoot bag, or offset gloot
      */
-    function mintXP(uint256 bagId) external view returns (uint32) {
-        return 50 + (15 * (iRift.bags(bagId).level == 0 ? 0 : iRift.bags(bagId).level - 1));
+    function mintXP(uint256 bagId) external view returns (uint256) {
+        return 50 + (15 * (iRiftData.getLevel(bagId) == 0 ? 0 : iRiftData.getLevel(bagId) - 1));
     }
 
     function getResonance(uint256 tokenId) public view returns (uint32) {
