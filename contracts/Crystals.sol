@@ -87,21 +87,8 @@ contract Crystals is
     bool private isOpenSeaProxyActive;
     IRiftData public iRiftData;
 
-    function initialize(address manaAddress, address riftdataAddr) public initializer {
-        __ERC721_init("Mana Crystals", "MCRYSTAL");
-        __ERC721Enumerable_init();
-        __ERC721Burnable_init();
-        __ReentrancyGuard_init();
-        __Ownable_init();
-        __Pausable_init();
-
-        iMana = IMana(manaAddress);
-        maxFocus = 10;
-        mintFee = 0.04 ether;
-        mMintFee = 0.004 ether;
-        xpTable = [15,30,50,75,110,155,210,280,500,800];
-        isOpenSeaProxyActive = false;
-        iRiftData = IRiftData(riftdataAddr);
+    function initialize() public initializer {
+        
     }
 
     //WRITE
@@ -373,6 +360,10 @@ contract Crystals is
 
     // OWNER
 
+    function setRiftData(address addr) external onlyOwner {
+        iRiftData = IRiftData(addr);
+    }
+    
     // function to disable gasless listings for security in case
     // opensea ever shuts down or is compromised
     function setIsOpenSeaProxyActive(bool _isOpenSeaProxyActive)

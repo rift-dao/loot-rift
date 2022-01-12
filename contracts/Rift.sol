@@ -87,25 +87,10 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     address[] public staticBurnableArr;
     mapping(uint256 => ChargeData) public chargesData;
 
-    function initialize(address lootAddr, address mlootAddr, address glootAddr) public initializer {
+    function initialize() public initializer {
         __Ownable_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-
-        iLoot = IERC721(lootAddr);
-        iMLoot = IERC721(mlootAddr);
-        iGLoot = IERC721(glootAddr);
-
-        description = "The Rift inbetween";
-
-        riftLevel = 2;
-        riftLevelIncreasePercentage = 10; 
-        riftLevelDecreasePercentage = 9;
-        riftLevelMinThreshold = 21000;
-        riftLevelMaxThreshold = 33100;
-        riftPower = 35000;
-        riftObjectsSacrificed = 0;
-        riftCallibratedTime = block.timestamp;
     }
 
     function ownerSetDescription(string memory desc) external onlyOwner {
