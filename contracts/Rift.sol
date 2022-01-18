@@ -156,6 +156,17 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     // READ
 
     function isBagHolder(uint256 bagId, address owner) _isBagHolder(bagId, owner) external view {}
+
+    function getBagInfo(uint256 bagId) external view returns (RiftBagInfo memory) {
+        return RiftBagInfo({
+            charges: uint64(getCharges(bagId)),
+            chargesUsed: chargesData[bagId].chargesUsed,
+            chargesPurchased: chargesData[bagId].chargesPurchased,
+            lastChargePurchased: chargesData[bagId].lastPurchase,
+            xp: iRiftData.xpMap(bagId),
+            level: iRiftData.getLevel(bagId)
+        });
+    }
     
     // WRITE
 

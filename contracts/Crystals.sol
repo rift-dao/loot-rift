@@ -88,7 +88,12 @@ contract Crystals is
     IRiftData public iRiftData;
 
     function initialize() public initializer {
-        
+        __ERC721_init("Mana Crystals", "MCRYSTAL");
+        __ERC721Enumerable_init();
+        __ERC721Burnable_init();
+        __ReentrancyGuard_init();
+        __Ownable_init();
+        __Pausable_init();
     }
 
     //WRITE

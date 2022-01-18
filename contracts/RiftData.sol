@@ -40,6 +40,7 @@ interface IRiftData {
     function karmaHolders() external view returns (uint256);
     function addXP(uint256 xp, uint256 bagId) external;
     function getLevel(uint256 bagId) external view returns (uint256);
+    function xpMap(uint256 bagId) external view returns (uint256);
 }
 
 /*
@@ -114,6 +115,13 @@ contract RiftData is IRiftData, OwnableUpgradeable {
         else if (_xp < 70) return 2;
         else {
             return 1 + (sqrt(625+75*_xp)-25)/50; // roughly 15% increase xp per level
+        }
+    }
+
+    // migrates xp from old system to new
+    function migrateXP(uint256[] memory bagIds) external onlyOwner {
+        for (uint i=0; i < bagIds.length; i++) {
+             xpMap[bagIds[i]] += _bags[bagIds[i]].xp + (_bags[bagIds[i]].level * 125);
         }
     }
 }

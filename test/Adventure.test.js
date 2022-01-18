@@ -19,11 +19,11 @@ contract('Adventure', function ([owner, other]) {
     beforeEach(async function () {
         this.mana = await Mana.new({ from: owner });
         this.riftData = await deployProxy(RiftData);
-        this.crystals = await deployProxy(Crystals, [this.mana.address, this.riftData.address]);
+        this.crystals = await deployProxy(Crystals);
         this.loot = await Loot.new({ from: owner });
         this.mloot = await Loot.new({ from: owner });
         this.gloot = await Loot.new({ from: owner });
-        this.rift = await deployProxy(Rift, [this.loot.address, this.mloot.address, this.gloot.address]);
+        this.rift = await deployProxy(Rift);
         // this.quests = await RiftQuests.new(this.rift.address, { from: owner });
         // this.enterRift = await EnterRift.new(this.quests.address, this.crystals.address, this.mana.address, { from: owner });
         this.metadata = await CrystalsMetadata.new(this.crystals.address, { from: owner });
@@ -89,12 +89,12 @@ contract('Adventure', function ([owner, other]) {
     //     assert.equal((await this.riftData.getLevel(1)), 2, "100XP will level up");
     // });
 
-    it('can consume charges', async function () {
-        await this.rift.addRiftObject(owner);
-        assert.equal((await this.rift.getCharges(1)), 1, "New bags have 1 charge");
-        await this.rift.useCharge(1, 1, owner);
-        assert.equal((await this.rift.getCharges(1)), 0, "Used a charge");
-    });
+    // it('can consume charges', async function () {
+    //     await this.rift.addRiftObject(owner);
+    //     assert.equal((await this.rift.getCharges(1)), 1, "New bags have 1 charge");
+    //     await this.rift.useCharge(1, 1, owner);
+    //     assert.equal((await this.rift.getCharges(1)), 0, "Used a charge");
+    // });
 
     it ('gas tests', async function () {
         
