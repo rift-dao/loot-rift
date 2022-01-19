@@ -110,14 +110,10 @@ contract Crystals is
     {
         require(bags[bagId].mintCount == 0, "Use mint crystal");
         require(bagId <= GEN_THRESH, "Bag unrecognized");
-        if (bagId < 8001 || bagId > glootOffset) {
-            require(msg.value == mintFee, "FEE");
-        } else {
-            require(msg.value == mMintFee, "FEE");
-        }
+        require(msg.value == mintFee, "FEE");
         
         _mintCrystal(bagId);
-        iMana.ccMintTo(_msgSender(), (bagId < 8001 || bagId > glootOffset) ? 1000 : 100);
+        iMana.ccMintTo(_msgSender(), 1000); // starter mana
     }
 
     /**
@@ -131,7 +127,7 @@ contract Crystals is
     {
         require(bagId <= GEN_THRESH, "Bag unrecognized");
         require(bags[bagId].mintCount > 0, "Use first mint");
-        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
+        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * 100);
 
         _mintCrystal(bagId);
     }
@@ -241,6 +237,37 @@ contract Crystals is
         emit CrystalRefocused(_msgSender(), tokenId, crystal.focus);
     }
 
+    function sacrificeAndMint(uint256 tokenId, uint256 bagId) 
+        external 
+        ownsCrystal(tokenId)
+        whenNotPaused
+        nonReentrant
+    {
+        require(bagId <= GEN_THRESH, "Bag unrecognized");
+        require(bags[bagId].mintCount > 0, "Use first mint");
+        BurnableObject memory bo = burnObject(tokenId);
+        iMana.ccMintTo(_msgSender(), bo.mana);
+        iRiftData.addXP(bo.xp, bagId);
+        iRift.addPower(bo.power);
+
+        iRift.useCharge(1, bagId, _msgSender());
+        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * 100);
+
+        uint256 level = iRiftData.getLevel(bagId);
+        bags[bagId].mintCount += 1;
+        crystalsMap[tokenId] = Crystal({
+            focus: 1,
+            lastClaim: uint64(block.timestamp) - 1 days,
+            focusManaProduced: 0,
+            attunement: uint16(level),
+            regNum: uint32(mintedCrystals),
+            lvlClaims: 0
+        });
+
+        iRiftData.addXP(50 + (15 * (level - 1)), bagId);
+        mintedCrystals += 1;
+    }
+
     // READ 
 
     /**
@@ -272,7 +299,7 @@ contract Crystals is
     function getResonance(uint256 tokenId) public view returns (uint32) {
         // 2 x Focus x OG Bonus * attunement bonus
         return uint32(crystalsMap[tokenId].focus * 2
-            * (isOGCrystal(tokenId) ? 10 : 1)
+            * 10
             * attunementBonus(crystalsMap[tokenId].attunement) / 100);
     }
 
@@ -318,12 +345,13 @@ contract Crystals is
     }
 
     /** @dev The rewards the Crystal will give if it's burned */
-    function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
-        isSynced(crystalsMap[tokenId].lastClaim, crystalsMap[tokenId].focus);
+    function burnObject(uint256 tokenId) public view override returns (BurnableObject memory) {
+        Crystal memory crystal = crystalsMap[tokenId];
+        isSynced(crystal.lastClaim, crystal.focus);
         return BurnableObject({
-            power: crystalsMap[tokenId].focus + crystalsMap[tokenId].attunement - 1,
-            mana: crystalsMap[tokenId].focus * (isOGCrystal(tokenId) ? 100 : 10),
-            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].focus - 1]
+            power: crystal.focus + crystal.attunement - 1,
+            mana: crystal.focus * 100,
+            xp: crystal.attunement * xpTable[crystal.focus - 1]
         });
     }
 

@@ -8,6 +8,7 @@ interface IRift {
     function riftLevel() external view returns (uint32);
     function useCharge(uint16 amount, uint256 bagId, address from) external;
     function isBagHolder(uint256 bagId, address owner) external;
+    function addPower(uint256 power) external;
 }
 
 struct BagProgress {

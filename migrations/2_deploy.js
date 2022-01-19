@@ -10,8 +10,8 @@ const RiftData = artifacts.require('RiftData');
 module.exports = function(deployer) {
   deployer.then(async () => {
     // await upgradeProxy('0xA1604ced1D0DBAE35f84Ac4ec1dA64cc222c1570', RiftData, { deployer });
-    // await upgradeProxy('0x93625D926BAd2C91E95E09D289b33204379CA757', Crystals,  { deployer });
-    // await upgradeProxy('0xf0CdC112A01AA657a6283fe9B61BC2eD0869c0f1', Rift, { deployer });
+    await upgradeProxy('0x93625D926BAd2C91E95E09D289b33204379CA757', Crystals,  { deployer });
+    await upgradeProxy('0xf0CdC112A01AA657a6283fe9B61BC2eD0869c0f1', Rift, { deployer });
 
     // const riftData = await deployProxy(RiftData, { deployer });
     // const mana = await deployer.deploy(Mana);

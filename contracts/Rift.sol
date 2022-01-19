@@ -226,7 +226,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     }
 
     /**
-     * @dev increases the rift's power by burning an object into it. rewards XP and karma. the burnt object must implement IRiftBurnable
+     * @dev increases the rift's power by burning an object into it. rewards XP. the burnt object must implement IRiftBurnable
      * @param burnableAddr address of the object that is getting burned
      * @param tokenId id of object getting burned
      * @param bagId id of bag that will get XP
@@ -240,7 +240,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     }
 
     /**
-     * @dev increases the rift's power by burning an object into it. rewards XP and karma. 
+     * @dev increases the rift's power by burning an object into it. rewards XP. 
      * @param burnableAddr address of the object that is getting burned
      * @param tokenId id of object getting burned
      * @param bagId id of bag that will get XP
@@ -259,12 +259,16 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     function _rewardBurn(address burnableAddr, uint256 tokenId, uint256 bagId, BurnableObject memory bo) internal {
 
         riftPower += bo.power;
-        iRiftData.addKarma(bo.power, _msgSender());
         riftObjectsSacrificed += 1;     
 
         iRiftData.addXP(bo.xp, bagId);
         iMana.ccMintTo(_msgSender(), bo.mana);
         emit ObjectSacrificed(_msgSender(), burnableAddr, tokenId, bagId, bo.power);
+    }
+
+    function addPower(uint256 power) external whenNotPaused {
+        require(riftObjects[msg.sender] == true, "Can't add power");
+        riftPower += power;
     }
 
     // Rift Power
