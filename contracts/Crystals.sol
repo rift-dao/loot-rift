@@ -239,9 +239,26 @@ contract Crystals is
 
     function sacrificeAndMint(uint256 tokenId, uint256 bagId) 
         external 
-        ownsCrystal(tokenId)
         whenNotPaused
         nonReentrant
+    {
+        _sacrificeAndMint(tokenId, bagId);
+    }
+
+    function sacrificeAndMintMult(uint256[] memory tokenIds, uint256[] memory bagIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        require(tokenIds.length == bagIds.length, "token and bag must be equal");
+        for (uint i=0; i < tokenIds.length; i++) {
+            _sacrificeAndMint(tokenIds[i], bagIds[i]);
+        }
+    }
+
+    function _sacrificeAndMint(uint256 tokenId, uint256 bagId) 
+        internal
+        ownsCrystal(tokenId)
     {
         require(bagId <= GEN_THRESH, "Bag unrecognized");
         require(bags[bagId].mintCount > 0, "Use first mint");
@@ -267,6 +284,7 @@ contract Crystals is
         iRiftData.addXP(50 + (15 * (level - 1)), bagId);
         mintedCrystals += 1;
     }
+        
 
     // READ 
 
