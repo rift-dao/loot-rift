@@ -62,7 +62,7 @@ contract RiftData is IRiftData, OwnableUpgradeable {
     mapping(uint256 => uint256) public xpMap;
 
      function initialize() public initializer {
-        __Ownable_init();
+        // __Ownable_init();
      }
 
     function addRiftController(address addr) external onlyOwner {

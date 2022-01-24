@@ -9,10 +9,17 @@ const RiftData = artifacts.require('RiftData');
 
 module.exports = function(deployer) {
   deployer.then(async () => {
-    // await upgradeProxy('0xA1604ced1D0DBAE35f84Ac4ec1dA64cc222c1570', RiftData, { deployer });
-    await upgradeProxy('0x93625D926BAd2C91E95E09D289b33204379CA757', Crystals,  { deployer });
-    // await upgradeProxy('0xf0CdC112A01AA657a6283fe9B61BC2eD0869c0f1', Rift, { deployer });
+    // const riftData = await upgradeProxy('0x632678bBa8a4DD16255F164e9d74853BeA9856E7', RiftData, { deployer });
+    // const crystals = await upgradeProxy('0x3051162ED7DeF8Af730Aaf4C7cB8a10Ee19b8303', Crystals,  { deployer });
+    const rift = await upgradeProxy('0x290a1a360F64758D1b46F994E541ac9b7aE5c830', Rift, { deployer });
 
+    // riftData.addXPController(crystals.address);
+    // riftData.addXPController(rift.address);
+
+    // crystals.setRiftData(riftData.address);
+
+    // riftData.migrateXP([687,127473,1336418,4727,7146,6434,314994,9997822,5924,246064,4901,479587,45093,1262912,190129,4422,3485,4242,1525,1182,7239,74,1897,5467,240780,150026,3164,37150,1313,73,687,1627,57,3157,5299,246,612]);
+   
     // const riftData = await deployProxy(RiftData, { deployer });
     // const mana = await deployer.deploy(Mana);
     // const crystals = await deployProxy(Crystals, [mana.address, riftData.address], { deployer });
