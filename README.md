@@ -29,3 +29,7 @@
 1. include `const { deployProxy, upgradeProxy } = require('@openzeppelin/truffle-upgrades');` in 2_deploy
 2. first deploy in format: `await deployProxy(Crystals, [mana.address], { deployer });`
 3. upgrade format: `await upgradeProxy('<proxy address>', Crystals, { deployer });` 
+
+## Deploy
+
+* Verify deploying wallet has over 2x estimated funds required

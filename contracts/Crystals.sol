@@ -85,21 +85,10 @@ contract Crystals is
 
     address private openSeaProxyRegistryAddress;
     bool private isOpenSeaProxyActive;
+    IRiftData public iRiftData;
 
-    function initialize(address manaAddress) public initializer {
-        __ERC721_init("Mana Crystals", "MCRYSTAL");
-        __ERC721Enumerable_init();
-        __ERC721Burnable_init();
-        __ReentrancyGuard_init();
-        __Ownable_init();
-        __Pausable_init();
+    function initialize() public initializer {
 
-        iMana = IMana(manaAddress);
-        maxFocus = 10;
-        mintFee = 0.04 ether;
-        mMintFee = 0.004 ether;
-        xpTable = [15,30,50,75,110,155,210,280,500,800];
-        isOpenSeaProxyActive = false;
     }
 
     //WRITE
@@ -116,15 +105,10 @@ contract Crystals is
     {
         require(bags[bagId].mintCount == 0, "Use mint crystal");
         require(bagId <= GEN_THRESH, "Bag unrecognized");
-        if (bagId < 8001 || bagId > glootOffset) {
-            require(msg.value == mintFee, "FEE");
-        } else {
-            require(msg.value == mMintFee, "FEE");
-        }
-        // set up bag in rift and give it a charge. does nothing for existing bags in rift
-        iRift.setupNewBag(bagId);
+        require(msg.value == mintFee, "FEE");
+        
         _mintCrystal(bagId);
-        iMana.ccMintTo(_msgSender(), (bagId < 8001 || bagId > glootOffset) ? 1000 : 100);
+        iMana.ccMintTo(_msgSender(), 1000); // starter mana
     }
 
     /**
@@ -138,7 +122,7 @@ contract Crystals is
     {
         require(bagId <= GEN_THRESH, "Bag unrecognized");
         require(bags[bagId].mintCount > 0, "Use first mint");
-        iMana.burn(_msgSender(), iRift.bags(bagId).level * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
+        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * 100);
 
         _mintCrystal(bagId);
     }
@@ -147,18 +131,18 @@ contract Crystals is
         iRift.useCharge(1, bagId, _msgSender());
 
         uint256 tokenId = getNextCrystal(bagId);
-
+        uint256 level = iRiftData.getLevel(bagId);
         bags[bagId].mintCount += 1;
         crystalsMap[tokenId] = Crystal({
             focus: 1,
             lastClaim: uint64(block.timestamp) - 1 days,
             focusManaProduced: 0,
-            attunement: iRift.bags(bagId).level,
+            attunement: uint16(level),
             regNum: uint32(mintedCrystals),
             lvlClaims: 0
         });
 
-        iRift.awardXP(uint32(bagId), 50 + (15 * (iRift.bags(bagId).level - 1)));
+        iRiftData.addXP(50 + (15 * (level - 1)), bagId);
         mintedCrystals += 1;
         _safeMint(_msgSender(), tokenId);
     }
@@ -248,6 +232,55 @@ contract Crystals is
         emit CrystalRefocused(_msgSender(), tokenId, crystal.focus);
     }
 
+    function sacrificeAndMint(uint256 tokenId, uint256 bagId) 
+        external 
+        whenNotPaused
+        nonReentrant
+    {
+        _sacrificeAndMint(tokenId, bagId);
+    }
+
+    function sacrificeAndMintMult(uint256[] memory tokenIds, uint256[] memory bagIds)
+        external
+        whenNotPaused
+        nonReentrant
+    {
+        require(tokenIds.length == bagIds.length, "token and bag must be equal");
+        for (uint i=0; i < tokenIds.length; i++) {
+            _sacrificeAndMint(tokenIds[i], bagIds[i]);
+        }
+    }
+
+    function _sacrificeAndMint(uint256 tokenId, uint256 bagId) 
+        internal
+        ownsCrystal(tokenId)
+    {
+        require(bagId <= GEN_THRESH, "Bag unrecognized");
+        require(bags[bagId].mintCount > 0, "Use first mint");
+        BurnableObject memory bo = burnObject(tokenId);
+        iMana.ccMintTo(_msgSender(), bo.mana);
+        iRiftData.addXP(bo.xp, bagId);
+        iRift.addPower(bo.power);
+
+        iRift.useCharge(1, bagId, _msgSender());
+        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * 100);
+
+        uint256 level = iRiftData.getLevel(bagId);
+        bags[bagId].mintCount += 1;
+        crystalsMap[tokenId] = Crystal({
+            focus: 1,
+            lastClaim: uint64(block.timestamp) - 1 days,
+            focusManaProduced: 0,
+            attunement: uint16(level),
+            regNum: uint32(mintedCrystals),
+            lvlClaims: 0
+        });
+
+        iRiftData.addXP(50 + (15 * (level - 1)), bagId);
+        mintedCrystals += 1;
+    }
+        
+
     // READ 
 
     /**
@@ -272,14 +305,14 @@ contract Crystals is
      * @dev Amount of XP rewarded for minting a Crystal with given bag
      * @param bagId The id of Loot or mLoot bag, or offset gloot
      */
-    function mintXP(uint256 bagId) external view returns (uint32) {
-        return 50 + (15 * (iRift.bags(bagId).level == 0 ? 0 : iRift.bags(bagId).level - 1));
+    function mintXP(uint256 bagId) external view returns (uint256) {
+        return 50 + (15 * (iRiftData.getLevel(bagId) == 0 ? 0 : iRiftData.getLevel(bagId) - 1));
     }
 
     function getResonance(uint256 tokenId) public view returns (uint32) {
         // 2 x Focus x OG Bonus * attunement bonus
         return uint32(crystalsMap[tokenId].focus * 2
-            * (isOGCrystal(tokenId) ? 10 : 1)
+            * 10
             * attunementBonus(crystalsMap[tokenId].attunement) / 100);
     }
 
@@ -325,12 +358,13 @@ contract Crystals is
     }
 
     /** @dev The rewards the Crystal will give if it's burned */
-    function burnObject(uint256 tokenId) external view override returns (BurnableObject memory) {
-        isSynced(crystalsMap[tokenId].lastClaim, crystalsMap[tokenId].focus);
+    function burnObject(uint256 tokenId) public view override returns (BurnableObject memory) {
+        Crystal memory crystal = crystalsMap[tokenId];
+        isSynced(crystal.lastClaim, crystal.focus);
         return BurnableObject({
-            power: crystalsMap[tokenId].focus + crystalsMap[tokenId].attunement - 1,
-            mana: crystalsMap[tokenId].focus * (isOGCrystal(tokenId) ? 100 : 10),
-            xp: crystalsMap[tokenId].attunement * xpTable[crystalsMap[tokenId].focus - 1]
+            power: crystal.focus + crystal.attunement - 1,
+            mana: crystal.focus * 100,
+            xp: crystal.attunement * xpTable[crystal.focus - 1]
         });
     }
 
@@ -372,6 +406,10 @@ contract Crystals is
 
     // OWNER
 
+    function setRiftData(address addr) external onlyOwner {
+        iRiftData = IRiftData(addr);
+    }
+    
     // function to disable gasless listings for security in case
     // opensea ever shuts down or is compromised
     function setIsOpenSeaProxyActive(bool _isOpenSeaProxyActive)

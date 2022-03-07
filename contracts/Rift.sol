@@ -85,26 +85,12 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     mapping(address => BurnableObject) public staticBurnObjects;
     address[] public riftObjectsArr;
     address[] public staticBurnableArr;
+    mapping(uint256 => ChargeData) public chargesData;
 
-    function initialize(address lootAddr, address mlootAddr, address glootAddr) public initializer {
+    function initialize() public initializer {
         __Ownable_init();
         __Pausable_init();
         __ReentrancyGuard_init();
-
-        iLoot = IERC721(lootAddr);
-        iMLoot = IERC721(mlootAddr);
-        iGLoot = IERC721(glootAddr);
-
-        description = "The Rift inbetween";
-
-        riftLevel = 2;
-        riftLevelIncreasePercentage = 10; 
-        riftLevelDecreasePercentage = 9;
-        riftLevelMinThreshold = 21000;
-        riftLevelMaxThreshold = 33100;
-        riftPower = 35000;
-        riftObjectsSacrificed = 0;
-        riftCallibratedTime = block.timestamp;
     }
 
     function ownerSetDescription(string memory desc) external onlyOwner {
@@ -171,8 +157,15 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
 
     function isBagHolder(uint256 bagId, address owner) _isBagHolder(bagId, owner) external view {}
 
-    function bags(uint256 bagId) external view returns (RiftBag memory) {
-        return iRiftData.bags(bagId);
+    function getBagInfo(uint256 bagId) external view returns (RiftBagInfo memory) {
+        return RiftBagInfo({
+            charges: uint64(getCharges(bagId)),
+            chargesUsed: chargesData[bagId].chargesUsed,
+            chargesPurchased: chargesData[bagId].chargesPurchased,
+            lastChargePurchased: chargesData[bagId].lastPurchase,
+            xp: iRiftData.xpMap(bagId),
+            level: iRiftData.getLevel(bagId)
+        });
     }
     
     // WRITE
@@ -185,11 +178,15 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         _isBagHolder(bagId, _msgSender()) 
         whenNotPaused 
         nonReentrant {
-        require(block.timestamp - iRiftData.bags(bagId).lastChargePurchase > 1 days, "Too soon"); 
+        ChargeData memory cd = chargesData[bagId];
+        require(block.timestamp - cd.lastPurchase > 1 days, "Too soon"); 
         require(riftLevel > 0, "rift has no power");
-        iMana.burn(_msgSender(), iRiftData.bags(bagId).level * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
-        _chargeBag(bagId, 1, iRiftData.bags(bagId).level);
-        iRiftData.updateLastChargePurchase(uint64(block.timestamp), bagId);
+        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
+        chargesData[bagId] = ChargeData({
+            chargesPurchased: cd.chargesPurchased + 1,
+            chargesUsed: cd.chargesUsed,
+            lastPurchase: uint128(block.timestamp)
+        });
     }
 
     function useCharge(uint16 amount, uint256 bagId, address from) 
@@ -199,91 +196,37 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         nonReentrant 
     {
         require(riftObjects[msg.sender], "Not of the Rift");
-        iRiftData.removeCharges(amount, bagId);
-        
+        require(getCharges(bagId) >= amount, "Not enough charges");
+        chargesData[bagId].chargesUsed += amount;
         emit UseCharge(from, _msgSender(), bagId, amount);
     }
 
-    /**
-     * @dev grants XP, levels up bags, and rewards rift charges.
-     */
-    function awardXP(uint32 bagId, uint16 xp) external nonReentrant whenNotPaused {
-        require(riftQuests[msg.sender], "only the worthy");
-        _awardXP(bagId, xp);
-    }
+    function getCharges(uint256 bagId) public view returns (uint256) {
+        uint256 lvl = iRiftData.getLevel(bagId);
+        uint256 charges = lvl;
 
-    function _awardXP(uint32 bagId, uint16 xp) internal {
-        RiftBag memory bag = iRiftData.bags(bagId);
-        uint16 newlvl = bag.level;
-
-        if (bag.level == 0) {
-            newlvl = 1;
-            _chargeBag(bagId, levelChargeAward[newlvl], newlvl);
-        }
+        charges += lvl/10;
+        charges += lvl/5;
         
-        /*
- _        _______           _______  _                   _______  _ 
-( \      (  ____ \|\     /|(  ____ \( \        |\     /|(  ____ )( )
-| (      | (    \/| )   ( || (    \/| (        | )   ( || (    )|| |
-| |      | (__    | |   | || (__    | |        | |   | || (____)|| |
-| |      |  __)   ( (   ) )|  __)   | |        | |   | ||  _____)| |
-| |      | (       \ \_/ / | (      | |        | |   | || (      (_)
-| (____/\| (____/\  \   /  | (____/\| (____/\  | (___) || )       _ 
-(_______/(_______/   \_/   (_______/(_______/  (_______)|/       (_)                                                    
-                                                                 
-        */
-
-        uint64 _xp = uint64(xp + bag.xp);
-
-        while (_xp >= xpRequired(newlvl)) {
-            _xp -= xpRequired(newlvl);
-            newlvl += 1;
-            _chargeBag(bagId, levelChargeAward[newlvl], newlvl);
+        if (lvl > 1) {
+            charges += 1;
+        } 
+        if (lvl > 2) {
+            charges += 1;
+        }
+        if (lvl > 7) {
+            charges += 1;
         }
 
-        iRiftData.updateXP(_xp, bagId);
-        iRiftData.updateLevel(newlvl, bagId);
-        emit AwardXP(bagId, xp);
-    }
+        if (lvl > 20) {
+            charges += ((lvl - 20)/10) * 10;
+        }
 
-    function xpRequired(uint32 level) public pure returns (uint64) {
-        if (level == 1) { return 65; }
-        else if (level == 2) { return 130; }
-        else if (level == 3) { return 260; }
-        
-        return uint64(260*(115**(level-3))/(100**(level-3)));
-    }
-
-    function _chargeBag(uint256 bagId, uint16 charges, uint16 forLvl) internal {
-        if (riftLevel == 0) {
-            return; // no power in the rift
-        }
-        if (charges == 0) {
-            charges = forLvl/10;
-            charges += forLvl%5 == 0 ? 1 : 0; // bonus on every fifth lvl
-            charges += forLvl%10 == 0 ? 1 : 0; // bonus bonus on every tenth
-        }
-        if ((charges * forLvl) > riftPower) {
-            riftPower = 0;
-        } else {
-            riftPower -= (charges * forLvl);
-        }
-        iRiftData.addCharges(charges, bagId);
-        emit AddCharge(_msgSender(), bagId, charges, forLvl);
+        return charges + chargesData[bagId].chargesPurchased - chargesData[bagId].chargesUsed;
     }
 
     /**
-     * @dev sets up any bag in the rift. does nothing if bag is already set up.
-     */
-    function setupNewBag(uint256 bagId) external whenNotPaused {
-        if (iRiftData.bags(bagId).level == 0) {
-            iRiftData.updateLevel(1, bagId);    
-            _chargeBag(bagId,levelChargeAward[1], 1);
-        }        
-    }
-
-    /**
-     * @dev increases the rift's power by burning an object into it. rewards XP and karma. the burnt object must implement IRiftBurnable
+     * @dev increases the rift's power by burning an object into it. rewards XP. the burnt object must implement IRiftBurnable
      * @param burnableAddr address of the object that is getting burned
      * @param tokenId id of object getting burned
      * @param bagId id of bag that will get XP
@@ -297,7 +240,7 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     }
 
     /**
-     * @dev increases the rift's power by burning an object into it. rewards XP and karma. 
+     * @dev increases the rift's power by burning an object into it. rewards XP. 
      * @param burnableAddr address of the object that is getting burned
      * @param tokenId id of object getting burned
      * @param bagId id of bag that will get XP
@@ -316,12 +259,16 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     function _rewardBurn(address burnableAddr, uint256 tokenId, uint256 bagId, BurnableObject memory bo) internal {
 
         riftPower += bo.power;
-        iRiftData.addKarma(bo.power, _msgSender());
         riftObjectsSacrificed += 1;     
 
-        _awardXP(uint32(bagId), bo.xp);
+        iRiftData.addXP(bo.xp, bagId);
         iMana.ccMintTo(_msgSender(), bo.mana);
         emit ObjectSacrificed(_msgSender(), burnableAddr, tokenId, bagId, bo.power);
+    }
+
+    function addPower(uint256 power) external whenNotPaused {
+        require(riftObjects[msg.sender] == true, "Can't add power");
+        riftPower += power;
     }
 
     // Rift Power

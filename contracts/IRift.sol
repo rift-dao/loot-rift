@@ -6,11 +6,9 @@ import "./RiftData.sol";
 
 interface IRift {
     function riftLevel() external view returns (uint32);
-    function setupNewBag(uint256 bagId) external;
     function useCharge(uint16 amount, uint256 bagId, address from) external;
-    function bags(uint256 bagId) external view returns (RiftBag memory);
-    function awardXP(uint32 bagId, uint16 xp) external;
     function isBagHolder(uint256 bagId, address owner) external;
+    function addPower(uint256 power) external;
 }
 
 struct BagProgress {
@@ -22,6 +20,21 @@ struct BurnableObject {
     uint64 power;
     uint32 mana;
     uint16 xp;
+}
+
+struct ChargeData {
+    uint64 chargesPurchased;
+    uint64 chargesUsed;
+    uint128 lastPurchase;
+}
+
+struct RiftBagInfo {
+    uint64 charges;
+    uint64 chargesUsed;
+    uint64 chargesPurchased;
+    uint128 lastChargePurchased;
+    uint256 xp;
+    uint256 level;
 }
 
 interface IRiftBurnable {

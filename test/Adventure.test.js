@@ -19,7 +19,7 @@ contract('Adventure', function ([owner, other]) {
     beforeEach(async function () {
         this.mana = await Mana.new({ from: owner });
         this.riftData = await deployProxy(RiftData);
-        this.crystals = await deployProxy(Crystals, [this.mana.address]);
+        this.crystals = await deployProxy(Crystals);
         this.loot = await Loot.new({ from: owner });
         this.mloot = await Loot.new({ from: owner });
         this.gloot = await Loot.new({ from: owner });
@@ -29,6 +29,9 @@ contract('Adventure', function ([owner, other]) {
         this.metadata = await CrystalsMetadata.new(this.crystals.address, { from: owner });
 
         await this.riftData.addRiftController(this.rift.address);
+        await this.riftData.addRiftController(this.crystals.address);
+        await this.riftData.addXPController(this.rift.address);
+        await this.riftData.addXPController(this.crystals.address);
 
         await this.mana.addMintController(this.crystals.address);
         await this.mana.addMintController(this.rift.address);
@@ -37,6 +40,8 @@ contract('Adventure', function ([owner, other]) {
         await this.mana.ownerSetRift(this.rift.address);
         await this.crystals.ownerSetMetadataAddress(this.metadata.address);
         await this.crystals.ownerSetRiftAddress(this.rift.address);
+        await this.crystals.ownerSetManaAddress(this.mana.address);
+        await this.crystals.setRiftData(this.riftData.address);
         // await this.crystals.ownerSetOpenSeaProxy(this.loot.address); // placeholder
         await this.rift.ownerSetRiftData(this.riftData.address);
         await this.rift.addRiftObject(this.crystals.address);
@@ -65,24 +70,189 @@ contract('Adventure', function ([owner, other]) {
         await this.loot.mint(1);
     });
 
-    it ('can burn a static object', async function () {
-        await this.gloot.mint(2);
-        await this.rift.addStaticBurnable( this.gloot.address, 100, 100, 100);
-        await this.gloot.setApprovalForAll(this.rift.address, true);
-        await truffleAssert.passes(this.rift.growTheRiftStatic(this.gloot.address, 2, 1, { from: owner }));
+    // it ('can burn a static object', async function () {
+    //     console.log(await this.gloot.mint.estimateGas(2));
+    //     await this.gloot.mint(2);
+    //     await this.rift.addStaticBurnable( this.gloot.address, 100, 100, 100);
+    //     await this.gloot.setApprovalForAll(this.rift.address, true);
+    //     await truffleAssert.passes(this.rift.growTheRiftStatic(this.gloot.address, 2, 1, { from: owner }));
+    // });
+
+    // it('should have default values for fresh bag', async function () {
+    //     assert.equal((await this.riftData.getLevel(1)), 1, "New bags are level 1");
+    //     assert.equal((await this.rift.getCharges(1)), 1, "New bags have 1 charge");
+
+    // });
+
+    // it ('can reward XP and level up for activity', async function () {
+    //     await this.riftData.addXPController(owner);
+    //     // console.log(await this.rift.awardXP.estimateGas(1, 50));
+    //     await this.riftData.addXP(100, 1);
+    //     assert.equal((await this.riftData.getLevel(1)), 2, "100XP will level up");
+    // });
+
+    // it('can consume charges', async function () {
+    //     await this.rift.addRiftObject(owner);
+    //     assert.equal((await this.rift.getCharges(1)), 1, "New bags have 1 charge");
+    //     await this.rift.useCharge(1, 1, owner);
+    //     assert.equal((await this.rift.getCharges(1)), 0, "Used a charge");
+    // });
+
+    it ('can sacrifice and mint to save gas', async function () {
+        // first mint first
+        await truffleAssert.passes(this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }))
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        assert.equal((await this.riftData.getLevel(1)), 2, "Should be level 2 after sacrifice");
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.riftData.xpMap(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        await truffleAssert.passes(this.crystals.sacrificeAndMint(1, 1, { from: owner }))
+        console.log(await this.rift.getCharges(1));
+        console.log(await this.riftData.getLevel(1));
+        // console.log(await this.crystals.sacrificeAndMint.estimateGas(1,1, { from: owner }));
+        // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+        // console.log(await this.rift.growTheRift.estimateGas(this.crystals.address, 1, 1, { from: owner }))
     });
+
+    // it ('gas tests', async function () {
+        
+    //     assert.equal((await this.riftData.getLevel(1)), 1, "New bags are level 1");
+
+    //     // console.log(await this.crystals.firstMint.estimateGas(1, { from: owner }));
+    //     await truffleAssert.fails(this.crystals.sacrificeAndMint(1, 1));
+    //     await truffleAssert.passes(this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }))
+    //     assert.equal((await this.riftData.xpMap(1)), 50, "First mint should add 50 XP");
+    //     assert.equal((await this.riftData.getLevel(1)), 1, "Should be level 1");
+
+    //     // await truffleAssert.fails(this.crystals.firstMint(1, { value: web3.utils.toWei("0.04", "ether") }))
+
+    //     // await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 1, 1, { from: other }));
+
+    //     // await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 1, 1, { from: owner }));
+    //     // assert.equal((await this.riftData.getLevel(1)), 2, "Should be level 2");
+
+
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // assert.equal((await this.riftData.getLevel(1)), 2, "Should be level 2");
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // console.log(await this.rift.getCharges(1));
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // console.log(await this.rift.getCharges(1));
+
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // console.log(await this.rift.getCharges(1));
+
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // console.log(await this.rift.getCharges(1));
+
+    //     // assert.equal((await this.rift.getLevel((await this.rift.bags(1)).xp)), 2, "Should be level 2");
+
+    //     // await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 10000001, 1, { from: owner }));
+    //     // assert.equal((await this.rift.getLevel((await this.rift.bags(1)).xp)), 2, "Should be level 2");
+
+    //     // await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 20000001, 1, { from: owner }));
+    //     // assert.equal((await this.rift.getLevel((await this.rift.bags(1)).xp)), 2, "Should be level 2");
+
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 30000001, 1, { from: owner }));
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 40000001, 1, { from: owner }));
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.crystals.mintCrystal(1, { from: owner }));
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    //     // await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 50000001, 1, { from: owner }));
+    //     // console.log(await this.crystals.mintCrystal.estimateGas(1, { from: owner }));
+    // });
 
     // it ('can interact as gloot and mloot', async function () {
     //     await this.gloot.mint(2);
     //     await this.mloot.mint(90000);
-
+        
     //     await truffleAssert.fails(this.crystals.firstMint(2, { value: web3.utils.toWei("0.04", "ether") }))
 
     //     await truffleAssert.passes(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.04", "ether") }))
-    //     await truffleAssert.passes(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.01", "ether") }))
+    //     await truffleAssert.passes(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.004", "ether") }))
 
     //     await truffleAssert.fails(this.crystals.firstMint(9997462, { value: web3.utils.toWei("0.04", "ether") }))
-    //     await truffleAssert.fails(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.01", "ether") }))
+    //     await truffleAssert.fails(this.crystals.firstMint(90000, { value: web3.utils.toWei("0.004", "ether") }))
 
     //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 9997462, 9997462, { from: other }));
     //     await truffleAssert.fails(this.rift.growTheRift(this.crystals.address, 90000, 90000, { from: other }));
@@ -91,6 +261,7 @@ contract('Adventure', function ([owner, other]) {
     //     await truffleAssert.passes(this.rift.growTheRift(this.crystals.address, 90000, 90000, { from: owner }));
 
     //     await truffleAssert.passes(this.crystals.mintCrystal(9997462, { from: owner }));
+
     //     await truffleAssert.passes(this.crystals.mintCrystal(90000, { from: owner }));
     // });
 
