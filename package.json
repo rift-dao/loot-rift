@@ -40,6 +40,9 @@
     "@openzeppelin/contracts-upgradeable": "^4.4.1",
     "@truffle/hdwallet-provider": "^1.6.0",
     "dotenv": "^10.0.0",
-    "truffle-hdwallet-provider": "^1.0.17"
+    "ethereumjs-tx": "^2.1.2",
+    "ethereumjs-util": "^7.1.4",
+    "truffle-hdwallet-provider": "^1.0.17",
+    "web3": "^1.7.1"
   }
 }
