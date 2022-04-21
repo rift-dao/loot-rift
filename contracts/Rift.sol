@@ -221,15 +221,21 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         uint256 lvl = iRiftData.getLevel(bagId);
         uint256 charges = 1;
 
+        // 1 charge every chargeMod levels
         charges += (lvl / chargeMod);
-        if (chargesData[bagId].lastPurchase >= (chargeRate * 1 days)) { charges += 1; }
 
+        // make sure charges aren't negative
         if (chargesData[bagId].chargesUsed > (charges + chargesData[bagId].chargesPurchased)) {
-            return 0;
+            charges = 0;
         } else {
             // purchased charges are deprecated, but still honored for anyone that purchased before deprecation
-            return charges + chargesData[bagId].chargesPurchased - chargesData[bagId].chargesUsed;
+            charges = charges + chargesData[bagId].chargesPurchased - chargesData[bagId].chargesUsed;
         }  
+
+        // extra charge 
+        if (block.timestamp - chargesData[bagId].lastPurchase >= (chargeRate * 1 days)) { charges += 1; }
+
+        return charges;
     }
 
     /**
