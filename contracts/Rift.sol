@@ -206,11 +206,23 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         require(riftObjects[msg.sender], "Not of the Rift");
         require(getCharges(bagId) >= amount, "Not enough charges");
         ChargeData memory cd = chargesData[bagId];
-        chargesData[bagId] = ChargeData({
-            chargesPurchased: cd.chargesPurchased,
-            chargesUsed: (block.timestamp - cd.lastPurchase < (chargeRate * 1 days)) ? cd.chargesUsed += amount : cd.chargesUsed += amount - 1,
-            lastPurchase: (block.timestamp - cd.lastPurchase < (chargeRate * 1 days)) ? cd.lastPurchase : uint128(block.timestamp)
-        });
+
+        //use up purchased charges first
+        if (cd.chargesPurchased > 0) {
+            // does not support amounts > 1. That feature is not unlocked yet.
+            chargesData[bagId] = ChargeData({
+                chargesPurchased: cd.chargesPurchased - 1, // will go to 0
+                chargesUsed: cd.chargesUsed,
+                lastPurchase: cd.lastPurchase
+            });
+        } else {
+            chargesData[bagId] = ChargeData({
+                chargesPurchased: 0, 
+                chargesUsed: (block.timestamp - cd.lastPurchase < (chargeRate * 1 days)) ? cd.chargesUsed + amount : cd.chargesUsed + amount - 1,
+                lastPurchase: (block.timestamp - cd.lastPurchase < (chargeRate * 1 days)) ? cd.lastPurchase : uint128(block.timestamp)
+            });
+        }
+        
         emit UseCharge(from, _msgSender(), bagId, amount);
     }
 
