@@ -86,6 +86,8 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     address[] public riftObjectsArr;
     address[] public staticBurnableArr;
     mapping(uint256 => ChargeData) public chargesData;
+    uint256 public chargeMod; // bag creates charge every `chargeMod` levels
+    uint256 public chargeRate; // bag creates a charge every `chargeRate` days
 
     function initialize() public initializer {
         __Ownable_init();
@@ -153,6 +155,11 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         levelChargeAward[level] = charges;
     }
 
+    function ownerSetChargeGen(uint256 _mod, uint256 _rate) external onlyOwner {
+        chargeMod = _mod;
+        chargeRate = _rate;
+    }
+
     // READ
 
     function isBagHolder(uint256 bagId, address owner) _isBagHolder(bagId, owner) external view {}
@@ -171,23 +178,24 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     // WRITE
 
     /**
+     * DEPRECATED
      * @dev purchase a Rift Charge with Mana
      * @param bagId bag that will be given the charge
      */
-    function buyCharge(uint256 bagId) external
-        _isBagHolder(bagId, _msgSender()) 
-        whenNotPaused 
-        nonReentrant {
-        ChargeData memory cd = chargesData[bagId];
-        require(block.timestamp - cd.lastPurchase > 1 days, "Too soon"); 
-        require(riftLevel > 0, "rift has no power");
-        iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
-        chargesData[bagId] = ChargeData({
-            chargesPurchased: cd.chargesPurchased + 1,
-            chargesUsed: cd.chargesUsed,
-            lastPurchase: uint128(block.timestamp)
-        });
-    }
+    // function buyCharge(uint256 bagId) external
+    //     _isBagHolder(bagId, _msgSender()) 
+    //     whenNotPaused 
+    //     nonReentrant {
+    //     ChargeData memory cd = chargesData[bagId];
+    //     require(block.timestamp - cd.lastPurchase > 1 days, "Too soon"); 
+    //     require(riftLevel > 0, "rift has no power");
+    //     iMana.burn(_msgSender(), iRiftData.getLevel(bagId) * ((bagId < 8001 || bagId > glootOffset) ? 100 : 10));
+    //     chargesData[bagId] = ChargeData({
+    //         chargesPurchased: cd.chargesPurchased + 1,
+    //         chargesUsed: cd.chargesUsed,
+    //         lastPurchase: uint128(block.timestamp)
+    //     });
+    // }
 
     function useCharge(uint16 amount, uint256 bagId, address from) 
         _isBagHolder(bagId, from) 
@@ -197,32 +205,37 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
     {
         require(riftObjects[msg.sender], "Not of the Rift");
         require(getCharges(bagId) >= amount, "Not enough charges");
-        chargesData[bagId].chargesUsed += amount;
+        ChargeData memory cd = chargesData[bagId];
+        chargesData[bagId] = ChargeData({
+            chargesPurchased: cd.chargesPurchased,
+            chargesUsed: (block.timestamp - cd.lastPurchase < (chargeRate * 1 days)) ? cd.chargesUsed += amount : cd.chargesUsed += amount - 1,
+            lastPurchase: (block.timestamp - cd.lastPurchase < (chargeRate * 1 days)) ? cd.lastPurchase : uint128(block.timestamp)
+        });
         emit UseCharge(from, _msgSender(), bagId, amount);
     }
 
+    // give 1 charge for first level
+    // give 1 charge every chargeMod levels
+    // gain 1 charge after chargeRate days (does not stack)
     function getCharges(uint256 bagId) public view returns (uint256) {
         uint256 lvl = iRiftData.getLevel(bagId);
-        uint256 charges = lvl;
+        uint256 charges = 1;
 
-        charges += lvl/10;
-        charges += lvl/5;
-        
-        if (lvl > 1) {
-            charges += 1;
-        } 
-        if (lvl > 2) {
-            charges += 1;
-        }
-        if (lvl > 7) {
-            charges += 1;
-        }
+        // 1 charge every chargeMod levels
+        charges += (lvl / chargeMod);
 
-        if (lvl > 20) {
-            charges += ((lvl - 20)/10) * 10;
-        }
+        // make sure charges aren't negative
+        if (chargesData[bagId].chargesUsed > charges) {
+            charges = 0;
+        } else {
+            charges = charges - chargesData[bagId].chargesUsed;
+        }  
 
-        return charges + chargesData[bagId].chargesPurchased - chargesData[bagId].chargesUsed;
+        // extra charge 
+        if (block.timestamp - chargesData[bagId].lastPurchase >= (chargeRate * 1 days)) { charges += 1; }
+
+        // purchased charges are deprecated, but still honored for anyone that purchased before deprecation
+        return charges + chargesData[bagId].chargesPurchased;
     }
 
     /**
