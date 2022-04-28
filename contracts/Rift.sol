@@ -225,17 +225,17 @@ contract Rift is Initializable, ReentrancyGuardUpgradeable, PausableUpgradeable,
         charges += (lvl / chargeMod);
 
         // make sure charges aren't negative
-        if (chargesData[bagId].chargesUsed > (charges + chargesData[bagId].chargesPurchased)) {
+        if (chargesData[bagId].chargesUsed > charges) {
             charges = 0;
         } else {
-            // purchased charges are deprecated, but still honored for anyone that purchased before deprecation
-            charges = charges + chargesData[bagId].chargesPurchased - chargesData[bagId].chargesUsed;
+            charges = charges - chargesData[bagId].chargesUsed;
         }  
 
         // extra charge 
         if (block.timestamp - chargesData[bagId].lastPurchase >= (chargeRate * 1 days)) { charges += 1; }
 
-        return charges;
+        // purchased charges are deprecated, but still honored for anyone that purchased before deprecation
+        return charges + chargesData[bagId].chargesPurchased;
     }
 
     /**
